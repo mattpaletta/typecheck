@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package typecheck;
+// option cc_enable_arenas = true;
+
+message Type {
+	string name = 1;
+};

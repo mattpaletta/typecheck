@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package typecheck;
+// option cc_enable_arenas = true;
+
+import "type.proto";
+
+message FunctionDefinition {
+	repeated typecheck.Type argTypes = 1;
+	typecheck.Type returnType = 2;
+	string name = 3;
+}

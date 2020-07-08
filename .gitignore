@@ -1,3 +1,5 @@
+.vs/
+CMakeSettings.json
 compile_commands.json
 **/*.DS_Store
 **/*.swp

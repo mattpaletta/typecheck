@@ -14,6 +14,8 @@ function(fetch_extern name repo tag)
 	set(binary_dir "${${name}_BINARY_DIR}")
 	if (EXISTS ${source_dir}/CMakeLists.txt)
 		add_subdirectory(${source_dir} ${binary_dir} EXCLUDE_FROM_ALL)
+	elseif (EXISTS ${source_dir}/cmake/CMakeLists.txt)
+		add_subdirectory(${source_dir}/cmake ${binary_dir} EXCLUDE_FROM_ALL)
 	endif()
 
 	# Store source & binary dir as global variables
