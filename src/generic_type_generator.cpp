@@ -1,5 +1,6 @@
 #include "generic_type_generator.hpp"
 #include <vector>
+#include <algorithm>
 
 // Convert from base 10 to base 26
 std::vector<int> convertToBase(const std::size_t init, const std::size_t base) {
