@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package typecheck;
+
+import "type.proto";
+// option cc_enable_arenas = true;
+
+message KnownProtocolKind {
+	enum DefaultProtocol {
+		Sequence = 0;
+		IteratorProtocol = 1;
+		RawRepresentable = 2;
+		Equatable = 3;
+		Hashable = 4;
+		Comparable = 5;
+		Error = 6;
+		OptionSet = 7;
+		CaseIterable = 8;
+
+		CodingKey = 9;
+		Encodable = 10;
+		Decodable = 11;
+
+		StringInterpolation = 12;	
+	}
+
+	enum LiteralProtocol {
+		// Start of Literal Protocols
+		ExpressibleByArray = 0;
+		ExpressibleByBoolean = 1;
+		ExpressibleByDictionary = 2;
+		ExpressibleByFloat = 3;
+		ExpressibleByInteger = 4;
+		ExpressibleByStringInterpolation = 5;
+		ExpressibleByString = 6;
+		ExpressibleByNil = 7;
+		ExpressibleByUnicodeScalar = 8;
+
+		ExpressibleByColour = 9;
+		ExpressibleByImage = 10;
+		ExpressibleByFile = 11;
+	}
+
+	oneof kind {
+		DefaultProtocol default = 1;
+		LiteralProtocol literal = 2;
+	}
+}
+
+enum ConstraintKind {
+	Bind = 0;
+	Equal = 1;
+	BindParam = 2;
+	Conversion = 3;
+	ConformsTo = 4;
+}
+
+enum ConstraintRestrictionKind { 
+	DeepEquality = 0;
+	Superclass = 1;
+	ArrayToPointer = 2;
+	StringToPointer = 3;
+	ValueToOptional = 4;
+}
+
+// Taken from https://github.com/apple/swift/lib/Sema/Constraint.h
+enum ConstraintClassification {
+	/// A relational constraint, which relates two types.
+	Relational = 0;
+	
+	/// A member constraint, which names a member of a type and assigns it a reference type.
+	Member = 1;
+	
+	/// A property of a single type, such as whether it is defaultable to a particular type.
+	TypeProperty = 2;
+
+	 /// A disjunction constraint.
+	Disjunction = 3;
+}
+
+message Constraint {
+	ConstraintKind kind = 1;
+	ConstraintRestrictionKind restriction = 2;
+
+	bool hasRestriction = 3;
+	bool isActive = 4;
+	bool isDisabled = 5;
+	bool isFavoured = 6;
+
+	int64 id = 7;
+
+	message Types {
+		typecheck.Type first = 1;
+		typecheck.Type second = 2;
+		typecheck.Type third = 3;
+	};
+
+	message Member {
+		typecheck.Type first = 1;
+		typecheck.Type second = 2;
+//		oneof {
+			int64 declContextPtr = 3; // Pointer to the declaration context
+//		}
+	}
+
+	message Overload {
+		typecheck.Type type = 1;
+		int64 overloadChoice = 2;
+		int64 declContextPtr = 3; // Pointer to the declaration context
+	}
+
+	message Conforms {
+		KnownProtocolKind protocol = 1;
+		typecheck.Type type = 2;
+	}
+
+	oneof constraint {
+		Types types = 8;
+		Member member = 9;
+		Overload overload = 10;
+		Conforms conforms = 11;
+	}
+};

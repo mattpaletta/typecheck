@@ -1,0 +1,34 @@
+languages: cpp
+
+os: linux
+dist: bionic
+cache: ccache
+
+env:
+  # Build with standard settings, in release
+  - BUILD=Release
+  
+compiler:
+  - gcc 
+
+addons:
+  apt:
+    update: true
+    source:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc
+
+before_install:
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+      export CMAKE_MAJOR_VERSION=3.17;
+      export CMAKE_MINOR_VERSION=2;
+      wget -q https://cmake.org/files/v${CMAKE_MAJOR_VERSION}/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && mkdir /opt/cmake && sh ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh --prefix=/opt/cmake --skip-license && sudo ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake && rm ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && export PATH=/usr/local/bin:$PATH;
+    fi;
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=OFF -DENABLE_CPP_CHECK=OFF -DENABLE_IWYU=OFF -DCMAKE_BUILD_TYPE=${BUILD} ..
+  - cmake --build . -j 4 --target test_typecheck
+  - ./test_typecheck
