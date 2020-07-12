@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resolver.hpp"
+#include "typecheck/resolver.hpp"
 
 namespace typecheck {
 	class ResolveEquals : public Resolver {

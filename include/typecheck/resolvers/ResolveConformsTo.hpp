@@ -1,11 +1,11 @@
 #pragma once
 
-#include "resolver.hpp"
-#include "literal_protocol.hpp"
+#include "typecheck/resolver.hpp"
+#include "typecheck/literal_protocol.hpp"
 
-#include "protocols/ExpressibleByDoubleLiteral.hpp"
-#include "protocols/ExpressibleByFloatLiteral.hpp"
-#include "protocols/ExpressibleByIntegerLiteral.hpp"
+#include "typecheck/protocols/ExpressibleByDoubleLiteral.hpp"
+#include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
+#include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
 
 #include <iostream>
 #include <memory>

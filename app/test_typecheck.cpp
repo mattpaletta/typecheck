@@ -5,11 +5,11 @@
 #include <vector>
 #include <iostream>
 
-#include "type_manager.hpp"
-#include "generic_type_generator.hpp"
+#include <typecheck/type_manager.hpp>
+#include <typecheck/generic_type_generator.hpp>
 
-#include "resolvers/ResolveConformsTo.hpp"
-#include "resolvers/ResolveEquals.hpp"
+#include <typecheck/resolvers/ResolveConformsTo.hpp>
+#include <typecheck/resolvers/ResolveEquals.hpp>
 
 /*
 TEST_CASE("test integer constraint", "[typecheck]") {

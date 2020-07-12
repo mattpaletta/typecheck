@@ -1,4 +1,4 @@
-#include "generic_type_generator.hpp"
+#include "typecheck/generic_type_generator.hpp"
 #include <vector>
 #include <algorithm>
 

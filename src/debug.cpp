@@ -1,4 +1,4 @@
-#include "debug.hpp"
+#include "typecheck/debug.hpp"
 #include <iostream>
 
 void typecheck::_check(const bool b, const std::string msg, const std::string file, const int line) {

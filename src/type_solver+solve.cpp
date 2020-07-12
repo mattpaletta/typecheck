@@ -1,10 +1,10 @@
-#include "type_solver.hpp"
-#include "type_manager.hpp"
-#include "resolver.hpp"
+#include "typecheck/type_solver.hpp"
+#include "typecheck/type_manager.hpp"
+#include "typecheck/resolver.hpp"
 
-#include "protocols/ExpressibleByIntegerLiteral.hpp"
-#include "protocols/ExpressibleByFloatLiteral.hpp"
-#include "protocols/ExpressibleByDoubleLiteral.hpp"
+#include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
+#include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
+#include "typecheck/protocols/ExpressibleByDoubleLiteral.hpp"
 
 #include <set>
 #include <vector>

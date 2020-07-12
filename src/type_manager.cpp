@@ -1,8 +1,8 @@
-#include "type_manager.hpp"
-#include "debug.hpp"
+#include "typecheck/type_manager.hpp"
+#include "typecheck/debug.hpp"
 
-#include "resolvers/ResolveConformsTo.hpp"
-#include "resolvers/ResolveEquals.hpp"
+#include "typecheck/resolvers/ResolveConformsTo.hpp"
+#include "typecheck/resolvers/ResolveEquals.hpp"
 
 #include <typecheck_protos/constraint.pb.h>
 #include <algorithm>
@@ -104,6 +104,8 @@ const typecheck::Constraint& typecheck::TypeManager::getConstraint(const std::si
 			return constraint;
 		}
 	}
+
+	return {};
 }
 
 bool typecheck::TypeManager::solve() {

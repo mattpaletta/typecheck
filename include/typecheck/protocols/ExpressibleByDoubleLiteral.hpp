@@ -1,6 +1,6 @@
 #pragma once
 
-#include "literal_protocol.hpp"
+#include "typecheck/literal_protocol.hpp"
 
 namespace typecheck {
 	class ExpressibleByDoubleLiteral : public LiteralProtocol {

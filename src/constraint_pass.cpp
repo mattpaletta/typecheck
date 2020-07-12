@@ -1,5 +1,5 @@
-#include "constraint_pass.hpp"
-#include "type_manager.hpp"
+#include "typecheck/constraint_pass.hpp"
+#include "typecheck/type_manager.hpp"
 #include <algorithm>
 
 typecheck::ConstraintPass typecheck::ConstraintPass::CreateCopy() const {

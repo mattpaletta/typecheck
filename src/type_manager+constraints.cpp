@@ -1,5 +1,5 @@
-#include "type_manager.hpp"
-#include "debug.hpp"
+#include "typecheck/type_manager.hpp"
+#include "typecheck/debug.hpp"
 
 #include <typecheck_protos/constraint.pb.h>
 

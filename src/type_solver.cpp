@@ -1,7 +1,7 @@
-#include "type_solver.hpp"
-#include "type_manager.hpp"
-#include "constraint_pass.hpp"
-#include "utils.hpp"
+#include "typecheck/type_solver.hpp"
+#include "typecheck/type_manager.hpp"
+#include "typecheck/constraint_pass.hpp"
+#include "typecheck/utils.hpp"
 
 #include <numeric>
 #include <set>
