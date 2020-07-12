@@ -1,138 +1,68 @@
 #include "type_solver.hpp"
+#include "type_manager.hpp"
+#include "resolver.hpp"
+
+#include "protocols/ExpressibleByIntegerLiteral.hpp"
+#include "protocols/ExpressibleByFloatLiteral.hpp"
+#include "protocols/ExpressibleByDoubleLiteral.hpp"
+
 #include <set>
 #include <vector>
 #include <iostream>
+#include <deque>
 
-#define TYPECHECK_PROTOTYPE() std::cout << "Warning, prototype code: " << __FILE__ << ":" << __LINE__ << std::endl
 
-std::vector<typecheck::Type> typecheck::TypeSolver::getAllConforms(const typecheck::Constraint& constraint) const {
-	std::vector<typecheck::Type> options;
-	TYPECHECK_PROTOTYPE();
-	switch (constraint.conforms().protocol().kind_case()) {
-	case typecheck::KnownProtocolKind::kLiteral:
-		switch (constraint.conforms().protocol().literal()) {
-		case typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger:
-			// The first one is 'preferred'
-			options.emplace_back();
-			options.back().set_name("int");
-			options.emplace_back();
-			options.back().set_name("float");
-			options.emplace_back();
-			options.back().set_name("double");
-			break;
-		}
-		break;
-	case typecheck::KnownProtocolKind::kDefault:
-		break;
-	}
-	return options;
-}
-
-typecheck::Type typecheck::TypeSolver::getPreferredConforms(const typecheck::Constraint& constraint) const {
-	typecheck::Type type;
-	switch (constraint.conforms().protocol().kind_case()) {
-	case typecheck::KnownProtocolKind::kLiteral:
-		switch (constraint.conforms().protocol().literal()) {
-		case typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger:
-			type.set_name("int");
-			break;
-		}
-		break;
-	case typecheck::KnownProtocolKind::kDefault:
-		break;
-	}
-	return type;
-}
-
-bool typecheck::TypeSolver::HasMorePasses(const typecheck::ConstraintPass& pass) {
-	return false;
-}
-
-bool typecheck::TypeSolver::ResolveConformsTo(const typecheck::Constraint& constraint, typecheck::ConstraintPass* pass) {
-	auto conformVar = constraint.conforms().type();
-	if (pass->resolvedTypes.find(conformVar.name()) == pass->resolvedTypes.end()) {
-		// Unresolved
-		auto preferred = this->getPreferredConforms(constraint);
-		auto allCandidates = this->getAllConforms(constraint);
-		
-		// e.g. T0 -> int
-		pass->resolvedTypes.insert(std::make_pair(conformVar.name(), preferred.name()));
-		// TODO: Keep counter, so we know which 'type' to try.
-		return true;
-	} else {
-		// Already been resolved
-		return true;
-	}
-}
-
-bool typecheck::TypeSolver::ResolveEquals(const typecheck::Constraint& constraint, typecheck::ConstraintPass* pass) {
-	if (!constraint.types().has_first() || !constraint.types().has_second()) {
-		// Error
-		throw std::runtime_error("Equals constraint must have two types.");
-	}
-	auto eqType0 = constraint.types().first();
-	auto eqType1 = constraint.types().second();
-
-	if (pass->hasResolvedType(eqType0) && pass->hasResolvedType(eqType1)) {
-		// They have already both been resolved
-		// we will make sure they are the same when we add up the score
-		return true;
-	} else if (pass->hasResolvedType(eqType0)) {
-		// Only T0 has been resolved, make T1 = T0;
-		pass->resolvedTypes.emplace(std::make_pair(eqType1.name(), pass->resolvedTypes.at(eqType0.name())));
-		return true;
-	} else if (pass->hasResolvedType(eqType1)) {
-		// Only T1 has been resolved, make T0 = T1;
-		pass->resolvedTypes.emplace(std::make_pair(eqType0.name(), pass->resolvedTypes.at(eqType1.name())));
-		return true;
-	} else {
-		// Neither has been resolved
-		return false;
-	}
-}
-
-void typecheck::TypeSolver::DoPass(ConstraintPass* pass) {
-	std::set<std::size_t> resolvedConstraints;
+void typecheck::TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const {
+	std::deque<std::size_t> unresolvedConstraints;
 	
-	// Stop when we've resolved all of the constraints
-	while (resolvedConstraints.size() < pass->constraints.size()) {
-		for (std::size_t i = 0; i < pass->constraints.size(); ++i) {
-			if (resolvedConstraints.find(i) != resolvedConstraints.end()) {
-				// We've already processed this one
-				continue;
-			}
+	// Build queue of constraints indexes
+	for (std::size_t i = 0; i < manager->constraints.size(); ++i) {
+		unresolvedConstraints.push_back(i);
+	}
 
-			bool did_resolve = false;
-			auto& constraint = pass->constraints.at(i);
+	this->DoPass_internal(pass, unresolvedConstraints, manager);
+}
 
-			switch (constraint.kind()) {
-			case typecheck::ConstraintKind::ConformsTo:
-				did_resolve = this->ResolveConformsTo(constraint, pass);
-				break;
-			case typecheck::ConstraintKind::Conversion:
-				break;
-			case typecheck::ConstraintKind::Equal:
-				did_resolve = this->ResolveEquals(constraint, pass);
-				break;
-			} 
-			/*
-			else if (canResolveFunction(constraint)) {
-				// Add in types T0: (T1, T2) -> T3
-				// in solution
-			}*/
-			
-			/*
-			else if (canResolveConvertible(constraint)) {
-				if (is_convertible(T0, T1) {
+void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed) const {
+	auto best_pass = pass->CreateCopy();
+	// Set it to initially invalid, until proven otherwise.
+	best_pass.is_valid = false;
 
-				}
+	if (indexes.size() == 0) {
+		// If no nodes, return!
+		return;
+	}
+
+	const auto i = indexes.front();
+	auto& current_constraint = manager->constraints.at(i);
+	indexes.pop_front();
+
+	typecheck::ConstraintPass iterPass = pass->CreateCopy();
+
+	// If we have a perfect score, stop searching
+	while (best_pass.score > 0 && iterPass.GetResolver(current_constraint, manager)->hasMoreSolutions(current_constraint, manager)) {
+		if (iterPass.GetResolver(current_constraint, manager)->resolveNext(current_constraint, manager)) {
+			this->DoPass_internal(&iterPass, indexes, manager, prev_failed);
+		} else {
+			// It failed, add it to the end of the queue
+			indexes.push_back(i);
+			if (prev_failed == std::numeric_limits<std::size_t>::max() /* default if nothing failed */) {
+				// Set i as the first thing that failed
+				this->DoPass_internal(&iterPass, indexes, manager, i);
+			} else if (prev_failed == i) {
+				// We failed this same constraint twice
+				// Abort!
+				pass->is_valid = false;
+				break;
 			}
-			*/
-			
-			if (did_resolve) {
-				resolvedConstraints.insert(i);
-			}
+		}
+
+		auto best_score = best_pass.score;
+		if (iterPass.CalcScore(manager) < best_pass.score) {
+			best_pass = std::move(iterPass);
 		}
 	}
 
+	// Merge best_pass in 'pass'
+	best_pass.CopyToExisting(pass);
 }

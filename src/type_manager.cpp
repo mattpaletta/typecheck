@@ -1,6 +1,9 @@
 #include "type_manager.hpp"
 #include "debug.hpp"
 
+#include "resolvers/ResolveConformsTo.hpp"
+#include "resolvers/ResolveEquals.hpp"
+
 #include <typecheck_protos/constraint.pb.h>
 #include <algorithm>
 
@@ -22,12 +25,13 @@ bool typecheck::TypeManager::hasRegisteredType(const std::string& name) const no
 }
 
 typecheck::Type typecheck::TypeManager::getRegisteredType(const std::string& name) const noexcept {
-	for (auto& ty : this->registeredTypes) {
-		if (ty.name() == name) {
-			return ty;
+	for (auto& type : this->registeredTypes) {
+		if (type.name() == name) {
+			return type;
 		}
 	}
-	return typecheck::Type();
+
+	return {};
 }
 
 bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::string& T1) {
@@ -46,7 +50,7 @@ bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::st
 	return false;
 }
 
-typecheck::Type typecheck::TypeManager::getResolvedType(const typecheck::Type& type) const {
+typecheck::Type typecheck::TypeManager::getResolvedType(const typecheck::TypeVar& type) const {
 	return this->solver.getResolvedType(type);
 }
 
@@ -74,70 +78,41 @@ void typecheck::TypeManager::registerFunctionDefinition(const typecheck::Functio
 	this->functions.push_back(funcDef);
 }
 
-std::string typecheck::TypeManager::CreateTypeVar() {
-	const auto var = this->type_generator.next();
-	this->registerType(var);
-	return var;
-}
-
-typecheck::Constraint getNewBlankConstraint(typecheck::ConstraintKind kind) {
-	typecheck::Constraint constraint;
-	constraint.set_kind(kind);
-	constraint.set_hasrestriction(false);
-	constraint.set_isactive(false);
-	constraint.set_isdisabled(false);
-	constraint.set_isfavoured(false);
-	return constraint;
-}
-
-std::size_t typecheck::TypeManager::CreateEqualsConstraint(const typecheck::Type& t0, const typecheck::Type& t1) {
-	auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::Equal);
-	constraint.set_id(this->constraint_generator.next_id());
-
-	TYPECHECK_ASSERT(!t0.name().empty(), "Cannot use empty type when creating constraint.");
-	TYPECHECK_ASSERT(!t1.name().empty(), "Cannot use empty type when creating constraint.");
-
-	TYPECHECK_ASSERT(this->hasRegisteredType(t0.name()), "Must register types before creating constraint");
-	TYPECHECK_ASSERT(this->hasRegisteredType(t1.name()), "Must register types before creating constraint");
-
-	constraint.mutable_types()->mutable_first()->set_name(t0.name());
-	constraint.mutable_types()->mutable_second()->set_name(t1.name());
-
-	this->constraints.emplace_back(constraint);
-	return constraint.id();
-}
-
-std::size_t typecheck::TypeManager::CreateConformsToConstraint(const typecheck::Type& t0, const typecheck::KnownProtocolKind& conforms) {
-	auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::ConformsTo);
-
-	TYPECHECK_ASSERT(!t0.name().empty(), "Cannot use empty type when creating constraint.");
-	TYPECHECK_ASSERT(this->hasRegisteredType(t0.name()), "Must register types before creating constraint");
-
-	constraint.mutable_conforms()->mutable_type()->set_name(t0.name());
-	switch (conforms.kind_case()) {
-	case typecheck::KnownProtocolKind::kLiteral:
-		constraint.mutable_conforms()->mutable_protocol()->set_literal(conforms.literal());
-		break;
-	case typecheck::KnownProtocolKind::kDefault:
-		constraint.mutable_conforms()->mutable_protocol()->set_default_(conforms.default_());
-		break;
-	case typecheck::KnownProtocolKind::KIND_NOT_SET:
-		TYPECHECK_ASSERT(false, "Must set Protocol Kind.");
+bool typecheck::TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolver) {
+	bool will_insert = this->registeredResolvers.find(resolver->kind) == this->registeredResolvers.end();
+	if (will_insert) {
+		// We don't have one yet, so add it
+		this->registeredResolvers.emplace(std::make_pair(resolver->kind, std::move(resolver)));
 	}
-	constraint.set_id(this->constraint_generator.next_id());
-	
-	this->constraints.emplace_back(constraint);
-	return constraint.id();
+
+	return will_insert;
 }
 
-void typecheck::TypeManager::solve() {
-	this->solver.setConstraints(this->constraints);
-	//std::vector<typecheck::Type> tmp;
-	//std::transform(this->registeredTypes.begin(), this->registeredTypes.end(), tmp.begin(), [](const Type& original) {
-	//	// Copy to new.
-	//	return original;
-	//});
-	this->solver.setTypes(this->registeredTypes);
-	this->solver.setFunctions(this->functions);
-	this->solver.solve();
+typecheck::TypeVar typecheck::TypeManager::CreateTypeVar() {
+	const auto var = this->type_generator.next();
+
+	this->registeredTypeVars.insert(var);
+
+	TypeVar type;
+	type.set_symbol(var);
+	return type;
+}
+
+const typecheck::Constraint& typecheck::TypeManager::getConstraint(const std::size_t id) const {
+	for (auto& constraint : this->constraints) {
+		if (constraint.id() == id) {
+			return constraint;
+		}
+	}
+}
+
+bool typecheck::TypeManager::solve() {
+	// Add default `resolvers`, ignore response
+	// it will not double-register, so this is safe
+	constexpr auto default_id = std::numeric_limits<std::size_t>::max();
+	this->registerResolver(std::make_unique<typecheck::ResolveConformsTo>(nullptr, default_id));
+	this->registerResolver(std::make_unique<typecheck::ResolveEquals>(nullptr, default_id));
+
+	// Finally, solve
+	return this->solver.solve(this);
 }

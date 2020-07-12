@@ -421,6 +421,7 @@ def resolveConversionConstraint(constraint, typeVars, manager: TypeManager):
       yield (False, typeVars)
   else:
     yield (False, typeVars)
+
 def resolveConstraint(constraint, typeVars, manager: TypeManager):
   if constraint.kind == ConstraintKind.Equal:
       yield from resolveEqualConstraint(constraint, typeVars, manager)

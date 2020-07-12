@@ -2,9 +2,11 @@
 
 #include <google/protobuf/util/message_differencer.h>
 #include <algorithm>
+#include <numeric>
 #include <set>
 
 void typecheck::TypeSolver::RemoveDuplicates() {
+	/*
 	std::set<std::size_t> duplicates;
 	// Only check items to the left, meaning we'll leave the original, but move consequent items.
 	for (std::size_t i = 0; i < this->constraints.size(); ++i) {
@@ -26,15 +28,17 @@ void typecheck::TypeSolver::RemoveDuplicates() {
 		}
 	}
 	this->constraints = newWithoutDuplicates;
+	*/
 }
 
 void typecheck::TypeSolver::FindOverloads() {
-	// Arrange these into a map, so we can quickly get all of the overloads available for a function.
-	for (const auto& func : this->functions) {
-		this->funcOverloads[func.name()].push_back(func);
-	}
+
 }
 
 void typecheck::TypeSolver::BuildRefGraph() {
 
+}
+
+typecheck::ConstraintPass typecheck::TypeSolver::BuildPass(const std::vector<int>&) const {
+	return {};
 }

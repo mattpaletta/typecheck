@@ -10,15 +10,21 @@
 #include <typecheck_protos/function_definition.pb.h>
 #include "type_solver.hpp"
 #include "generic_type_generator.hpp"
+#include "resolver.hpp"
 
 namespace typecheck {
+	class ConstraintPass;
 	class TypeManager {
+		friend ConstraintPass;
+		friend TypeSolver;
 	private:
 		std::vector<Constraint> constraints;
 	
 		std::vector<Type> registeredTypes;
+		std::set<std::string> registeredTypeVars;
 		std::map<std::string, std::set<std::string>> convertible;
 		std::vector<FunctionDefinition> functions;
+		std::map<ConstraintKind, std::unique_ptr<Resolver>> registeredResolvers;
 
 		TypeSolver solver;
 		GenericTypeGenerator type_generator;
@@ -46,11 +52,15 @@ namespace typecheck {
 		// 'Register' function definitions
 		void registerFunctionDefinition(const FunctionDefinition& funcDef);
 
-		std::string CreateTypeVar();
-		std::size_t CreateConformsToConstraint(const Type& t0, const KnownProtocolKind& t1);
-		std::size_t CreateEqualsConstraint(const typecheck::Type& t0, const typecheck::Type& t1);
+		// `Register` resolvers
+		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
 
-		void solve();
-		Type getResolvedType(const Type& type) const;
+		typecheck::TypeVar CreateTypeVar();
+		std::size_t CreateLiteralConformsToConstraint(const TypeVar& t0, const typecheck::KnownProtocolKind_LiteralProtocol& protocol);
+		std::size_t CreateEqualsConstraint(const typecheck::TypeVar& t0, const typecheck::TypeVar& t1);
+		const Constraint& getConstraint(const std::size_t id) const;
+
+		bool solve();
+		Type getResolvedType(const TypeVar& type) const;
 	};
 }

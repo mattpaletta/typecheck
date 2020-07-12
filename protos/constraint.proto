@@ -31,14 +31,14 @@ message KnownProtocolKind {
 		ExpressibleByDictionary = 2;
 		ExpressibleByFloat = 3;
 		ExpressibleByInteger = 4;
-		ExpressibleByStringInterpolation = 5;
+		// ExpressibleByStringInterpolation = 5;
 		ExpressibleByString = 6;
 		ExpressibleByNil = 7;
-		ExpressibleByUnicodeScalar = 8;
+		// ExpressibleByUnicodeScalar = 8;
 
-		ExpressibleByColour = 9;
-		ExpressibleByImage = 10;
-		ExpressibleByFile = 11;
+		// ExpressibleByColour = 9;
+		// ExpressibleByImage = 10;
+		// ExpressibleByFile = 11;
 	}
 
 	oneof kind {

@@ -6,3 +6,7 @@ package typecheck;
 message Type {
 	string name = 1;
 };
+
+message TypeVar {
+	string symbol = 1;
+}

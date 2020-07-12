@@ -47,6 +47,11 @@ include(cmake/generate_protos.cmake)
 # fetch_extern(or-tools https://github.com/google/or-tools.git 45770b833997f827d322e929b1ed4781c4e60d44)
 fetch_extern(catch2 https://github.com/catchorg/Catch2 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
 fetch_extern(protobuf https://github.com/protocolbuffers/protobuf 96a62f7cc7d5f82c1a70f10654fa1ed1815c4de8)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_AUTOGEN_VERBOSE OFF)
+
+# Waiting on PR: https://github.com/mraggi/discreture/pull/8
+# fetch_extern(discreture https://github.com/mraggi/discreture.git 1069df683a4126700668a1d23368dbbbe857da0f)
 
 if (ENABLE_IWYU)
 	find_program(iwyu_path NAMES include-what-you-use iwyu REQUIRED)
@@ -85,15 +90,15 @@ target_include_directories(typecheck PUBLIC include)
 target_link_libraries(typecheck PUBLIC typecheck_protos)
 # target_link_libraries(typecheck PUBLIC ortools::ortools)
 
-if (${cppcheck_path})
+if (ENABLE_CPP_CHECK)
 	set_property(TARGET typecheck PROPERTY CXX_CPPCHECK ${cppcheck_path})
 endif()
 
-if (${iwyu_path})
+if (ENABLE_IWYU)
 	set_property(TARGET typecheck PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
 endif()
 
-if (${clang_tidy_path})
+if (ENABLE_CLANG_TIDY)
 	set_property(TARGET typecheck PROPERTY CXX_CLANG_TIDY ${clang_tidy_path})
 endif()
 
