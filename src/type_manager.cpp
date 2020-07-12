@@ -1,6 +1,5 @@
 #include "typecheck/type_manager.hpp"
 #include <typecheck_protos/constraint.pb.h>           // for ConstraintKind
-#include <__tree>                                     // for operator!=, ope...
 #include <limits>                                     // for numeric_limits
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
