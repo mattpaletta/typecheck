@@ -8,12 +8,7 @@ namespace typecheck {
 		ExpressibleByDoubleLiteral() : LiteralProtocol() {}
 		~ExpressibleByDoubleLiteral() = default;
 
-		std::vector<Type> getPreferredTypes() const {
-			return { ty("double") };
-		}
-
-		std::vector<Type> getOtherTypes() const {
-			return {};
-		}
+		std::vector<Type> getPreferredTypes() const;
+		std::vector<Type> getOtherTypes() const;
 	};
 }

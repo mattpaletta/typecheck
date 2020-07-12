@@ -14,7 +14,7 @@
 
 void typecheck::TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const {
 	std::deque<std::size_t> unresolvedConstraints;
-	
+
 	// Build queue of constraints indexes
 	for (std::size_t i = 0; i < manager->constraints.size(); ++i) {
 		unresolvedConstraints.push_back(i);
@@ -57,9 +57,8 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
 			}
 		}
 
-		auto best_score = best_pass.score;
 		if (iterPass.CalcScore(manager) < best_pass.score) {
-			best_pass = std::move(iterPass);
+			iterPass.CopyToExisting(&best_pass);
 		}
 	}
 

@@ -1,4 +1,5 @@
 #include "typecheck/type_solver.hpp"
+#include "typecheck/resolver.hpp"
 
 #include <google/protobuf/util/message_differencer.h>
 #include <algorithm>

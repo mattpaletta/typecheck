@@ -1,6 +1,8 @@
 #include "typecheck/generic_type_generator.hpp"
-#include <vector>
-#include <algorithm>
+#include <algorithm>  // for reverse
+#include <string>     // for basic_string
+#include <vector>     // for vector<>::iterator, vector
+
 
 // Convert from base 10 to base 26
 std::vector<int> convertToBase(const std::size_t init, const std::size_t base) {
@@ -22,7 +24,7 @@ std::size_t typecheck::GenericTypeGenerator::next_id() {
 
 std::string typecheck::GenericTypeGenerator::next() {
 	constexpr int A_in_ascii = 65;
-		
+
 	std::string out;
 	for (const auto ch : convertToBase(this->curr_num++, 26)) {
 		out += static_cast<char>(ch + A_in_ascii);

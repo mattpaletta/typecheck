@@ -8,12 +8,7 @@ namespace typecheck {
 		ExpressibleByIntegerLiteral() : LiteralProtocol() {}
 		~ExpressibleByIntegerLiteral() = default;
 
-		std::vector<Type> getPreferredTypes() const {
-			return { ty("int") };
-		}
-
-		std::vector<Type> getOtherTypes() const {
-			return { ty("double"), ty("float") };
-		}
+		std::vector<Type> getPreferredTypes() const;
+		std::vector<Type> getOtherTypes() const;
 	};
 }

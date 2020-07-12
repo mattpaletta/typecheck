@@ -1,6 +1,12 @@
 #include "typecheck/constraint_pass.hpp"
-#include "typecheck/type_manager.hpp"
-#include <algorithm>
+
+#include <stdexcept>                         // for runtime_error
+#include <type_traits>                       // for remove_reference<>::type
+#include <utility>                           // for make_pair
+#include <vector>                            // for vector
+#include "typecheck/resolver.hpp"            // for Resolver
+#include "typecheck_protos/constraint.pb.h"  // for Constraint, ConstraintKind
+#include "typecheck/type_manager.hpp"        // for TypeManager
 
 typecheck::ConstraintPass typecheck::ConstraintPass::CreateCopy() const {
 	typecheck::ConstraintPass new_pass;
@@ -75,7 +81,7 @@ typecheck::Resolver* typecheck::ConstraintPass::GetResolverRec(const Constraint&
 			return stored_resolver.get();
 		}
 	}
-	
+
 	if (this->prev) {
 		// This won't create a 'new' one, caller will have to do that.
 		return this->prev->GetResolverRec(constraint, manager);
@@ -93,7 +99,7 @@ typecheck::Resolver* typecheck::ConstraintPass::GetResolver(const typecheck::Con
 			return stored_resolver.get();
 		}
 	}
-	
+
 	if (manager->registeredResolvers.find(constraint.kind()) == manager->registeredResolvers.end()) {
 		// It's not in the manager either
 		throw std::runtime_error("Constraint resolver not registered: " + std::to_string(constraint.kind()));

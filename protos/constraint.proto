@@ -3,7 +3,7 @@ syntax = "proto3";
 package typecheck;
 
 import "type.proto";
-// option cc_enable_arenas = true;
+/// option cc_enable_arenas = true;
 
 message KnownProtocolKind {
 	enum DefaultProtocol {
@@ -21,7 +21,7 @@ message KnownProtocolKind {
 		Encodable = 10;
 		Decodable = 11;
 
-		StringInterpolation = 12;	
+		StringInterpolation = 12;
 	}
 
 	enum LiteralProtocol {
@@ -55,7 +55,7 @@ enum ConstraintKind {
 	ConformsTo = 4;
 }
 
-enum ConstraintRestrictionKind { 
+enum ConstraintRestrictionKind {
 	DeepEquality = 0;
 	Superclass = 1;
 	ArrayToPointer = 2;
@@ -67,10 +67,10 @@ enum ConstraintRestrictionKind {
 enum ConstraintClassification {
 	/// A relational constraint, which relates two types.
 	Relational = 0;
-	
+
 	/// A member constraint, which names a member of a type and assigns it a reference type.
 	Member = 1;
-	
+
 	/// A property of a single type, such as whether it is defaultable to a particular type.
 	TypeProperty = 2;
 

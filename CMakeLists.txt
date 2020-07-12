@@ -8,8 +8,8 @@ option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(ENABLE_UBSAN "Enable Undefined Behaviour Sanitizer" OFF)
 option(ENABLE_IWYU "Use include-what-you-use" ON)
 option(ENABLE_LWYU "Use link-what-you-use" ON)
-option(ENABLE_CLANG_TIDY "Use clang-tidy" OFF)
-option(ENABLE_CPP_CHECK "Use cppcheck" OFF)
+option(ENABLE_CLANG_TIDY "Use clang-tidy" ON)
+option(ENABLE_CPP_CHECK "Use cppcheck" ON)
 
 if (ENABLE_ASAN)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
@@ -45,10 +45,6 @@ include(cmake/generate_protos.cmake)
 #set(USE_SCIP ON)
 #set(USE_XPRESS ON)
 # fetch_extern(or-tools https://github.com/google/or-tools.git 45770b833997f827d322e929b1ed4781c4e60d44)
-if (NOT TARGET Catch2::Catch2)
-	fetch_extern(catch2 https://github.com/catchorg/Catch2 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
-endif()
-
 if (NOT TARGET protobuf::libprotobuf)
 	fetch_extern(protobuf https://github.com/protocolbuffers/protobuf 96a62f7cc7d5f82c1a70f10654fa1ed1815c4de8)
 endif()
@@ -58,9 +54,13 @@ set(CMAKE_AUTOGEN_VERBOSE OFF)
 # Waiting on PR: https://github.com/mraggi/discreture/pull/8
 # fetch_extern(discreture https://github.com/mraggi/discreture.git 1069df683a4126700668a1d23368dbbbe857da0f)
 
+file(GLOB_RECURSE PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/protos/*.proto)
+generateProtos(PROTO_FILES typecheck_protos)
+
 if (ENABLE_IWYU)
 	find_program(iwyu_path NAMES include-what-you-use iwyu REQUIRED)
 	message("Include-What-You-Use Enabled: ${iwyu_path}")
+	set(iwhy_path_and_options "${iwyu_path} --mapping_file=typecheck.imp")
 endif()
 
 if (ENABLE_LWYU)
@@ -69,11 +69,14 @@ if (ENABLE_LWYU)
 endif()
 
 if (ENABLE_CPP_CHECK)
-	find_program(cppcheck_path cppcheck REQUIRED)
-	if (${cppcheck_path} STREQUAL "cppcheck_path-NOTFOUND")
+	find_program(CMAKE_CXX_CPPCHECK cppcheck REQUIRED)
+	if (${CMAKE_CXX_CPPCHECK} STREQUAL "cppcheck_path-NOTFOUND")
 		message(FATAL_ERROR "cppcheck not found")
 	endif()
-	message("CPPCheck Enabled: ${cppcheck_path}")
+	list(APPEND CMAKE_CXX_CPPCHECK
+		"--enable=warning"
+		"--force"
+		"--std=c++${CMAKE_CXX_STANDARD}")
 endif()
 
 if (ENABLE_CLANG_TIDY)
@@ -81,11 +84,9 @@ if (ENABLE_CLANG_TIDY)
 	if (${clang_tidy_path} STREQUAL "clang_tidy_path-NOTFOUND")
 		message(FATAL_ERROR "clang-tidy not found")
 	endif()
+	set(CMAKE_CXX_CLANG_TIDY ${clang_tidy_path} -checks=-*,readability-*)
 	message("Clang-Tidy Enabled: ${clang_tidy_path}")
 endif()
-
-file(GLOB_RECURSE PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/protos/*.proto)
-generateProtos(PROTO_FILES typecheck_protos)
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.hpp)
 file(GLOB_RECURSE INC_FILES include/*.hpp)
@@ -97,14 +98,20 @@ target_link_libraries(typecheck PUBLIC typecheck_protos)
 
 if (ENABLE_CPP_CHECK)
 	set_property(TARGET typecheck PROPERTY CXX_CPPCHECK ${cppcheck_path})
+	unset(CMAKE_CXX_CPPCHECK)
 endif()
 
 if (ENABLE_IWYU)
-	set_property(TARGET typecheck PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path})
+	set_property(TARGET typecheck PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path_and_options})
 endif()
 
 if (ENABLE_CLANG_TIDY)
 	set_property(TARGET typecheck PROPERTY CXX_CLANG_TIDY ${clang_tidy_path})
+	unset(CMAKE_CXX_CLANG_TIDY)
+endif()
+
+if (NOT TARGET Catch2::Catch2)
+	fetch_extern(catch2 https://github.com/catchorg/Catch2 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
 endif()
 
 enable_testing()

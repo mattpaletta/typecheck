@@ -1,11 +1,16 @@
 #include "typecheck/type_manager.hpp"
-#include "typecheck/debug.hpp"
-
-#include "typecheck/resolvers/ResolveConformsTo.hpp"
-#include "typecheck/resolvers/ResolveEquals.hpp"
-
-#include <typecheck_protos/constraint.pb.h>
-#include <algorithm>
+#include <typecheck_protos/constraint.pb.h>           // for ConstraintKind
+#include <__tree>                                     // for operator!=, ope...
+#include <limits>                                     // for numeric_limits
+#include <type_traits>                                // for move
+#include <utility>                                    // for make_pair
+#include "typecheck/generic_type_generator.hpp"       // for GenericTypeGene...
+#include "typecheck/resolver.hpp"                     // for Resolver
+#include "typecheck/resolvers/ResolveConformsTo.hpp"  // for ResolveConformsTo
+#include "typecheck/resolvers/ResolveEquals.hpp"      // for ResolveEquals
+#include "typecheck/type_solver.hpp"                  // for TypeSolver
+#include "typecheck_protos/function_definition.pb.h"  // for FunctionDefinition
+#include "typecheck_protos/type.pb.h"                 // for Type, TypeVar
 
 typecheck::TypeManager::TypeManager() {}
 
@@ -98,14 +103,14 @@ typecheck::TypeVar typecheck::TypeManager::CreateTypeVar() {
 	return type;
 }
 
-const typecheck::Constraint& typecheck::TypeManager::getConstraint(const std::size_t id) const {
+const typecheck::Constraint* typecheck::TypeManager::getConstraint(const std::size_t id) const {
 	for (auto& constraint : this->constraints) {
 		if (constraint.id() == id) {
-			return constraint;
+			return &constraint;
 		}
 	}
 
-	return {};
+	return nullptr;
 }
 
 bool typecheck::TypeManager::solve() {

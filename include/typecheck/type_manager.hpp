@@ -19,7 +19,7 @@ namespace typecheck {
 		friend TypeSolver;
 	private:
 		std::vector<Constraint> constraints;
-	
+
 		std::vector<Type> registeredTypes;
 		std::set<std::string> registeredTypeVars;
 		std::map<std::string, std::set<std::string>> convertible;
@@ -44,7 +44,7 @@ namespace typecheck {
 		bool registerType(const std::string& name);
 		bool hasRegisteredType(const std::string& name) const noexcept;
 		Type getRegisteredType(const std::string& name) const noexcept;
-		 
+
 		// 'Register' convertible types
 		bool setConvertible(const std::string& T0, const std::string& T1);
 		bool isConvertible(const std::string& T0, const std::string& T1) const noexcept;
@@ -58,7 +58,7 @@ namespace typecheck {
 		typecheck::TypeVar CreateTypeVar();
 		std::size_t CreateLiteralConformsToConstraint(const TypeVar& t0, const typecheck::KnownProtocolKind_LiteralProtocol& protocol);
 		std::size_t CreateEqualsConstraint(const typecheck::TypeVar& t0, const typecheck::TypeVar& t1);
-		const Constraint& getConstraint(const std::size_t id) const;
+		const Constraint* getConstraint(const std::size_t id) const;
 
 		bool solve();
 		Type getResolvedType(const TypeVar& type) const;

@@ -1,5 +1,6 @@
 #pragma once
-#include <string>
+#include <iosfwd>		// for string
+
 namespace typecheck {
 	void _check(const bool b, const std::string msg, const std::string file, const int line);
 }

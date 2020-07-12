@@ -90,10 +90,10 @@ TEST_CASE("test resolve conforms to", "[resolver]") {
 
 	typecheck::ConstraintPass pass;
 	auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
-	CHECK(resolver.hasMoreSolutions(tm.getConstraint(constraintID), &tm));
-	CHECK(resolver.resolveNext(tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
-	CHECK(resolver.score(tm.getConstraint(constraintID), &tm) == 0);
+	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
 }
 
 TEST_CASE("test resolve equals have both", "[resolver]") {
@@ -107,10 +107,10 @@ TEST_CASE("test resolve equals have both", "[resolver]") {
 	pass.setResolvedType(T1.symbol(), tm.getRegisteredType("int"));
 	pass.setResolvedType(T2.symbol(), tm.getRegisteredType("int"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
-	CHECK(resolver.hasMoreSolutions(tm.getConstraint(constraintID), &tm));
-	CHECK(resolver.resolveNext(tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
-	CHECK(resolver.score(tm.getConstraint(constraintID), &tm) == 0);
+	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
 }
 
 TEST_CASE("test resolve equals have both not equal", "[resolver]") {
@@ -124,10 +124,10 @@ TEST_CASE("test resolve equals have both not equal", "[resolver]") {
 	pass.setResolvedType(T1.symbol(), tm.getRegisteredType("int"));
 	pass.setResolvedType(T2.symbol(), tm.getRegisteredType("float"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
-	CHECK(resolver.hasMoreSolutions(tm.getConstraint(constraintID), &tm));
-	CHECK(resolver.resolveNext(tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
-	CHECK(resolver.score(tm.getConstraint(constraintID), &tm) > 0);
+	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 0);
 }
 
 TEST_CASE("test resolve equals have t0", "[resolver]") {
@@ -140,10 +140,10 @@ TEST_CASE("test resolve equals have t0", "[resolver]") {
 	typecheck::ConstraintPass pass;
 	pass.setResolvedType(T1.symbol(), tm.getRegisteredType("int"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
-	CHECK(resolver.hasMoreSolutions(tm.getConstraint(constraintID), &tm));
-	CHECK(resolver.resolveNext(tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
-	CHECK(resolver.score(tm.getConstraint(constraintID), &tm) == 0);
+	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
 }
 
 TEST_CASE("test resolve equals have t1", "[resolver]") {
@@ -156,10 +156,10 @@ TEST_CASE("test resolve equals have t1", "[resolver]") {
 	typecheck::ConstraintPass pass;
 	pass.setResolvedType(T2.symbol(), tm.getRegisteredType("int"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
-	CHECK(resolver.hasMoreSolutions(tm.getConstraint(constraintID), &tm));
-	CHECK(resolver.resolveNext(tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
-	CHECK(resolver.score(tm.getConstraint(constraintID), &tm) == 0);
+	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
 }
 
 TEST_CASE("test resolve equals have neither", "[resolver]") {
@@ -171,10 +171,10 @@ TEST_CASE("test resolve equals have neither", "[resolver]") {
 
 	typecheck::ConstraintPass pass;
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
-	CHECK(resolver.hasMoreSolutions(tm.getConstraint(constraintID), &tm));
-	CHECK(!resolver.resolveNext(tm.getConstraint(constraintID), &tm));
+	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+	CHECK(!resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
-	CHECK(resolver.score(tm.getConstraint(constraintID), &tm) > 0);
+	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 0);
 }
 
 
@@ -233,7 +233,7 @@ TEST_CASE("solve basic type int equals constraint", "[constraint]") {
 
 	// type(1) == type(2);
 	auto T1 = tm.CreateTypeVar(); // These are names of type variables, not actual types.
-	auto T2 = tm.CreateTypeVar(); 
+	auto T2 = tm.CreateTypeVar();
 
 	auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
 	auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
