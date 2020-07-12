@@ -20,7 +20,7 @@ typecheck::ConstraintPass typecheck::ConstraintPass::CreateCopy() const {
 void typecheck::ConstraintPass::CopyToExisting(ConstraintPass* dest) const {
 	dest->resolvedTypes = this->resolvedTypes;
 	dest->score = this->score;
-	dest->is_valid = dest->is_valid && this->is_valid;
+	dest->is_valid = this->is_valid;
 }
 
 std::size_t typecheck::ConstraintPass::CalcScore(const TypeManager* manager) {
