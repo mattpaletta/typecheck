@@ -27,20 +27,20 @@ namespace typecheck {
 			const auto T1 = constraint.types().second();
 
 			if (this->pass) {
-				const bool hasT0 = this->pass->hasResolvedType(T0.name());
-				const bool hasT1 = this->pass->hasResolvedType(T1.name());
+				const bool hasT0 = this->pass->hasResolvedType(T0);
+				const bool hasT1 = this->pass->hasResolvedType(T1);
 				if (hasT0 && hasT1) {
 					// We will determine if they are the same in the 'score'
 					return true;
 
 				} else if (hasT0) {
 					// Don't have T1
-					this->pass->setResolvedType(T1.name(), this->pass->getResolvedType(T0.name()));
+					this->pass->setResolvedType(T1, this->pass->getResolvedType(T0));
 					return true;
 
 				} else if (hasT1) {
 					// Don't have T0
-					this->pass->setResolvedType(T0.name(), this->pass->getResolvedType(T1.name()));
+					this->pass->setResolvedType(T0, this->pass->getResolvedType(T1));
 					return true;
 
 				} else {
@@ -59,8 +59,8 @@ namespace typecheck {
 				return std::numeric_limits<std::size_t>::max();
 			}
 
-			const auto T0Var = constraint.types().first().name();
-			const auto T1Var = constraint.types().second().name();
+			const auto T0Var = constraint.types().first();
+			const auto T1Var = constraint.types().second();
 
 			if (this->pass && this->pass->hasResolvedType(T0Var) && this->pass->hasResolvedType(T1Var)) {
 				const auto T0 = this->pass->getResolvedType(T0Var);

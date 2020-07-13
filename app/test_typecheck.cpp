@@ -11,60 +11,6 @@
 #include <typecheck/resolvers/ResolveConformsTo.hpp>
 #include <typecheck/resolvers/ResolveEquals.hpp>
 
-/*
-TEST_CASE("test integer constraint", "[typecheck]") {
-	operations_research::MPSolver solver("integer_constant", operations_research::MPSolver::CBC_MIXED_INTEGER_PROGRAMMING);
-	std::vector<operations_research::MPVariable*> vars;
-	auto make_var = [&vars, &solver](const std::string& name) {
-		vars.emplace_back(solver.MakeIntVar(0, 1, name));
-	};
-	std::vector<std::string> vars_to_make = {"T0", "T1"};
-	for (auto& name : vars_to_make) {
-		// Create 'basic vars'
-		make_var(name + "_i");
-		make_var(name + "_f");
-		make_var(name + "_b");
-
-
-		// The type TX can only be one of (int, float, bool)
-		auto* constraint = solver.MakeRowConstraint(1, 1, name + "_oneof");
-		constraint->SetCoefficient(solver.LookupVariableOrNull(name + "_i"), 1);
-		constraint->SetCoefficient(solver.LookupVariableOrNull(name + "_f"), 1);
-		constraint->SetCoefficient(solver.LookupVariableOrNull(name + "_b"), 1);
-	}
-
-	// Minimize the number of conversions to do
-	auto* objective = solver.MutableObjective();
-
-	// T0 is an int
-	objective->SetCoefficient(solver.LookupVariableOrNull("T0_i"), 1);
-	objective->SetCoefficient(solver.LookupVariableOrNull("T0_b"), 0);
-	objective->SetCoefficient(solver.LookupVariableOrNull("T0_f"), 0);
-
-	// T1 is a float
-	objective->SetCoefficient(solver.LookupVariableOrNull("T1_i"), 0);
-	objective->SetCoefficient(solver.LookupVariableOrNull("T1_b"), 0);
-	objective->SetCoefficient(solver.LookupVariableOrNull("T1_f"), 1);
-
-	objective->SetMaximization();
-
-	// T0 == T1
-	solver.Solve();
-}
-
-TEST_CASE("test int constraint", "[typecheck]") {
-	TypeManager tm;
-	// i = 0;
-	// i == int
-	Constraint c;
-	c.kind = Bind;
-	c.restriction = DeepEquality;
-	c.Types.first = TypeSymbol::Integer;
-	tm.add(&c);
-	tm.solve();
-};
-*/
-
 // Utility function to avoid boilerplate code in testing.
 void setupTypeManager(typecheck::TypeManager* tm) {
 	CHECK(tm->registerType("int"));
@@ -104,8 +50,8 @@ TEST_CASE("test resolve equals have both", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T1.symbol(), tm.getRegisteredType("int"));
-	pass.setResolvedType(T2.symbol(), tm.getRegisteredType("int"));
+	pass.setResolvedType(T1, tm.getRegisteredType("int"));
+	pass.setResolvedType(T2, tm.getRegisteredType("int"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -121,8 +67,8 @@ TEST_CASE("test resolve equals have both not equal", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T1.symbol(), tm.getRegisteredType("int"));
-	pass.setResolvedType(T2.symbol(), tm.getRegisteredType("float"));
+	pass.setResolvedType(T1, tm.getRegisteredType("int"));
+	pass.setResolvedType(T2, tm.getRegisteredType("float"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -138,7 +84,7 @@ TEST_CASE("test resolve equals have t0", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T1.symbol(), tm.getRegisteredType("int"));
+	pass.setResolvedType(T1, tm.getRegisteredType("int"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -154,7 +100,7 @@ TEST_CASE("test resolve equals have t1", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T2.symbol(), tm.getRegisteredType("int"));
+	pass.setResolvedType(T2, tm.getRegisteredType("int"));
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -307,4 +253,28 @@ TEST_CASE("solve basic type conforms to triangle conversion solvable constraint"
 	auto constraintT5 = tm.CreateEqualsConstraint(T2, T3);
 
 	CHECK(tm.solve());
+}
+
+TEST_CASE("solve convertible constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+
+    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    auto constraintT3 = tm.CreateConvertibleConstraint(T1, T2);
+
+    CHECK(tm.solve());
+}
+
+TEST_CASE("solve convertible reverse constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+
+    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    auto constraintT3 = tm.CreateConvertibleConstraint(T2, T1);
+
+    CHECK(!tm.solve());
 }

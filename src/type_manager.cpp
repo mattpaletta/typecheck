@@ -4,33 +4,53 @@
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
 #include "typecheck/generic_type_generator.hpp"       // for GenericTypeGene...
+
 #include "typecheck/resolver.hpp"                     // for Resolver
 #include "typecheck/resolvers/ResolveConformsTo.hpp"  // for ResolveConformsTo
 #include "typecheck/resolvers/ResolveEquals.hpp"      // for ResolveEquals
+#include "typecheck/resolvers/ResolveConvertible.hpp" // for ResolveConvertible
+
 #include "typecheck/type_solver.hpp"                  // for TypeSolver
 #include "typecheck_protos/function_definition.pb.h"  // for FunctionDefinition
 #include "typecheck_protos/type.pb.h"                 // for Type, TypeVar
+#include <google/protobuf/util/message_differencer.h>
 
 typecheck::TypeManager::TypeManager() {}
 
 bool typecheck::TypeManager::registerType(const std::string& name) {
+    Type ty;
+    ty.set_name(name);
+    return this->registerType(ty);
+}
+
+bool typecheck::TypeManager::registerType(const Type& name) {
 	// Determine if has type
 	const auto alreadyHasType = this->hasRegisteredType(name);
 	if (!alreadyHasType) {
 		typecheck::Type type;
-		type.set_name(name);
+		type.CopyFrom(name);
 		this->registeredTypes.emplace_back(type);
 	}
 	return !alreadyHasType;
 }
 
 bool typecheck::TypeManager::hasRegisteredType(const std::string& name) const noexcept {
-	return !this->getRegisteredType(name).name().empty();
+    return !this->getRegisteredType(name).name().empty();
+}
+
+bool typecheck::TypeManager::hasRegisteredType(const Type& name) const noexcept {
+    return !this->getRegisteredType(name).name().empty();
 }
 
 typecheck::Type typecheck::TypeManager::getRegisteredType(const std::string& name) const noexcept {
+    Type ty;
+    ty.set_name(name);
+    return this->getRegisteredType(ty);
+}
+
+typecheck::Type typecheck::TypeManager::getRegisteredType(const Type& name) const noexcept {
 	for (auto& type : this->registeredTypes) {
-		if (type.name() == name) {
+        if (type.name() == name.name()) {
 			return type;
 		}
 	}
@@ -39,7 +59,17 @@ typecheck::Type typecheck::TypeManager::getRegisteredType(const std::string& nam
 }
 
 bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::string& T1) {
-	if (T0 == T1) {
+    Type t0;
+    t0.set_name(T0);
+
+    Type t1;
+    t1.set_name(T1);
+
+    return this->setConvertible(t0, t1);
+}
+
+bool typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) {
+    if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 		return true;
 	}
 
@@ -59,23 +89,46 @@ typecheck::Type typecheck::TypeManager::getResolvedType(const typecheck::TypeVar
 }
 
 bool typecheck::TypeManager::isConvertible(const std::string& T0, const std::string& T1) const noexcept {
-	if (T0 == T1) {
+    Type t0;
+    t0.set_name(T0);
+
+    Type t1;
+    t1.set_name(T1);
+    return this->isConvertible(t0, t1);
+}
+
+bool typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept {
+    if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 		return true;
 	}
 
 	const auto t0_ptr = this->getRegisteredType(T0);
 	const auto t1_ptr = this->getRegisteredType(T1);
 
-	if (this->convertible.find(T0) == this->convertible.end()) {
+    if (this->convertible.find(T0.name()) == this->convertible.end()) {
 		// T0 is not in the map, meaning the conversion won't be there.
 		return false;
 	}
 
-	if (!t0_ptr.name().empty() && !t1_ptr.name().empty() && this->convertible.at(T0).find(t1_ptr.name()) != this->convertible.at(T0).end()) {
+    if (!t0_ptr.name().empty() && !t1_ptr.name().empty() && this->convertible.at(T0.name()).find(t1_ptr.name()) != this->convertible.at(T0.name()).end()) {
 		// Convertible from T0 -> T1
 		return true;
 	}
 	return false;
+}
+
+std::vector<typecheck::Type> typecheck::TypeManager::getConvertible(const Type& T0) const {
+    std::vector<Type> out;
+    if (this->convertible.find(T0.name()) != this->convertible.end()) {
+        // Load into vector
+        for (auto& convert : this->convertible.at(T0.name())) {
+            Type type;
+            type.set_name(convert);
+            out.emplace_back(std::move(type));
+        }
+    }
+
+    return out;
 }
 
 void typecheck::TypeManager::registerFunctionDefinition(const typecheck::FunctionDefinition& funcDef) {
@@ -118,6 +171,7 @@ bool typecheck::TypeManager::solve() {
 	constexpr auto default_id = std::numeric_limits<std::size_t>::max();
 	this->registerResolver(std::make_unique<typecheck::ResolveConformsTo>(nullptr, default_id));
 	this->registerResolver(std::make_unique<typecheck::ResolveEquals>(nullptr, default_id));
+    this->registerResolver(std::make_unique<typecheck::ResolveConvertible>(nullptr, default_id));
 
 	// Finally, solve
 	return this->solver.solve(this);

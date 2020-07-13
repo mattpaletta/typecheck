@@ -41,13 +41,19 @@ namespace typecheck {
 		TypeManager& operator=(TypeManager&&) = delete;
 
 		// 'Register' types
-		bool registerType(const std::string& name);
-		bool hasRegisteredType(const std::string& name) const noexcept;
-		Type getRegisteredType(const std::string& name) const noexcept;
+        bool registerType(const std::string& name);
+		bool registerType(const Type& name);
+        bool hasRegisteredType(const std::string& name) const noexcept;
+		bool hasRegisteredType(const Type& name) const noexcept;
+        Type getRegisteredType(const std::string& name) const noexcept;
+		Type getRegisteredType(const Type& name) const noexcept;
 
 		// 'Register' convertible types
-		bool setConvertible(const std::string& T0, const std::string& T1);
-		bool isConvertible(const std::string& T0, const std::string& T1) const noexcept;
+        bool setConvertible(const std::string& T0, const std::string& T1);
+		bool setConvertible(const Type& T0, const Type& T1);
+        bool isConvertible(const std::string& T0, const std::string& T1) const noexcept;
+		bool isConvertible(const Type& T0, const Type& T1) const noexcept;
+        std::vector<Type> getConvertible(const Type& T0) const;
 
 		// 'Register' function definitions
 		void registerFunctionDefinition(const FunctionDefinition& funcDef);
@@ -56,8 +62,9 @@ namespace typecheck {
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
 
 		typecheck::TypeVar CreateTypeVar();
-		std::size_t CreateLiteralConformsToConstraint(const TypeVar& t0, const typecheck::KnownProtocolKind_LiteralProtocol& protocol);
-		std::size_t CreateEqualsConstraint(const typecheck::TypeVar& t0, const typecheck::TypeVar& t1);
+		std::size_t CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
+		std::size_t CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
+        std::size_t CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
 		const Constraint* getConstraint(const std::size_t id) const;
 
 		bool solve();

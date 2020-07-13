@@ -23,8 +23,8 @@ std::size_t typecheck::TypeManager::CreateEqualsConstraint(const typecheck::Type
 	TYPECHECK_ASSERT(this->registeredTypeVars.find(t0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
 	TYPECHECK_ASSERT(this->registeredTypeVars.find(t1.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
 
-	constraint.mutable_types()->mutable_first()->set_name(t0.symbol());
-	constraint.mutable_types()->mutable_second()->set_name(t1.symbol());
+	constraint.mutable_types()->mutable_first()->CopyFrom(t0);
+	constraint.mutable_types()->mutable_second()->CopyFrom(t1);
 
 	this->constraints.emplace_back(constraint);
 	return constraint.id();
@@ -36,9 +36,24 @@ std::size_t typecheck::TypeManager::CreateLiteralConformsToConstraint(const type
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
 	TYPECHECK_ASSERT(this->registeredTypeVars.find(t0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
 
-	constraint.mutable_conforms()->mutable_type()->set_name(t0.symbol());
+	constraint.mutable_conforms()->mutable_type()->CopyFrom(t0);
 	constraint.mutable_conforms()->mutable_protocol()->set_literal(protocol);
 
 	this->constraints.emplace_back(constraint);
 	return constraint.id();
+}
+
+std::size_t typecheck::TypeManager::CreateConvertibleConstraint(const typecheck::TypeVar& T0, const typecheck::TypeVar& T1) {
+    auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::Conversion, this->constraint_generator.next_id());
+    
+    TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
+    TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+
+    TYPECHECK_ASSERT(!T1.symbol().empty(), "Cannot use empty type when creating constraint.");
+    TYPECHECK_ASSERT(this->registeredTypeVars.find(T1.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+
+    constraint.mutable_types()->mutable_first()->CopyFrom(T0);
+    constraint.mutable_types()->mutable_second()->CopyFrom(T1);
+    this->constraints.emplace_back(constraint);
+    return constraint.id();
 }

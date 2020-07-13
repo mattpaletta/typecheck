@@ -46,8 +46,8 @@ namespace typecheck {
 		std::size_t CalcScore(const TypeManager* manager);
 		bool IsValid(const TypeManager* manager);
 
-		Type getResolvedType(const std::string& var) const;
-		bool hasResolvedType(const std::string& var) const;
-		void setResolvedType(const std::string& var, const Type& type);
+		Type getResolvedType(const TypeVar& var) const;
+		bool hasResolvedType(const TypeVar& var) const;
+		void setResolvedType(const TypeVar& var, const Type& type);
 	};
 }

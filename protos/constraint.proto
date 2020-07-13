@@ -90,28 +90,28 @@ message Constraint {
 	int64 id = 7;
 
 	message Types {
-		typecheck.Type first = 1;
-		typecheck.Type second = 2;
-		typecheck.Type third = 3;
+		typecheck.TypeVar first = 1;
+		typecheck.TypeVar second = 2;
+		typecheck.TypeVar third = 3;
 	};
 
 	message Member {
-		typecheck.Type first = 1;
-		typecheck.Type second = 2;
+		typecheck.TypeVar first = 1;
+		typecheck.TypeVar second = 2;
 //		oneof {
 			int64 declContextPtr = 3; // Pointer to the declaration context
 //		}
 	}
 
 	message Overload {
-		typecheck.Type type = 1;
+		typecheck.TypeVar type = 1;
 		int64 overloadChoice = 2;
 		int64 declContextPtr = 3; // Pointer to the declaration context
 	}
 
 	message Conforms {
 		KnownProtocolKind protocol = 1;
-		typecheck.Type type = 2;
+		typecheck.TypeVar type = 2;
 	}
 
 	oneof constraint {

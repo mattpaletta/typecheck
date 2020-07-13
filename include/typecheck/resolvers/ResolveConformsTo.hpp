@@ -87,14 +87,14 @@ namespace typecheck {
 				this->state.pop_back();
 
 				auto typeVar = constraint.conforms().type();
-				this->pass->setResolvedType(typeVar.name(), nextType);
+				this->pass->setResolvedType(typeVar, nextType);
 				return true;
 			}
 			return false;
 		}
 
 		virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override {
-			const auto typeVar = constraint.conforms().type().name();
+			const auto typeVar = constraint.conforms().type();
 
 			if (this->pass && this->currLiteralProtocol && this->pass->hasResolvedType(typeVar)) {
 				const auto resolvedType = this->pass->getResolvedType(typeVar);

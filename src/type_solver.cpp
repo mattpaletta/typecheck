@@ -28,5 +28,5 @@ bool typecheck::TypeSolver::solve(const TypeManager* manager) {
 }
 
 typecheck::Type typecheck::TypeSolver::getResolvedType(const typecheck::TypeVar& _typeVar) const {
-	return this->last_pass.getResolvedType(_typeVar.symbol());
+	return this->last_pass.getResolvedType(_typeVar);
 }
