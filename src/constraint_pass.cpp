@@ -54,7 +54,7 @@ std::size_t typecheck::ConstraintPass::CalcScore(const TypeManager* manager) {
 
 typecheck::Type typecheck::ConstraintPass::getResolvedType(const TypeVar& var) const {
 	Type type;
-    type.set_name(this->resolvedTypes.at(var.symbol()));
+    type.CopyFrom(this->resolvedTypes.at(var.symbol()));
 	return type;
 }
 
@@ -63,8 +63,8 @@ bool typecheck::ConstraintPass::hasResolvedType(const TypeVar& var) const {
 }
 
 void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, const typecheck::Type& type) {
-    if (!type.name().empty() && !var.symbol().empty()) {
-        this->resolvedTypes[var.symbol()] = type.name();
+    if ((type.has_raw() || type.has_func()) && !var.symbol().empty()) {
+        this->resolvedTypes[var.symbol()] = type;
 	}
 }
 

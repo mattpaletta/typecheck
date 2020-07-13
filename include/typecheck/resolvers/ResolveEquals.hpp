@@ -1,6 +1,7 @@
 #pragma once
 
 #include "typecheck/resolver.hpp"
+#include <google/protobuf/util/message_differencer.h>
 
 namespace typecheck {
 	class ResolveEquals : public Resolver {
@@ -68,7 +69,7 @@ namespace typecheck {
 
 				// std::cout << "Score Equals: " << T0.name() << " == " << T1.name() << std::endl;
 
-				if (T0.name() == T1.name()) {
+				if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 					// Perfect score or not.
 					return 0;
 				}

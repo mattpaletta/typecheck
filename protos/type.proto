@@ -3,8 +3,20 @@ syntax = "proto3";
 package typecheck;
 // option cc_enable_arenas = true;
 
-message Type {
+message Function {
+	repeated Type args = 1;
+	Type return = 2;
+}
+
+message RawType {
 	string name = 1;
+}
+
+message Type {
+	oneof kind {
+		RawType raw = 1;
+		Function func = 2;
+	}
 };
 
 message TypeVar {

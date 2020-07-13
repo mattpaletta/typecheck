@@ -7,6 +7,8 @@
 #include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
 #include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
 
+#include <google/protobuf/util/message_differencer.h>
+
 #include <iostream>
 #include <memory>
 #include <typecheck_protos/constraint.pb.h>
@@ -101,7 +103,7 @@ namespace typecheck {
 				// Is it a preferred type or other type?
 				for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
 					// std::cout << "Conforms To: " << pref.name() << " == " << resolvedType.name() << std::endl;
-					if (pref.name() == resolvedType.name()) {
+                    if (google::protobuf::util::MessageDifferencer::Equals(pref, resolvedType)) {
 						// It's preferred! Perfect score
 						return 0;
 					}
@@ -109,7 +111,7 @@ namespace typecheck {
 
 				for (auto& other : this->currLiteralProtocol->getOtherTypes()) {
 					// std::cout << "Conforms To: " << other.name() << " == " << resolvedType.name() << std::endl;
-					if (other.name() == resolvedType.name()) {
+					if (google::protobuf::util::MessageDifferencer::Equals(other, resolvedType)) {
 						// It's other! Resolved, but not perfect score
 						return 1;
 					}

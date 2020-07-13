@@ -8,7 +8,7 @@ namespace typecheck {
 	protected:
 		Type ty(const std::string& _ty) const {
 			Type ty;
-			ty.set_name(_ty);
+            ty.mutable_raw()->set_name(_ty);
 			return ty;
 		}
 

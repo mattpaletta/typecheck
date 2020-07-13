@@ -13,13 +13,14 @@
 #include "typecheck/type_solver.hpp"                  // for TypeSolver
 #include "typecheck_protos/function_definition.pb.h"  // for FunctionDefinition
 #include "typecheck_protos/type.pb.h"                 // for Type, TypeVar
+
 #include <google/protobuf/util/message_differencer.h>
 
 typecheck::TypeManager::TypeManager() {}
 
 bool typecheck::TypeManager::registerType(const std::string& name) {
     Type ty;
-    ty.set_name(name);
+    ty.mutable_raw()->set_name(name);
     return this->registerType(ty);
 }
 
@@ -35,22 +36,24 @@ bool typecheck::TypeManager::registerType(const Type& name) {
 }
 
 bool typecheck::TypeManager::hasRegisteredType(const std::string& name) const noexcept {
-    return !this->getRegisteredType(name).name().empty();
+    const auto returned = this->getRegisteredType(name);
+    return returned.has_raw() || returned.has_func();
 }
 
 bool typecheck::TypeManager::hasRegisteredType(const Type& name) const noexcept {
-    return !this->getRegisteredType(name).name().empty();
+    const auto returned = this->getRegisteredType(name);
+    return returned.has_raw() || returned.has_func();
 }
 
 typecheck::Type typecheck::TypeManager::getRegisteredType(const std::string& name) const noexcept {
     Type ty;
-    ty.set_name(name);
+    ty.mutable_raw()->set_name(name);
     return this->getRegisteredType(ty);
 }
 
 typecheck::Type typecheck::TypeManager::getRegisteredType(const Type& name) const noexcept {
 	for (auto& type : this->registeredTypes) {
-        if (type.name() == name.name()) {
+        if (google::protobuf::util::MessageDifferencer::Equals(type, name)) {
 			return type;
 		}
 	}
@@ -60,10 +63,10 @@ typecheck::Type typecheck::TypeManager::getRegisteredType(const Type& name) cons
 
 bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::string& T1) {
     Type t0;
-    t0.set_name(T0);
+    t0.mutable_raw()->set_name(T0);
 
     Type t1;
-    t1.set_name(T1);
+    t1.mutable_raw()->set_name(T1);
 
     return this->setConvertible(t0, t1);
 }
@@ -76,9 +79,13 @@ bool typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) {
 	const auto t0_ptr = this->getRegisteredType(T0);
 	const auto t1_ptr = this->getRegisteredType(T1);
 
-	if (!t0_ptr.name().empty() && !t1_ptr.name().empty() && this->convertible[t0_ptr.name()].find(t1_ptr.name()) == this->convertible[t0_ptr.name()].end()) {
+    // Function types not convertible
+    if (t0_ptr.has_func() || t1_ptr.has_func()) {
+        // Functions not convertible to each other
+        return false;
+    } else if (!t0_ptr.raw().name().empty() && !t1_ptr.raw().name().empty() && this->convertible[t0_ptr.raw().name()].find(t1_ptr.raw().name()) == this->convertible[t0_ptr.raw().name()].end()) {
 		// Convertible from T0 -> T1
-		this->convertible[t0_ptr.name()].insert(t1_ptr.name());
+        this->convertible[t0_ptr.raw().name()].insert(t1_ptr.raw().name());
 		return true;
 	}
 	return false;
@@ -90,10 +97,10 @@ typecheck::Type typecheck::TypeManager::getResolvedType(const typecheck::TypeVar
 
 bool typecheck::TypeManager::isConvertible(const std::string& T0, const std::string& T1) const noexcept {
     Type t0;
-    t0.set_name(T0);
+    t0.mutable_raw()->set_name(T0);
 
     Type t1;
-    t1.set_name(T1);
+    t1.mutable_raw()->set_name(T1);
     return this->isConvertible(t0, t1);
 }
 
@@ -105,12 +112,17 @@ bool typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const
 	const auto t0_ptr = this->getRegisteredType(T0);
 	const auto t1_ptr = this->getRegisteredType(T1);
 
-    if (this->convertible.find(T0.name()) == this->convertible.end()) {
+    // Function types not convertible
+    if (t0_ptr.has_func() || t1_ptr.has_func()) {
+        return false;
+    }
+
+    if (this->convertible.find(T0.raw().name()) == this->convertible.end()) {
 		// T0 is not in the map, meaning the conversion won't be there.
 		return false;
 	}
 
-    if (!t0_ptr.name().empty() && !t1_ptr.name().empty() && this->convertible.at(T0.name()).find(t1_ptr.name()) != this->convertible.at(T0.name()).end()) {
+    if (!t0_ptr.raw().name().empty() && !t1_ptr.raw().name().empty() && this->convertible.at(T0.raw().name()).find(t1_ptr.raw().name()) != this->convertible.at(T0.raw().name()).end()) {
 		// Convertible from T0 -> T1
 		return true;
 	}
@@ -119,11 +131,17 @@ bool typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const
 
 std::vector<typecheck::Type> typecheck::TypeManager::getConvertible(const Type& T0) const {
     std::vector<Type> out;
-    if (this->convertible.find(T0.name()) != this->convertible.end()) {
+
+    // Function types not convertible
+    if (T0.has_func()) {
+        return out;
+    }
+
+    if (this->convertible.find(T0.raw().name()) != this->convertible.end()) {
         // Load into vector
-        for (auto& convert : this->convertible.at(T0.name())) {
+        for (auto& convert : this->convertible.at(T0.raw().name())) {
             Type type;
-            type.set_name(convert);
+            type.mutable_raw()->set_name(convert);
             out.emplace_back(std::move(type));
         }
     }

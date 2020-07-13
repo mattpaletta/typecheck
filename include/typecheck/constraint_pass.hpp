@@ -25,7 +25,9 @@ namespace typecheck {
 		const ConstraintPass* prev = nullptr;
 	private:
 		std::size_t score = std::numeric_limits<std::size_t>::max();
-		std::map<std::string, std::string> resolvedTypes;
+
+        // The key must be string, because 'typeVar' not comparable.
+		std::map<std::string, Type> resolvedTypes;
 
 		mutable std::map<ConstraintKind, std::unique_ptr<Resolver>> resolvers;
 		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);

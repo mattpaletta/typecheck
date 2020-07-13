@@ -173,7 +173,6 @@ TEST_CASE("load basic type conversions", "[type_manager]") {
 	CHECK(!tm.isConvertible("double", "float"));
 }
 
-
 TEST_CASE("solve basic type int equals constraint", "[constraint]") {
 	getDefaultTypeManager(tm);
 
@@ -187,8 +186,11 @@ TEST_CASE("solve basic type int equals constraint", "[constraint]") {
 
 	CHECK(tm.solve());
 
-	CHECK(tm.getResolvedType(T1).name() == "int");
-	CHECK(tm.getResolvedType(T2).name() == "int");
+    REQUIRE(tm.getResolvedType(T1).has_raw());
+    REQUIRE(tm.getResolvedType(T2).has_raw());
+
+    CHECK(tm.getResolvedType(T1).raw().name() == "int");
+    CHECK(tm.getResolvedType(T2).raw().name() == "int");
 }
 
 
@@ -204,8 +206,11 @@ TEST_CASE("solve basic type float equals constraint", "[constraint]") {
 
 	CHECK(tm.solve());
 
-	CHECK(tm.getResolvedType(T1).name() == "float");
-	CHECK(tm.getResolvedType(T2).name() == "float");
+    REQUIRE(tm.getResolvedType(T1).has_raw());
+    REQUIRE(tm.getResolvedType(T2).has_raw());
+
+    CHECK(tm.getResolvedType(T1).raw().name() == "float");
+    CHECK(tm.getResolvedType(T2).raw().name() == "float");
 }
 
 
