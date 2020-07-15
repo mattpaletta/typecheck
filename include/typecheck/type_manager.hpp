@@ -7,7 +7,6 @@
 
 #include <typecheck_protos/constraint.pb.h>
 #include <typecheck_protos/type.pb.h>
-#include <typecheck_protos/function_definition.pb.h>
 #include "type_solver.hpp"
 #include "generic_type_generator.hpp"
 #include "resolver.hpp"
@@ -55,8 +54,9 @@ namespace typecheck {
 		bool isConvertible(const Type& T0, const Type& T1) const noexcept;
         std::vector<Type> getConvertible(const Type& T0) const;
 
-		// 'Register' function definitions
-		void registerFunctionDefinition(const FunctionDefinition& funcDef);
+		// 'Register' function definition using Constraint
+        // Warning, this method is slow and should not be used frequently.
+        std::vector<Type> getFunctionOverloads(const TypeVar& var) const;
 
 		// `Register` resolvers
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
@@ -65,7 +65,10 @@ namespace typecheck {
 		std::size_t CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
 		std::size_t CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
         std::size_t CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-		const Constraint* getConstraint(const std::size_t id) const;
+        std::size_t CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
+        std::size_t CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
+        std::size_t CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
+        const Constraint* getConstraint(const std::size_t id) const;
 
 		bool solve();
 		Type getResolvedType(const TypeVar& type) const;

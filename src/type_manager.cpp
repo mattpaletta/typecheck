@@ -9,10 +9,11 @@
 #include "typecheck/resolvers/ResolveConformsTo.hpp"  // for ResolveConformsTo
 #include "typecheck/resolvers/ResolveEquals.hpp"      // for ResolveEquals
 #include "typecheck/resolvers/ResolveConvertible.hpp" // for ResolveConvertible
+#include "typecheck/resolvers/ResolveApplicableFunction.hpp" // for ResolveApplicableFunction
+#include "typecheck/resolvers/ResolveBindOverload.hpp" // for ResolveBindOverload
 
 #include "typecheck/type_solver.hpp"                  // for TypeSolver
-#include "typecheck_protos/function_definition.pb.h"  // for FunctionDefinition
-#include "typecheck_protos/type.pb.h"                 // for Type, TypeVar
+#include <typecheck_protos/type.pb.h>                 // for Type, TypeVar
 
 #include <google/protobuf/util/message_differencer.h>
 
@@ -59,6 +60,19 @@ typecheck::Type typecheck::TypeManager::getRegisteredType(const Type& name) cons
 	}
 
 	return {};
+}
+
+std::vector<typecheck::Type> typecheck::TypeManager::getFunctionOverloads(const TypeVar& var) const {
+    std::vector<typecheck::Type> overloads;
+    for (auto& constraint : this->constraints) {
+        // Lookup by 'var', to deal with anonymous functions.
+        if (constraint.kind() == ConstraintKind::ApplicableFunction &&
+            google::protobuf::util::MessageDifferencer::Equals(constraint.explicit_().var(), var)) {
+            overloads.push_back(constraint.explicit_().type());
+        }
+    }
+
+    return overloads;
 }
 
 bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::string& T1) {
@@ -149,10 +163,6 @@ std::vector<typecheck::Type> typecheck::TypeManager::getConvertible(const Type& 
     return out;
 }
 
-void typecheck::TypeManager::registerFunctionDefinition(const typecheck::FunctionDefinition& funcDef) {
-	this->functions.push_back(funcDef);
-}
-
 bool typecheck::TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolver) {
 	bool will_insert = this->registeredResolvers.find(resolver->kind) == this->registeredResolvers.end();
 	if (will_insert) {
@@ -190,6 +200,8 @@ bool typecheck::TypeManager::solve() {
 	this->registerResolver(std::make_unique<typecheck::ResolveConformsTo>(nullptr, default_id));
 	this->registerResolver(std::make_unique<typecheck::ResolveEquals>(nullptr, default_id));
     this->registerResolver(std::make_unique<typecheck::ResolveConvertible>(nullptr, default_id));
+    this->registerResolver(std::make_unique<typecheck::ResolveApplicableFunction>(nullptr, default_id));
+    this->registerResolver(std::make_unique<typecheck::ResolveBindOverload>(nullptr, default_id));
 
 	// Finally, solve
 	return this->solver.solve(this);

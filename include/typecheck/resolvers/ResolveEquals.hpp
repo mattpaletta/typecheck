@@ -67,7 +67,7 @@ namespace typecheck {
 				const auto T0 = this->pass->getResolvedType(T0Var);
 				const auto T1 = this->pass->getResolvedType(T1Var);
 
-				// std::cout << "Score Equals: " << T0.name() << " == " << T1.name() << std::endl;
+//                std::cout << "Score Equals: " << constraint.id() << " " << T0.raw().name() << " == " << T1.raw().name() << std::endl;
 
 				if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 					// Perfect score or not.

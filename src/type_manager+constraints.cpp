@@ -57,3 +57,53 @@ std::size_t typecheck::TypeManager::CreateConvertibleConstraint(const typecheck:
     this->constraints.emplace_back(constraint);
     return constraint.id();
 }
+
+std::size_t typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) {
+    // overload to support creating from a vector.
+    typecheck::Type funcType;
+    for (auto& arg : args) {
+        funcType.mutable_func()->add_args()->CopyFrom(arg);
+        if (arg.has_raw()) {
+            // These types are 'type': int, float, etc., so don't have to look them up as registered TypeVars.
+            TYPECHECK_ASSERT(!arg.raw().name().empty(), "Cannot use empty type when creating constraint.");
+        }
+    }
+    funcType.mutable_func()->mutable_returntype()->CopyFrom(return_type);
+    return this->CreateApplicableFunctionConstraint(T0, funcType);
+}
+
+std::size_t typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) {
+    auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::ApplicableFunction, this->constraint_generator.next_id());
+
+    TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
+    TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+
+    TYPECHECK_ASSERT(type.has_func(), "Must use a function type when creating function constraint.");
+
+    constraint.mutable_explicit_()->mutable_var()->CopyFrom(T0);
+    constraint.mutable_explicit_()->mutable_type()->CopyFrom(type);
+
+    this->constraints.emplace_back(constraint);
+    return constraint.id();
+}
+
+std::size_t typecheck::TypeManager::CreateBindFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::TypeVar>& args, const typecheck::TypeVar& returnType) {
+    auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::BindOverload, this->constraint_generator.next_id());
+
+    TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
+    TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+    constraint.mutable_overload()->mutable_type()->CopyFrom(T0);
+
+    for (auto& arg : args) {
+        TYPECHECK_ASSERT(!arg.symbol().empty(), "Cannot use empty type when creating constraint.");
+        TYPECHECK_ASSERT(this->registeredTypeVars.find(arg.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+        constraint.mutable_overload()->add_argvars()->CopyFrom(arg);
+    }
+
+    TYPECHECK_ASSERT(!returnType.symbol().empty(), "Cannot use empty type when creating constraint.");
+    TYPECHECK_ASSERT(this->registeredTypeVars.find(returnType.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+    constraint.mutable_overload()->mutable_returnvar()->CopyFrom(returnType);
+
+    this->constraints.emplace_back(constraint);
+    return constraint.id();
+}

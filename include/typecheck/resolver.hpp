@@ -6,9 +6,17 @@ namespace typecheck {
 	class ConstraintPass;
 	class TypeManager;
 	class Resolver {
+    public:
+        friend ConstraintPass;
+
+        // Only ConstraintPass can copy
+        Resolver(const Resolver&) = default;
+        Resolver& operator=(const Resolver&) = default;
 	protected:
 		// WeakPtr.
 		ConstraintPass* pass;
+
+
 	public:
 		// Once set, can't ever be changed
 		const ConstraintKind kind;
@@ -16,8 +24,6 @@ namespace typecheck {
 
 		Resolver(ConstraintKind _kind, ConstraintPass* _pass, const std::size_t _id) : kind(_kind), pass(_pass), id(_id) {}
 		virtual ~Resolver() = default;
-		Resolver(const Resolver&) = delete;
-		Resolver& operator=(const Resolver&) = delete;
 
 		virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const {
 			return std::make_unique<Resolver>(this->kind, pass, id);

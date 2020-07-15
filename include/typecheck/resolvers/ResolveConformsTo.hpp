@@ -102,7 +102,7 @@ namespace typecheck {
 				const auto resolvedType = this->pass->getResolvedType(typeVar);
 				// Is it a preferred type or other type?
 				for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
-					// std::cout << "Conforms To: " << pref.name() << " == " << resolvedType.name() << std::endl;
+                    std::cout << "Conforms To: " << pref.raw().name() << " == " << resolvedType.raw().name() << std::endl;
                     if (google::protobuf::util::MessageDifferencer::Equals(pref, resolvedType)) {
 						// It's preferred! Perfect score
 						return 0;

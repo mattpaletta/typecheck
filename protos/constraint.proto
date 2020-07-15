@@ -53,6 +53,8 @@ enum ConstraintKind {
 	BindParam = 2;
 	Conversion = 3;
 	ConformsTo = 4;
+	ApplicableFunction = 5;
+	BindOverload = 6;
 }
 
 enum ConstraintRestrictionKind {
@@ -92,21 +94,28 @@ message Constraint {
 	message Types {
 		typecheck.TypeVar first = 1;
 		typecheck.TypeVar second = 2;
-		typecheck.TypeVar third = 3;
-	};
+		// typecheck.TypeVar third = 3;
+	}
+
+	message ExplicitType {
+		typecheck.TypeVar var = 1;
+		typecheck.Type type = 2;
+	}
 
 	message Member {
 		typecheck.TypeVar first = 1;
 		typecheck.TypeVar second = 2;
 //		oneof {
-			int64 declContextPtr = 3; // Pointer to the declaration context
+//			int64 declContextPtr = 3; // Pointer to the declaration context
 //		}
 	}
 
 	message Overload {
 		typecheck.TypeVar type = 1;
 		int64 overloadChoice = 2;
-		int64 declContextPtr = 3; // Pointer to the declaration context
+		repeated typecheck.TypeVar argVars = 3;
+		typecheck.TypeVar returnVar = 4;
+//		int64 declContextPtr = 3; // Pointer to the declaration context
 	}
 
 	message Conforms {
@@ -119,5 +128,6 @@ message Constraint {
 		Member member = 9;
 		Overload overload = 10;
 		Conforms conforms = 11;
+		ExplicitType explicit = 12;
 	}
 };

@@ -3,9 +3,10 @@ syntax = "proto3";
 package typecheck;
 // option cc_enable_arenas = true;
 
-message Function {
+message FunctionDefinition {
 	repeated Type args = 1;
-	Type return = 2;
+	Type returnType = 2;
+	string name = 3;
 }
 
 message RawType {
@@ -15,7 +16,7 @@ message RawType {
 message Type {
 	oneof kind {
 		RawType raw = 1;
-		Function func = 2;
+		typecheck.FunctionDefinition func = 2;
 	}
 };
 

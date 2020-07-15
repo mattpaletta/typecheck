@@ -6,7 +6,6 @@
 
 #include <typecheck_protos/type.pb.h>
 #include <typecheck_protos/constraint.pb.h>
-#include <typecheck_protos/function_definition.pb.h>
 
 #include "constraint_pass.hpp"
 
