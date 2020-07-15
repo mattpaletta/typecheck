@@ -38,22 +38,18 @@ std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& 
 
 	std::size_t new_score = 0;
 
-//    if (cached) {
-//        // Calculate sum of scores
-//        for (auto& score : this->scores) {
-//            new_score = safe_add(new_score, score.second);
-//        }
-//
-//        if (this->scores.empty()) {
-//            new_score = std::numeric_limits<std::size_t>::max();
-//        }
-//
-//        if (new_score == std::numeric_limits<std::size_t>::max()) {
-//            this->is_valid = false;
-//        }
-//
-//        return this->score; // new_score;
-//    }
+    if (cached) {
+        // Calculate sum of scores
+        for (auto& score : this->scores) {
+            new_score = safe_add(new_score, score.second);
+        }
+
+        if (this->scores.empty()) {
+            new_score = std::numeric_limits<std::size_t>::max();
+        }
+
+        return new_score;
+    }
 
     // Compute a partial score
 	for (const auto i : indices) {
