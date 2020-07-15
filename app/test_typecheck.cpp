@@ -28,7 +28,6 @@ void setupTypeManager(typecheck::TypeManager* tm) {
 	typecheck::TypeManager tm; \
 	setupTypeManager(&tm)
 
-
 TEST_CASE("test resolve conforms to", "[resolver]") {
 	getDefaultTypeManager(tm);
 	auto T1 = tm.CreateTypeVar();
@@ -40,6 +39,59 @@ TEST_CASE("test resolve conforms to", "[resolver]") {
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
 	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
+}
+
+TEST_CASE("test resolve conforms to has neither", "[resolver]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+
+    typecheck::ConstraintPass pass;
+    auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 0);
+}
+
+TEST_CASE("test resolve conforms to has one", "[resolver]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+
+    typecheck::ConstraintPass pass;
+    pass.setResolvedType(T1, tm.getRegisteredType("int"));
+    auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
+}
+
+TEST_CASE("test resolve conforms to has not conform", "[resolver]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("string");
+    auto T1 = tm.CreateTypeVar();
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+
+    typecheck::ConstraintPass pass;
+    pass.setResolvedType(T1, tm.getRegisteredType("string"));
+    auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 1);
+}
+
+TEST_CASE("test resolve conforms to has not preferred", "[resolver]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("string");
+    auto T1 = tm.CreateTypeVar();
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+
+    typecheck::ConstraintPass pass;
+    pass.setResolvedType(T1, tm.getRegisteredType("float"));
+    auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 1);
 }
 
 TEST_CASE("test resolve equals have both", "[resolver]") {
@@ -193,7 +245,6 @@ TEST_CASE("solve basic type int equals constraint", "[constraint]") {
     CHECK(tm.getResolvedType(T2).raw().name() == "int");
 }
 
-
 TEST_CASE("solve basic type float equals constraint", "[constraint]") {
 	getDefaultTypeManager(tm);
 
@@ -213,19 +264,32 @@ TEST_CASE("solve basic type float equals constraint", "[constraint]") {
     CHECK(tm.getResolvedType(T2).raw().name() == "float");
 }
 
-
-TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
+TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]") {
 	getDefaultTypeManager(tm);
 
 	auto T1 = tm.CreateTypeVar();
 	auto T2 = tm.CreateTypeVar();
 	auto T3 = tm.CreateTypeVar();
 
-	auto constraintT1 = tm.CreateEqualsConstraint(T1, T3);
+    auto constraintT1 = tm.CreateEqualsConstraint(T2, T1); // T1, T2);
 	auto constraintT2 = tm.CreateEqualsConstraint(T1, T2);
-	auto constraintT3 = tm.CreateEqualsConstraint(T2, T3);
+//	auto constraintT3 = tm.CreateEqualsConstraint(T2, T3);
 
 	CHECK(!tm.solve());
+}
+
+TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+    auto T3 = tm.CreateTypeVar();
+
+    auto constraintT1 = tm.CreateEqualsConstraint(T3, T1);
+    auto constraintT2 = tm.CreateEqualsConstraint(T1, T2);
+    auto constraintT3 = tm.CreateEqualsConstraint(T2, T3);
+
+    CHECK(!tm.solve());
 }
 
 TEST_CASE("solve basic type conforms to triangle solvable constraint", "[constraint]") {
@@ -260,7 +324,6 @@ TEST_CASE("solve basic type conforms to triangle conversion solvable constraint"
 	CHECK(tm.solve());
 }
 
-/*
 TEST_CASE("solve convertible constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
@@ -283,9 +346,9 @@ TEST_CASE("solve convertible reverse constraint", "[constraint]") {
     auto constraintT3 = tm.CreateConvertibleConstraint(T2, T1);
 
     CHECK(!tm.solve());
-}*/
+}
 
-/*
+
 TEST_CASE("solve function application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
@@ -303,8 +366,7 @@ TEST_CASE("solve function application constraint", "[constraint]") {
     REQUIRE(tm.getResolvedType(T2).has_raw());
     REQUIRE(tm.getResolvedType(T3).has_raw());
 
-    CHECK(tm.getResolvedType(T1).raw().name() == "float");
+    CHECK(tm.getResolvedType(T1).raw().name() == "int");
     CHECK(tm.getResolvedType(T2).raw().name() == "float");
     CHECK(tm.getResolvedType(T3).raw().name() == "double");
 }
-*/

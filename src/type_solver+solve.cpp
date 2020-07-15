@@ -25,73 +25,40 @@ void typecheck::TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* mana
 }
 
 void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed) const {
-    auto iterPass = pass->CreateCopy();
-
     auto best_pass = pass->CreateCopy();
+    
+    if (!indexes.empty()) {
+        // Create an original copy, used for score.
+        auto original_indices = indexes;
+        auto i = indexes.front();
+        auto* current_constraint = &manager->constraints.at(i);
+        indexes.pop_front();
 
-    if (indexes.size() == 0) {
-		// If no nodes, return!
-		return;
-	}
+        auto iterPass = pass->CreateCopy();
 
-    // Set it to initially invalid, until proven otherwise.
-    // best_pass.is_valid = false;
+        // If we have a perfect score, stop searching
+        while (iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
+            const auto did_resolve = iterPass.GetResolver(*current_constraint, manager)->resolveNext(*current_constraint, manager);
+            auto computed = iterPass.CreateCopy();
+            if (did_resolve) {
+                this->DoPass_internal(&computed, indexes, manager, prev_failed);
+            } else if (indexes.size() > 1 && prev_failed != i) {
+                auto new_list = indexes;
+                // It failed, add it to the end of the queue
+                new_list.push_back(i);
 
-    // Create an original copy, used for score.
-    auto iter_indexes = indexes;
-	auto i = indexes.front();
-	auto* current_constraint = &manager->constraints.at(i);
-    std::cout << "Solving constraint: " << i << std::endl;
-	indexes.pop_front();
+                this->DoPass_internal(&computed, new_list, manager, prev_failed == std::numeric_limits<std::size_t>::max() ? i : prev_failed);
+            } else {
+                // We failed the current one twice, not valid
+                break;
+            }
 
-	// If we have a perfect score, stop searching
-    while (/*best_pass.CalcScore(manager, true) > 0 && */ iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
-        const auto did_resolve = iterPass.GetResolver(*current_constraint, manager)->resolveNext(*current_constraint, manager);
-        if (did_resolve) {
-            this->DoPass_internal(&iterPass, indexes, manager, prev_failed);
+            if (computed.CalcScore(original_indices, manager) < best_pass.CalcScore(original_indices, manager, true)) {
+                computed.CopyToExisting(&best_pass);
+            }
         }
-        /*if (did_resolve && iterPass.IsValid(manager)) {
-            // This one got resolved successfully, but the child did not
-            // don't mark it as failed, but try again with this one at the end
-            // Switch to a different constraint, push old i first
+    }
 
-            indexes.push_back(i);
-            iterPass.ResetResolver(*current_constraint, manager);
-
-            i = indexes.front();
-
-            current_constraint = &manager->constraints.at(i);
-            indexes.pop_front();
-
-            this->DoPass_internal(&iterPass, indexes, manager, prev_failed);
-		} else */ if (!did_resolve || !iterPass.IsValid(manager)) {
-            // iterPass.ResetResolver(*current_constraint, manager);
-            
-			// It failed, add it to the end of the queue
-			indexes.push_back(i);
-			if (prev_failed == std::numeric_limits<std::size_t>::max() /* default if nothing failed */) {
-                std::cout << "Failed constraint: " << i << std::endl;
-				// Set i as the first thing that failed
-				this->DoPass_internal(&iterPass, indexes, manager, i);
-			} else if (prev_failed == i) {
-                std::cout << "Failed constraint: " << i << "twice, aborting" << std::endl;
-				// We failed this same constraint twice
-				// Abort!
-				pass->is_valid = false;
-				break;
-			}
-            indexes.pop_back();
-		}
-
-        if (iterPass.CalcScore(iter_indexes, manager) < best_pass.CalcScore(iter_indexes, manager, true)) {
-			iterPass.CopyToExisting(&best_pass);
-		}
-        std::cout << "Finished iteration, current score: " << iterPass.CalcScore(iter_indexes, manager, false) << std::endl;
-	}
-
-	// Merge best_pass in 'pass'
-    //if (iterPass.CalcScore(iter_indexes, manager) < best_pass.CalcScore(iter_indexes, manager, true)) {
-        best_pass.CopyToExisting(pass);
-    //}
-    std::cout << "Finished constraint, current best: " << best_pass.CalcScore(iter_indexes, manager, true) << std::endl;
+    // Merge best_pass in 'pass'
+    best_pass.CopyToExisting(pass);
 }

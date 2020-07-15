@@ -19,7 +19,6 @@ void typecheck::ConstraintPass::CopyToExisting(ConstraintPass* dest) const {
 	dest->resolvedTypes = this->resolvedTypes;
     dest->score = this->score;
  	dest->scores = this->scores;
-	dest->is_valid = this->is_valid;
 }
 
 template<class T>
@@ -33,25 +32,28 @@ T safe_add(const T& curr_val, const T& add_val) {
 }
 
 std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
-	std::size_t new_score = 0;
-	this->is_valid = true;
-
-    if (cached) {
-        // Calculate sum of scores
-        for (auto& score : this->scores) {
-            new_score = safe_add(new_score, score.second);
-        }
-
-        if (this->scores.empty()) {
-            new_score = std::numeric_limits<std::size_t>::max();
-        }
-
-        if (new_score == std::numeric_limits<std::size_t>::max()) {
-            this->is_valid = false;
-        }
-
-        return this->score; // new_score;
+    if (this->resolvedTypes.size() == 0) {
+        return std::numeric_limits<std::size_t>::max();
     }
+
+	std::size_t new_score = 0;
+
+//    if (cached) {
+//        // Calculate sum of scores
+//        for (auto& score : this->scores) {
+//            new_score = safe_add(new_score, score.second);
+//        }
+//
+//        if (this->scores.empty()) {
+//            new_score = std::numeric_limits<std::size_t>::max();
+//        }
+//
+//        if (new_score == std::numeric_limits<std::size_t>::max()) {
+//            this->is_valid = false;
+//        }
+//
+//        return this->score; // new_score;
+//    }
 
     // Compute a partial score
 	for (const auto i : indices) {
@@ -68,7 +70,11 @@ std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& 
                 if (!storedResolver) {
                     // This will create one if it doesn't exist.
                     storedResolver = this->GetResolver(constraint, manager);
+
+                    // Call optional initalization code.
+                    storedResolver->hasMoreSolutions(constraint, manager);
                 }
+
                 constraint_score = storedResolver->score(constraint, manager);
 
                 // Cache it
@@ -81,7 +87,6 @@ std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& 
             new_score = safe_add(new_score, constraint_score);
         } else {
             // We exceeded max score
-            this->is_valid = false;
             break;
         }
 	}
@@ -106,7 +111,7 @@ void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, c
 }
 
 bool typecheck::ConstraintPass::IsValid(const TypeManager* manager) {
-	return this->is_valid;
+	return this->score < std::numeric_limits<std::size_t>::max();
 }
 
 typecheck::Resolver* typecheck::ConstraintPass::GetResolverRec(const Constraint& constraint, const TypeManager* manager) const {

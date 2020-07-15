@@ -32,8 +32,7 @@ namespace typecheck {
 		Resolver* GetResolverRec(const Constraint& constraint, const TypeManager* manager) const;
         void ResetResolver(const typecheck::Constraint& constraint, const TypeManager* manager);
 
-		bool is_valid;
-	public:
+    public:
 		ConstraintPass() = default;
 		~ConstraintPass() = default;
 
@@ -47,6 +46,8 @@ namespace typecheck {
 		void CopyToExisting(ConstraintPass* dest) const;
 
 		std::size_t CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
+
+        // Calculated based on score
 		bool IsValid(const TypeManager* manager);
 
 		Type getResolvedType(const TypeVar& var) const;

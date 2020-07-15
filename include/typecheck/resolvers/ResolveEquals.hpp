@@ -32,16 +32,21 @@ namespace typecheck {
 				const bool hasT1 = this->pass->hasResolvedType(T1);
 				if (hasT0 && hasT1) {
 					// We will determine if they are the same in the 'score'
-					return true;
+//                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
+                    return true;
 
 				} else if (hasT0) {
 					// Don't have T1
 					this->pass->setResolvedType(T1, this->pass->getResolvedType(T0));
+//                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
+
 					return true;
 
 				} else if (hasT1) {
 					// Don't have T0
 					this->pass->setResolvedType(T0, this->pass->getResolvedType(T1));
+//                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
+
 					return true;
 
 				} else {
@@ -69,7 +74,7 @@ namespace typecheck {
 
 //                std::cout << "Score Equals: " << constraint.id() << " " << T0.raw().name() << " == " << T1.raw().name() << std::endl;
 
-				if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
+                if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 					// Perfect score or not.
 					return 0;
 				}

@@ -16,7 +16,7 @@ std::vector<typecheck::Type> typecheck::ExpressibleByFloatLiteral::getPreferredT
 }
 
 std::vector<typecheck::Type> typecheck::ExpressibleByFloatLiteral::getOtherTypes() const {
-	return { ty("double") };
+    return { ty("double") };
 }
 
 #include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
@@ -26,5 +26,5 @@ std::vector<typecheck::Type> typecheck::ExpressibleByIntegerLiteral::getPreferre
 }
 
 std::vector<typecheck::Type> typecheck::ExpressibleByIntegerLiteral::getOtherTypes() const {
-	return { ty("double"), ty("float") };
+    return { ty("double"), ty("float") };
 }

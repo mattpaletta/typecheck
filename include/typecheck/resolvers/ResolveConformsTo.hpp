@@ -2,6 +2,7 @@
 
 #include "typecheck/resolver.hpp"
 #include "typecheck/literal_protocol.hpp"
+#include "typecheck/debug.hpp"
 
 #include "typecheck/protocols/ExpressibleByDoubleLiteral.hpp"
 #include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
@@ -90,6 +91,8 @@ namespace typecheck {
 
 				auto typeVar = constraint.conforms().type();
 				this->pass->setResolvedType(typeVar, nextType);
+//                std::cout << typeVar.symbol() << " : " << nextType.raw().name() << std::endl;
+
 				return true;
 			}
 			return false;
@@ -97,12 +100,13 @@ namespace typecheck {
 
 		virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override {
 			const auto typeVar = constraint.conforms().type();
+            TYPECHECK_ASSERT(this->currLiteralProtocol.operator bool(), "Must set protocol before calling score, call this->hasMoreSolutions(...) first");
+            TYPECHECK_ASSERT(this->pass, "Must set pass object before calling score.");
 
 			if (this->pass && this->currLiteralProtocol && this->pass->hasResolvedType(typeVar)) {
 				const auto resolvedType = this->pass->getResolvedType(typeVar);
 				// Is it a preferred type or other type?
 				for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
-                    std::cout << "Conforms To: " << pref.raw().name() << " == " << resolvedType.raw().name() << std::endl;
                     if (google::protobuf::util::MessageDifferencer::Equals(pref, resolvedType)) {
 						// It's preferred! Perfect score
 						return 0;
@@ -110,7 +114,6 @@ namespace typecheck {
 				}
 
 				for (auto& other : this->currLiteralProtocol->getOtherTypes()) {
-					// std::cout << "Conforms To: " << other.name() << " == " << resolvedType.name() << std::endl;
 					if (google::protobuf::util::MessageDifferencer::Equals(other, resolvedType)) {
 						// It's other! Resolved, but not perfect score
 						return 1;
