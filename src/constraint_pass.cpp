@@ -102,6 +102,9 @@ bool typecheck::ConstraintPass::hasResolvedType(const TypeVar& var) const {
 
 void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, const typecheck::Type& type) {
     if ((type.has_raw() || type.has_func()) && !var.symbol().empty()) {
+        if (this->hasResolvedType(var)) {
+            std::cout << "warning, overriding existing type." << std::endl;
+        }
         this->resolvedTypes[var.symbol()] = type;
 	}
 }

@@ -3,6 +3,32 @@
 
 #include <typecheck_protos/constraint.pb.h>
 
+int getConstraintKindScore(const typecheck::ConstraintKind& kind) {
+    switch (kind) {
+        case typecheck::ConstraintKind::Bind:
+            return 0;
+        case typecheck::ConstraintKind::ApplicableFunction:
+            return 1;
+        case typecheck::ConstraintKind::BindOverload:
+            return 2;
+        case typecheck::ConstraintKind::ConformsTo:
+            return 3;
+        case typecheck::ConstraintKind::Conversion:
+            return 4;
+        case typecheck::ConstraintKind::Equal:
+            return 5;
+        default:
+            TYPECHECK_ASSERT(false, "Unknown constraint type, cannot get score.");
+    }
+}
+
+void typecheck::TypeManager::SortConstraints() {
+    // Sort the constraints by the order in which they need to be resolved
+    std::sort(this->constraints.begin(), this->constraints.end(), [](const Constraint& c1, const Constraint& c2) {
+        return getConstraintKindScore(c1.kind()) < getConstraintKindScore(c2.kind());
+    });
+}
+
 typecheck::Constraint getNewBlankConstraint(typecheck::ConstraintKind kind, const std::size_t& id) {
 	typecheck::Constraint constraint;
 	constraint.set_kind(kind);
@@ -103,6 +129,20 @@ std::size_t typecheck::TypeManager::CreateBindFunctionConstraint(const typecheck
     TYPECHECK_ASSERT(!returnType.symbol().empty(), "Cannot use empty type when creating constraint.");
     TYPECHECK_ASSERT(this->registeredTypeVars.find(returnType.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
     constraint.mutable_overload()->mutable_returnvar()->CopyFrom(returnType);
+
+    this->constraints.emplace_back(constraint);
+    return constraint.id();
+}
+
+std::size_t typecheck::TypeManager::CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) {
+    auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::Bind, this->constraint_generator.next_id());
+
+    TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
+    TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
+    TYPECHECK_ASSERT(type.has_raw() || type.has_func(), "Must insert valid type.");
+
+    constraint.mutable_explicit_()->mutable_var()->CopyFrom(T0);
+    constraint.mutable_explicit_()->mutable_type()->CopyFrom(type);
 
     this->constraints.emplace_back(constraint);
     return constraint.id();

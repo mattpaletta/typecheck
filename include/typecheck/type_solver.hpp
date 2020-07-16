@@ -19,10 +19,9 @@ namespace typecheck {
 		ConstraintPass last_pass;
 
 		// Implementations found in `type_solver+init_pass.cpp`
-		void InitPasses();
-		void RemoveDuplicates();
-		void FindOverloads();
-		void BuildRefGraph();
+		void InitPasses(typecheck::TypeManager* manager);
+        void RemoveDuplicates(typecheck::TypeManager* manager);
+		void BuildRefGraph(typecheck::TypeManager* manager);
 
 		// Implementations found in `type_solver+solver.cpp`
 		ConstraintPass BuildPass(const std::vector<int>&) const;

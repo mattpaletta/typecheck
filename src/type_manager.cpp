@@ -11,6 +11,7 @@
 #include "typecheck/resolvers/ResolveConvertible.hpp" // for ResolveConvertible
 #include "typecheck/resolvers/ResolveApplicableFunction.hpp" // for ResolveApplicableFunction
 #include "typecheck/resolvers/ResolveBindOverload.hpp" // for ResolveBindOverload
+#include "typecheck/resolvers/ResolveBindTo.hpp"       // for ResolveBindTo
 
 #include "typecheck/type_solver.hpp"                  // for TypeSolver
 #include <typecheck_protos/type.pb.h>                 // for Type, TypeVar
@@ -202,6 +203,9 @@ bool typecheck::TypeManager::solve() {
     this->registerResolver(std::make_unique<typecheck::ResolveConvertible>(nullptr, default_id));
     this->registerResolver(std::make_unique<typecheck::ResolveApplicableFunction>(nullptr, default_id));
     this->registerResolver(std::make_unique<typecheck::ResolveBindOverload>(nullptr, default_id));
+    this->registerResolver(std::make_unique<typecheck::ResolveBindTo>(nullptr, default_id));
+
+    this->SortConstraints();
 
 	// Finally, solve
 	return this->solver.solve(this);

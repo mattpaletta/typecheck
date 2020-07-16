@@ -10,6 +10,7 @@
 
 #include <typecheck/resolvers/ResolveConformsTo.hpp>
 #include <typecheck/resolvers/ResolveEquals.hpp>
+#include <typecheck/resolvers/ResolveBindTo.hpp>
 
 // Utility function to avoid boilerplate code in testing.
 void setupTypeManager(typecheck::TypeManager* tm) {
@@ -95,20 +96,64 @@ TEST_CASE("test resolve conforms to has not preferred", "[resolver]") {
 }
 
 TEST_CASE("test resolve equals have both", "[resolver]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+
+    auto constraintID = tm.CreateEqualsConstraint(T1, T2);
+
+    typecheck::ConstraintPass pass;
+    pass.setResolvedType(T1, tm.getRegisteredType("int"));
+    pass.setResolvedType(T2, tm.getRegisteredType("int"));
+    auto resolver = typecheck::ResolveEquals(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+    CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
+}
+
+TEST_CASE("test resolve bindto resolve", "[resolver]") {
 	getDefaultTypeManager(tm);
 	auto T1 = tm.CreateTypeVar();
-	auto T2 = tm.CreateTypeVar();
 
-	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
+    auto constraintID = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T1, tm.getRegisteredType("int"));
-	pass.setResolvedType(T2, tm.getRegisteredType("int"));
-	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
+	auto resolver = typecheck::ResolveBindTo(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
 
 	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
+}
+
+TEST_CASE("test resolve bindto already resolved", "[resolver]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+
+    auto constraintID = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+
+    typecheck::ConstraintPass pass;
+    pass.setResolvedType(T1, tm.getRegisteredType("int"));
+    auto resolver = typecheck::ResolveBindTo(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+    CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) == 0);
+}
+
+TEST_CASE("test resolve bindto conflicting", "[resolver]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+
+    auto constraintID = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+
+    typecheck::ConstraintPass pass;
+    pass.setResolvedType(T1, tm.getRegisteredType("float"));
+    auto resolver = typecheck::ResolveBindTo(&pass, constraintID);
+    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
+    CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
+
+    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 0);
 }
 
 TEST_CASE("test resolve equals have both not equal", "[resolver]") {
@@ -271,9 +316,8 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
 	auto T2 = tm.CreateTypeVar();
 	auto T3 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateEqualsConstraint(T2, T1); // T1, T2);
+    auto constraintT1 = tm.CreateEqualsConstraint(T2, T1);
 	auto constraintT2 = tm.CreateEqualsConstraint(T1, T2);
-//	auto constraintT3 = tm.CreateEqualsConstraint(T2, T3);
 
 	CHECK(!tm.solve());
 }
@@ -345,9 +389,40 @@ TEST_CASE("solve convertible reverse constraint", "[constraint]") {
     auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
     auto constraintT3 = tm.CreateConvertibleConstraint(T2, T1);
 
-    CHECK(!tm.solve());
+    REQUIRE(!tm.solve());
 }
 
+TEST_CASE("solve convertible bind reverse constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+
+    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    auto constraintT2 = tm.CreateBindToConstraint(T2, tm.getRegisteredType("int"));
+    auto constraintT3 = tm.CreateConvertibleConstraint(T2, T1);
+
+    REQUIRE(!tm.solve());
+
+    CHECK(tm.getResolvedType(T1).raw().name() == "int");
+    CHECK(tm.getResolvedType(T2).raw().name() == "int");
+}
+
+TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+
+    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    auto constraintT2 = tm.CreateBindToConstraint(T2, tm.getRegisteredType("float"));
+    auto constraintT3 = tm.CreateEqualsConstraint(T2, T1);
+
+    REQUIRE(tm.solve());
+
+    CHECK(tm.getResolvedType(T1).raw().name() == "float");
+    CHECK(tm.getResolvedType(T2).raw().name() == "float");
+}
 
 TEST_CASE("solve function application constraint", "[constraint]") {
     getDefaultTypeManager(tm);

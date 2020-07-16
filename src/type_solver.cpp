@@ -8,15 +8,14 @@
 
 typecheck::TypeSolver::TypeSolver() {}
 
-void typecheck::TypeSolver::InitPasses() {
-	this->RemoveDuplicates();
-	this->FindOverloads();
-	this->BuildRefGraph();
+void typecheck::TypeSolver::InitPasses(typecheck::TypeManager* manager) {
+	// this->RemoveDuplicates(manager);
+	this->BuildRefGraph(manager);
 }
 
 bool typecheck::TypeSolver::solve(const TypeManager* manager) {
 	// Builds utility data structures
-	this->InitPasses();
+	// this->InitPasses(manager);
 
 	typecheck::ConstraintPass best_pass;
 	this->DoPass(&best_pass, manager);

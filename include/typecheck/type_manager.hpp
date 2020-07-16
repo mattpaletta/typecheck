@@ -29,6 +29,8 @@ namespace typecheck {
 		GenericTypeGenerator type_generator;
 		GenericTypeGenerator constraint_generator;
 
+        void SortConstraints();
+
 	public:
 		TypeManager();
 		~TypeManager() = default;
@@ -68,6 +70,8 @@ namespace typecheck {
         std::size_t CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
         std::size_t CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
         std::size_t CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
+        std::size_t CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
+
         const Constraint* getConstraint(const std::size_t id) const;
 
 		bool solve();
