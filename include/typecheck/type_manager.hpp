@@ -32,6 +32,8 @@ namespace typecheck {
         void SortConstraints();
 
 	public:
+        bool use_reverse_sort = false;
+
 		TypeManager();
 		~TypeManager() = default;
 

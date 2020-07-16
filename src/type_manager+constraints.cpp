@@ -23,10 +23,22 @@ int getConstraintKindScore(const typecheck::ConstraintKind& kind) {
 }
 
 void typecheck::TypeManager::SortConstraints() {
-    // Sort the constraints by the order in which they need to be resolved
-    std::sort(this->constraints.begin(), this->constraints.end(), [](const Constraint& c1, const Constraint& c2) {
-        return getConstraintKindScore(c1.kind()) < getConstraintKindScore(c2.kind());
-    });
+    if (this->use_reverse_sort) {
+        // In reverse sort, make it the reverse of the order they need to be resolved, so we can make sure the algorithm can handle it. (worst case)
+        std::sort(this->constraints.begin(), this->constraints.end(), [](const Constraint& c1, const Constraint& c2) {
+            return getConstraintKindScore(c1.kind()) > getConstraintKindScore(c2.kind());
+        });
+#if DEBUG
+#else
+        std::cout << "Warning: TypeManager using reverse_sort, this is not recommended for production." << std::endl;
+#endif
+    } else {
+        // Sort the constraints by the order in which they need to be resolved
+        std::sort(this->constraints.begin(), this->constraints.end(), [](const Constraint& c1, const Constraint& c2) {
+            return getConstraintKindScore(c1.kind()) < getConstraintKindScore(c2.kind());
+        });
+    }
+
 }
 
 typecheck::Constraint getNewBlankConstraint(typecheck::ConstraintKind kind, const std::size_t& id) {
