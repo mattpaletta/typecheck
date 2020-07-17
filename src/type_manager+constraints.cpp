@@ -21,8 +21,9 @@ auto typecheck::TypeManager::getConstraintKindScore(const typecheck::ConstraintK
         case ConstraintKind_INT_MIN_SENTINEL_DO_NOT_USE_:
         case ConstraintKind_INT_MAX_SENTINEL_DO_NOT_USE_:
             return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-            break;
     }
+
+    return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 }
 
 void typecheck::TypeManager::SortConstraints() {
