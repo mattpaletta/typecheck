@@ -196,6 +196,7 @@ endif()
 
 target_compile_options(typecheck PRIVATE "${TYPECHECK_EXTRA_FLAGS}")
 target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>)
+target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:typecheck_protos,INTERFACE_INCLUDE_DIRECTORIES>)
 
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Release>:RELEASE>")

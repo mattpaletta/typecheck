@@ -10,10 +10,10 @@
 
 #include <google/protobuf/util/message_differencer.h>
 
-typecheck::ResolveApplicableFunction::ResolveApplicableFunction(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ApplicableFunction, pass, _id) {}
+typecheck::ResolveApplicableFunction::ResolveApplicableFunction(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ApplicableFunction, _pass, _id) {}
 
-auto typecheck::ResolveApplicableFunction::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
-    return std::make_unique<ResolveApplicableFunction>(pass, _id);
+auto typecheck::ResolveApplicableFunction::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+    return std::make_unique<ResolveApplicableFunction>(_pass, _id);
 }
 
 auto typecheck::ResolveApplicableFunction::is_valid_constraint(const Constraint& constraint) const -> bool {

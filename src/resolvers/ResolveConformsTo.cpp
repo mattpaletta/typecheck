@@ -18,10 +18,10 @@
 #include <memory>
 #include <typecheck_protos/constraint.pb.h>
 
-typecheck::ResolveConformsTo::ResolveConformsTo(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, pass, _id), is_preferred(true) {}
+typecheck::ResolveConformsTo::ResolveConformsTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, _pass, _id), is_preferred(true) {}
 
-auto typecheck::ResolveConformsTo::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
-    return std::make_unique<ResolveConformsTo>(pass, _id);
+auto typecheck::ResolveConformsTo::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+    return std::make_unique<ResolveConformsTo>(_pass, _id);
 }
 
 auto typecheck::ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) -> bool {

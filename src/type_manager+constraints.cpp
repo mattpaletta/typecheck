@@ -7,20 +7,20 @@ auto typecheck::TypeManager::getConstraintKindScore(const typecheck::ConstraintK
     switch (kind) {
         case BindParam:
         case Bind:
-            return 0;
+            return 0; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case ApplicableFunction:
-            return 1;
+            return 1; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case BindOverload:
-            return 2;
+            return 2; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case ConformsTo:
-            return 3;
+            return 3; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case Conversion:
-            return 4;
+            return 4; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case Equal:
-            return 5;
+            return 5; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case ConstraintKind_INT_MIN_SENTINEL_DO_NOT_USE_:
         case ConstraintKind_INT_MAX_SENTINEL_DO_NOT_USE_:
-            return 10;
+            return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
             break;
     }
 }

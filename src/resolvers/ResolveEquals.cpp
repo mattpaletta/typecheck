@@ -7,10 +7,10 @@
 
 #include "typecheck/resolvers/ResolveEquals.hpp"
 
-typecheck::ResolveEquals::ResolveEquals(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Equal, pass, _id) {}
+typecheck::ResolveEquals::ResolveEquals(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Equal, _pass, _id) {}
 
-auto typecheck::ResolveEquals::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
-    return std::make_unique<ResolveEquals>(pass, _id);
+auto typecheck::ResolveEquals::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+    return std::make_unique<ResolveEquals>(_pass, _id);
 }
 
 auto typecheck::ResolveEquals::is_valid_constraint(const Constraint& constraint) const -> bool {

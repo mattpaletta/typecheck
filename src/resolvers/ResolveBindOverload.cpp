@@ -11,10 +11,10 @@
 
 #include <google/protobuf/util/message_differencer.h>
 
-typecheck::ResolveBindOverload::ResolveBindOverload(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::BindOverload, pass, _id) {}
+typecheck::ResolveBindOverload::ResolveBindOverload(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::BindOverload, _pass, _id) {}
 
-auto typecheck::ResolveBindOverload::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
-    return std::make_unique<ResolveBindOverload>(pass, _id);
+auto typecheck::ResolveBindOverload::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+    return std::make_unique<ResolveBindOverload>(_pass, _id);
 }
 
 auto typecheck::ResolveBindOverload::is_valid_constraint(const Constraint& constraint) const -> bool {
