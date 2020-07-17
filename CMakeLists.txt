@@ -13,6 +13,8 @@ option(ENABLE_UBSAN "Enable Undefined Behaviour Sanitizer" OFF)
 option(ENABLE_IWYU "Use include-what-you-use" ON)
 option(ENABLE_LWYU "Use link-what-you-use" ON)
 option(ENABLE_CLANG_TIDY "Use clang-tidy" ON)
+option(TYPECHECK_FIX_ERRORS "Only relevant if ENABLE_CLANG_TIDY enabled, sets --fix flag on clang-tidy" ON)
+
 option(ENABLE_CPP_CHECK "Use cppcheck" ON)
 option(TYPECHECK_WERROR "Use Werror" OFF)
 option(TYPECHECK_BUILD_TESTS "Build tests, defaults to true if in-source directory" OFF)
@@ -163,6 +165,9 @@ if (ENABLE_CLANG_TIDY)
 	list(APPEND CMAKE_CXX_CLANG_TIDY
         "-header-filter=\"${CMAKE_SOURCE_DIRECTORY}\""
         "-checks=\"-*,clang-analyzer-*,modernize-*,clang-analyzer-*,cppcoreguidelines-*,cert-*,performance-*,portability-*,readability-*\"")
+    if (TYPECHECK_FIX_ERRORS)
+    list(APPEND CMAKE_CXX_CLANG_TIDY "--fix")
+    endif()
 	message("Clang-Tidy Enabled: ${clang_tidy_path}")
 endif()
 

@@ -3,10 +3,10 @@
 #include <string>     // for basic_string
 #include <vector>     // for vector<>::iterator, vector
 
-long long typecheck::GenericTypeGenerator::next_id() {
+auto typecheck::GenericTypeGenerator::next_id() -> long long {
 	return this->curr_num++;
 }
 
-std::string typecheck::GenericTypeGenerator::next() {
+auto typecheck::GenericTypeGenerator::next() -> std::string {
     return "T" + std::to_string(this->next_id());
 }

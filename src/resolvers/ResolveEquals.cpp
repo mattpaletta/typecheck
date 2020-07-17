@@ -9,19 +9,19 @@
 
 typecheck::ResolveEquals::ResolveEquals(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Equal, pass, _id) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::ResolveEquals::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const {
+auto typecheck::ResolveEquals::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
     return std::make_unique<ResolveEquals>(pass, _id);
 }
 
-bool typecheck::ResolveEquals::is_valid_constraint(const Constraint& constraint) const {
+auto typecheck::ResolveEquals::is_valid_constraint(const Constraint& constraint) const -> bool {
     return constraint.has_types() && constraint.types().has_first() && constraint.types().has_second();
 }
 
-bool typecheck::ResolveEquals::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::ResolveEquals::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     return this->pass && !has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-bool typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
     const auto T0 = constraint.types().first();
     const auto T1 = constraint.types().second();
@@ -64,7 +64,7 @@ bool typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const T
     }
 }
 
-std::size_t typecheck::ResolveEquals::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const {
+auto typecheck::ResolveEquals::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint)) {
         return std::numeric_limits<std::size_t>::max();
     }

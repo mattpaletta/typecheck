@@ -5,13 +5,13 @@
 #include <numeric>
 #include <set>
 
-typecheck::TypeSolver::TypeSolver() {}
+typecheck::TypeSolver::TypeSolver() = default;
 
 void typecheck::TypeSolver::InitPasses([[maybe_unused]] typecheck::TypeManager* manager) {
 
 }
 
-bool typecheck::TypeSolver::solve(const TypeManager* manager) {
+auto typecheck::TypeSolver::solve(const TypeManager* manager) -> bool {
 	// Builds utility data structures
 	// this->InitPasses(manager);
 
@@ -24,6 +24,6 @@ bool typecheck::TypeSolver::solve(const TypeManager* manager) {
 	return is_valid;
 }
 
-typecheck::Type typecheck::TypeSolver::getResolvedType(const typecheck::TypeVar& _typeVar) const {
+auto typecheck::TypeSolver::getResolvedType(const typecheck::TypeVar& _typeVar) const -> typecheck::Type {
 	return this->last_pass.getResolvedType(_typeVar);
 }

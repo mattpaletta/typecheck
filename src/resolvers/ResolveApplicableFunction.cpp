@@ -16,15 +16,15 @@ auto typecheck::ResolveApplicableFunction::clone(ConstraintPass* pass, const Con
     return std::make_unique<ResolveApplicableFunction>(pass, _id);
 }
 
-bool typecheck::ResolveApplicableFunction::is_valid_constraint(const Constraint& constraint) const {
+auto typecheck::ResolveApplicableFunction::is_valid_constraint(const Constraint& constraint) const -> bool {
     return constraint.has_explicit_() && constraint.explicit_().has_var() && constraint.explicit_().has_type() && constraint.explicit_().type().has_func();
 }
 
-bool typecheck::ResolveApplicableFunction::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::ResolveApplicableFunction::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     return this->pass && !has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-bool typecheck::ResolveApplicableFunction::resolveNext(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::ResolveApplicableFunction::resolveNext(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
 
     // See bindOverload for selecting the correct implementation
@@ -33,7 +33,7 @@ bool typecheck::ResolveApplicableFunction::resolveNext(const Constraint& constra
     return this->is_valid_constraint(constraint);
 }
 
-std::size_t typecheck::ResolveApplicableFunction::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const {
+auto typecheck::ResolveApplicableFunction::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint)) {
         return std::numeric_limits<std::size_t>::max();
     }

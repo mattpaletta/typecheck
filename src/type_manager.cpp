@@ -18,15 +18,15 @@
 
 #include <google/protobuf/util/message_differencer.h>
 
-typecheck::TypeManager::TypeManager() {}
+typecheck::TypeManager::TypeManager() = default;
 
-bool typecheck::TypeManager::registerType(const std::string& name) {
+auto typecheck::TypeManager::registerType(const std::string& name) -> bool {
     Type ty;
     ty.mutable_raw()->set_name(name);
     return this->registerType(ty);
 }
 
-bool typecheck::TypeManager::registerType(const Type& name) {
+auto typecheck::TypeManager::registerType(const Type& name) -> bool {
 	// Determine if has type
 	const auto alreadyHasType = this->hasRegisteredType(name);
 	if (!alreadyHasType) {
@@ -37,23 +37,23 @@ bool typecheck::TypeManager::registerType(const Type& name) {
 	return !alreadyHasType;
 }
 
-bool typecheck::TypeManager::hasRegisteredType(const std::string& name) const noexcept {
+auto typecheck::TypeManager::hasRegisteredType(const std::string& name) const noexcept -> bool {
     const auto returned = this->getRegisteredType(name);
     return returned.has_raw() || returned.has_func();
 }
 
-bool typecheck::TypeManager::hasRegisteredType(const Type& name) const noexcept {
+auto typecheck::TypeManager::hasRegisteredType(const Type& name) const noexcept -> bool {
     const auto returned = this->getRegisteredType(name);
     return returned.has_raw() || returned.has_func();
 }
 
-typecheck::Type typecheck::TypeManager::getRegisteredType(const std::string& name) const noexcept {
+auto typecheck::TypeManager::getRegisteredType(const std::string& name) const noexcept -> typecheck::Type {
     Type ty;
     ty.mutable_raw()->set_name(name);
     return this->getRegisteredType(ty);
 }
 
-typecheck::Type typecheck::TypeManager::getRegisteredType(const Type& name) const noexcept {
+auto typecheck::TypeManager::getRegisteredType(const Type& name) const noexcept -> typecheck::Type {
 	for (auto& type : this->registeredTypes) {
         if (google::protobuf::util::MessageDifferencer::Equals(type, name)) {
 			return type;
@@ -63,7 +63,7 @@ typecheck::Type typecheck::TypeManager::getRegisteredType(const Type& name) cons
 	return {};
 }
 
-std::vector<typecheck::Type> typecheck::TypeManager::getFunctionOverloads(const TypeVar& var) const {
+auto typecheck::TypeManager::getFunctionOverloads(const TypeVar& var) const -> std::vector<typecheck::Type> {
     std::vector<typecheck::Type> overloads;
     for (auto& constraint : this->constraints) {
         // Lookup by 'var', to deal with anonymous functions.
@@ -76,7 +76,7 @@ std::vector<typecheck::Type> typecheck::TypeManager::getFunctionOverloads(const 
     return overloads;
 }
 
-bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::string& T1) {
+auto typecheck::TypeManager::setConvertible(const std::string& T0, const std::string& T1) -> bool {
     Type t0;
     t0.mutable_raw()->set_name(T0);
 
@@ -86,7 +86,7 @@ bool typecheck::TypeManager::setConvertible(const std::string& T0, const std::st
     return this->setConvertible(t0, t1);
 }
 
-bool typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) {
+auto typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
     if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 		return true;
 	}
@@ -106,11 +106,11 @@ bool typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) {
 	return false;
 }
 
-typecheck::Type typecheck::TypeManager::getResolvedType(const typecheck::TypeVar& type) const {
+auto typecheck::TypeManager::getResolvedType(const typecheck::TypeVar& type) const -> typecheck::Type {
 	return this->solver.getResolvedType(type);
 }
 
-bool typecheck::TypeManager::isConvertible(const std::string& T0, const std::string& T1) const noexcept {
+auto typecheck::TypeManager::isConvertible(const std::string& T0, const std::string& T1) const noexcept -> bool {
     Type t0;
     t0.mutable_raw()->set_name(T0);
 
@@ -119,7 +119,7 @@ bool typecheck::TypeManager::isConvertible(const std::string& T0, const std::str
     return this->isConvertible(t0, t1);
 }
 
-bool typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept {
+auto typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept -> bool {
     if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 		return true;
 	}
@@ -145,7 +145,7 @@ bool typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const
 	return false;
 }
 
-std::vector<typecheck::Type> typecheck::TypeManager::getConvertible(const Type& T0) const {
+auto typecheck::TypeManager::getConvertible(const Type& T0) const -> std::vector<typecheck::Type> {
     std::vector<Type> out;
 
     // Function types not convertible
@@ -165,7 +165,7 @@ std::vector<typecheck::Type> typecheck::TypeManager::getConvertible(const Type& 
     return out;
 }
 
-bool typecheck::TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolver) {
+auto typecheck::TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolver) -> bool {
 	bool will_insert = this->registeredResolvers.find(resolver->kind) == this->registeredResolvers.end();
 	if (will_insert) {
 		// We don't have one yet, so add it
@@ -175,7 +175,7 @@ bool typecheck::TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolv
 	return will_insert;
 }
 
-typecheck::TypeVar typecheck::TypeManager::CreateTypeVar() {
+auto typecheck::TypeManager::CreateTypeVar() -> typecheck::TypeVar {
 	const auto var = this->type_generator.next();
 
 	this->registeredTypeVars.insert(var);
@@ -185,7 +185,7 @@ typecheck::TypeVar typecheck::TypeManager::CreateTypeVar() {
 	return type;
 }
 
-const typecheck::Constraint* typecheck::TypeManager::getConstraint(const ConstraintPass::IDType id) const {
+auto typecheck::TypeManager::getConstraint(const ConstraintPass::IDType id) const -> const typecheck::Constraint* {
 	for (auto& constraint : this->constraints) {
 		if (constraint.id() == id) {
 			return &constraint;
@@ -195,7 +195,7 @@ const typecheck::Constraint* typecheck::TypeManager::getConstraint(const Constra
 	return nullptr;
 }
 
-bool typecheck::TypeManager::solve() {
+auto typecheck::TypeManager::solve() -> bool {
 	// Add default `resolvers`, ignore response
 	// it will not double-register, so this is safe
 	constexpr auto default_id = std::numeric_limits<std::size_t>::max();

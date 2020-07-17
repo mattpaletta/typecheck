@@ -13,15 +13,15 @@
 
 typecheck::ResolveBindOverload::ResolveBindOverload(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::BindOverload, pass, _id) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::ResolveBindOverload::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const {
+auto typecheck::ResolveBindOverload::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
     return std::make_unique<ResolveBindOverload>(pass, _id);
 }
 
-bool typecheck::ResolveBindOverload::is_valid_constraint(const Constraint& constraint) const {
+auto typecheck::ResolveBindOverload::is_valid_constraint(const Constraint& constraint) const -> bool {
     return constraint.has_overload() && constraint.overload().has_type();
 }
 
-void typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> void {
     if (this->pass && this->is_valid_constraint(constraint)) {
         // Try and get registered overloads
         this->overloads = manager->getFunctionOverloads(constraint.overload().type());
@@ -31,7 +31,7 @@ void typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& c
     }
 }
 
-bool typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (!this->did_find_overloads) {
         // The first time do setup
         this->doInitialIterationSetup(constraint, manager);
@@ -42,7 +42,7 @@ bool typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constrai
     return this->is_valid_constraint(constraint) && this->overloads.size() > 0 && this->current_overload_i < this->overloads.size();
 }
 
-bool typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->did_find_overloads) {
         typecheck::Type nextOverload = this->overloads.at(this->current_overload_i);
 
@@ -86,7 +86,7 @@ bool typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, c
     return false;
 }
 
-std::size_t typecheck::ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const {
+auto typecheck::ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint)) {
         return std::numeric_limits<std::size_t>::max();
     }

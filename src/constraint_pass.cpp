@@ -8,7 +8,7 @@
 #include "typecheck_protos/constraint.pb.h"  // for Constraint, ConstraintKind
 #include "typecheck/type_manager.hpp"        // for TypeManager
 
-typecheck::ConstraintPass typecheck::ConstraintPass::CreateCopy() {
+auto typecheck::ConstraintPass::CreateCopy() -> typecheck::ConstraintPass {
 	typecheck::ConstraintPass new_pass;
     new_pass.prev = this;
     this->CopyToExisting(&new_pass);
@@ -22,7 +22,7 @@ void typecheck::ConstraintPass::CopyToExisting(ConstraintPass* dest) const {
 }
 
 template<class T>
-T safe_add(const T& curr_val, const T& add_val) {
+auto safe_add(const T& curr_val, const T& add_val) -> T {
     if (add_val == std::numeric_limits<T>::max()) {
         return std::numeric_limits<T>::max();
     } else if (curr_val <= add_val + curr_val) {
@@ -34,7 +34,7 @@ T safe_add(const T& curr_val, const T& add_val) {
     }
 }
 
-typecheck::ConstraintPass::scoreMapType& typecheck::ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
+auto typecheck::ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) -> typecheck::ConstraintPass::scoreMapType& {
     if (!cached) {
         // Update map
         this->CalcScore(indices, manager, cached);
@@ -42,7 +42,7 @@ typecheck::ConstraintPass::scoreMapType& typecheck::ConstraintPass::CalcScoreMap
     return this->scores;
 }
 
-bool typecheck::ConstraintPass::IsScoreBetter(const typecheck::ConstraintPass::scoreMapType& s1, const typecheck::ConstraintPass::scoreMapType& s2) {
+auto typecheck::ConstraintPass::IsScoreBetter(const typecheck::ConstraintPass::scoreMapType& s1, const typecheck::ConstraintPass::scoreMapType& s2) -> bool {
     // Is s1 better than s2?
 
     if (s1.size() > s2.size()) {
@@ -74,7 +74,7 @@ bool typecheck::ConstraintPass::IsScoreBetter(const typecheck::ConstraintPass::s
 }
 
 
-std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
+auto typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) -> std::size_t {
     if (this->resolvedTypes.size() == 0) {
         return std::numeric_limits<std::size_t>::max();
     }
@@ -133,13 +133,13 @@ std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& 
 	return new_score;
 }
 
-typecheck::Type typecheck::ConstraintPass::getResolvedType(const TypeVar& var) const {
+auto typecheck::ConstraintPass::getResolvedType(const TypeVar& var) const -> typecheck::Type {
 	Type type;
     type.CopyFrom(this->resolvedTypes.at(var.symbol()));
 	return type;
 }
 
-bool typecheck::ConstraintPass::hasResolvedType(const TypeVar& var) const {
+auto typecheck::ConstraintPass::hasResolvedType(const TypeVar& var) const -> bool {
     return this->resolvedTypes.find(var.symbol()) != this->resolvedTypes.end();
 }
 
@@ -149,7 +149,7 @@ void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, c
 	}
 }
 
-bool typecheck::ConstraintPass::HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) {
+auto typecheck::ConstraintPass::HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) -> bool {
     if (this->prev) {
         // Store all permission globally, so they are consistent.
         return this->prev->HasPermission(constraint, var, manager);
@@ -180,11 +180,11 @@ bool typecheck::ConstraintPass::HasPermission(const Constraint& constraint, cons
     }
 }
 
-bool typecheck::ConstraintPass::IsValid() {
+auto typecheck::ConstraintPass::IsValid() -> bool {
 	return this->score < std::numeric_limits<std::size_t>::max();
 }
 
-typecheck::Resolver* typecheck::ConstraintPass::GetResolverRec(const Constraint& constraint, const TypeManager* manager) const {
+auto typecheck::ConstraintPass::GetResolverRec(const Constraint& constraint, const TypeManager* manager) const -> typecheck::Resolver* {
 	// Recursively traverses
 	if (this->resolvers.find(constraint.id()) != this->resolvers.end()) {
 		auto& stored_resolver = this->resolvers.at(constraint.id());
@@ -206,7 +206,7 @@ void typecheck::ConstraintPass::ResetResolver(const typecheck::Constraint& const
     }
 }
 
-typecheck::Resolver* typecheck::ConstraintPass::GetResolver(const typecheck::Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ConstraintPass::GetResolver(const typecheck::Constraint& constraint, const TypeManager* manager) -> typecheck::Resolver* {
 	if (this->resolvers.find(constraint.id()) != this->resolvers.end()) {
 		// We already have the correct resolver in this pass
 		auto& stored_resolver = this->resolvers.at(constraint.id());

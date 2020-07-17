@@ -1,30 +1,30 @@
 #include "typecheck/protocols/ExpressibleByDoubleLiteral.hpp"
 
-std::vector<typecheck::Type> typecheck::ExpressibleByDoubleLiteral::getPreferredTypes() const {
+auto typecheck::ExpressibleByDoubleLiteral::getPreferredTypes() const -> std::vector<typecheck::Type> {
 	return { ty("double") };
 }
 
-std::vector<typecheck::Type> typecheck::ExpressibleByDoubleLiteral::getOtherTypes() const {
+auto typecheck::ExpressibleByDoubleLiteral::getOtherTypes() const -> std::vector<typecheck::Type>{
 	return {};
 }
 
 
 #include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
 
-std::vector<typecheck::Type> typecheck::ExpressibleByFloatLiteral::getPreferredTypes() const {
+auto typecheck::ExpressibleByFloatLiteral::getPreferredTypes() const -> std::vector<typecheck::Type> {
 	return { ty("float") };
 }
 
-std::vector<typecheck::Type> typecheck::ExpressibleByFloatLiteral::getOtherTypes() const {
+auto typecheck::ExpressibleByFloatLiteral::getOtherTypes() const -> std::vector<typecheck::Type> {
     return { ty("double") };
 }
 
 #include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
 
-std::vector<typecheck::Type> typecheck::ExpressibleByIntegerLiteral::getPreferredTypes() const {
+auto typecheck::ExpressibleByIntegerLiteral::getPreferredTypes() const -> std::vector<typecheck::Type> {
 	return { ty("int") };
 }
 
-std::vector<typecheck::Type> typecheck::ExpressibleByIntegerLiteral::getOtherTypes() const {
+auto typecheck::ExpressibleByIntegerLiteral::getOtherTypes() const -> std::vector<typecheck::Type> {
     return { ty("double"), ty("float") };
 }

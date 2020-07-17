@@ -15,11 +15,11 @@
 
 typecheck::ResolveConvertible::ResolveConvertible(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Conversion, pass, _id) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::ResolveConvertible::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const {
+auto typecheck::ResolveConvertible::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
     return std::make_unique<ResolveConvertible>(pass, _id);
 }
 
-bool typecheck::ResolveConvertible::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveConvertible::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (!constraint.has_types() || !constraint.types().has_first() || !constraint.types().has_second()) {
         std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
         return false;
@@ -33,7 +33,7 @@ bool typecheck::ResolveConvertible::doInitialIterationSetup(const Constraint& co
     return did_find_convertible;
 }
 
-bool typecheck::ResolveConvertible::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveConvertible::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
     // This will be called every time
 
     if (!this->did_find_convertible) {
@@ -44,7 +44,7 @@ bool typecheck::ResolveConvertible::hasMoreSolutions(const Constraint& constrain
     }
 }
 
-bool typecheck::ResolveConvertible::resolveNext(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveConvertible::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->options.size() > 0) {
         auto nextType = this->options.back();
 
@@ -60,7 +60,7 @@ bool typecheck::ResolveConvertible::resolveNext(const Constraint& constraint, co
     return false;
 }
 
-std::size_t typecheck::ResolveConvertible::score(const Constraint& constraint, const TypeManager* manager) const {
+auto typecheck::ResolveConvertible::score(const Constraint& constraint, const TypeManager* manager) const -> std::size_t {
     const auto T0 = constraint.types().first();
     const auto T1 = constraint.types().second();
 

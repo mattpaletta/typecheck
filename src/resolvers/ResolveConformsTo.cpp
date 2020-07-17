@@ -18,13 +18,13 @@
 #include <memory>
 #include <typecheck_protos/constraint.pb.h>
 
-typecheck::ResolveConformsTo::ResolveConformsTo(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, pass, _id) {}
+typecheck::ResolveConformsTo::ResolveConformsTo(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, pass, _id), is_preferred(true) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::ResolveConformsTo::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const {
+auto typecheck::ResolveConformsTo::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
     return std::make_unique<ResolveConformsTo>(pass, _id);
 }
 
-bool typecheck::ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) {
+auto typecheck::ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) -> bool {
     if (!constraint.has_conforms() || !constraint.conforms().has_protocol() || !constraint.conforms().has_type()) {
         std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
         return false;
@@ -61,7 +61,7 @@ bool typecheck::ResolveConformsTo::doInitialIterationSetup(const Constraint& con
     return did_find_protocol;
 }
 
-bool typecheck::ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     // This will be called every time
 
     if (!this->currLiteralProtocol) {
@@ -85,7 +85,7 @@ bool typecheck::ResolveConformsTo::hasMoreSolutions(const Constraint& constraint
     }
 }
 
-bool typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->currLiteralProtocol) {
         // TODO: Switch to list, so we can pop_front
         auto nextType = this->state.back();
@@ -102,7 +102,7 @@ bool typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, con
     return false;
 }
 
-std::size_t typecheck::ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const {
+auto typecheck::ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     const auto typeVar = constraint.conforms().type();
     TYPECHECK_ASSERT(this->currLiteralProtocol.operator bool(), "Must set protocol before calling score, call this->hasMoreSolutions(...) first");
     TYPECHECK_ASSERT(this->pass, "Must set pass object before calling score.");

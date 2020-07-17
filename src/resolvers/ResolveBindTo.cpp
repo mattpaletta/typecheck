@@ -12,19 +12,19 @@
 
 typecheck::ResolveBindTo::ResolveBindTo(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Bind, pass, _id) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::ResolveBindTo::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const {
+auto typecheck::ResolveBindTo::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
     return std::make_unique<ResolveBindTo>(pass, _id);
 }
 
-bool typecheck::ResolveBindTo::is_valid_constraint(const Constraint& constraint) const {
+auto typecheck::ResolveBindTo::is_valid_constraint(const Constraint& constraint) const -> bool {
     return constraint.has_explicit_() && constraint.explicit_().has_type() && constraint.explicit_().has_var();
 }
 
-bool typecheck::ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     return !this->has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-bool typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) {
+auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
     if (this->is_valid_constraint(constraint)) {
         if (this->pass->HasPermission(constraint, constraint.explicit_().var(), manager)) {
@@ -36,7 +36,7 @@ bool typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const T
     return true;
 }
 
-std::size_t typecheck::ResolveBindTo::score(const Constraint& constraint, const TypeManager* manager) const {
+auto typecheck::ResolveBindTo::score(const Constraint& constraint, const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint)) {
         return std::numeric_limits<std::size_t>::max();
     }
