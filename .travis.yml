@@ -29,6 +29,6 @@ before_install:
 script:
   - mkdir build
   - cd build
-  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=OFF -DENABLE_CPP_CHECK=OFF -DENABLE_IWYU=OFF -DCMAKE_BUILD_TYPE=${BUILD} ..
+  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=OFF -DENABLE_CPP_CHECK=OFF -DENABLE_IWYU=OFF -DTYPECHECK_WERROR=ON -DCMAKE_BUILD_TYPE=${BUILD} ..
   - cmake --build . -j 4 --target test_typecheck
   - ./test_typecheck
