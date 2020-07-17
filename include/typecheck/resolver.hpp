@@ -22,25 +22,13 @@ namespace typecheck {
 		const ConstraintKind kind;
 		const ConstraintPass::ConstraintIDType id;
 
-		Resolver(ConstraintKind _kind, ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id) : pass(_pass), kind(_kind), id(_id) {}
+        Resolver(ConstraintKind _kind, ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id);
 		virtual ~Resolver() = default;
 
-		virtual std::unique_ptr<Resolver> clone(ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id) const {
-			return std::make_unique<Resolver>(this->kind, _pass, _id);
-		}
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id) const;
 
-		virtual bool hasMoreSolutions([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
-			// Setup method
-			return false;
-		}
-
-		virtual bool resolveNext([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
-			// Called subsequent times.
-			return false;
-		}
-
-		virtual std::size_t score([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const {
-			return 0;
-		}
+        virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager);
+        virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager);
+        virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const;
 	};
 }
