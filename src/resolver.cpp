@@ -7,22 +7,22 @@
 
 #include "typecheck/resolver.hpp"
 
-typecheck::Resolver::Resolver(ConstraintKind _kind, ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id) : pass(_pass), kind(_kind), id(_id) {}
+typecheck::Resolver::Resolver(ConstraintKind _kind, ConstraintPass* _pass, const ConstraintPass::IDType _id) : pass(_pass), kind(_kind), id(_id) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::Resolver::clone(ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id) const {
+auto typecheck::Resolver::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
     return std::make_unique<Resolver>(this->kind, _pass, _id);
 }
 
-bool typecheck::Resolver::hasMoreSolutions([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::Resolver::hasMoreSolutions([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     // Setup method
     return false;
 }
 
-bool typecheck::Resolver::resolveNext([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) {
+auto typecheck::Resolver::resolveNext([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     // Called subsequent times.
     return false;
 }
 
-std::size_t typecheck::Resolver::score([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const {
+auto typecheck::Resolver::score([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     return 0;
 }

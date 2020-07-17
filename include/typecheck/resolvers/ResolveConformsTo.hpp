@@ -11,9 +11,9 @@ namespace typecheck {
 		std::vector<Type> state;
 		
 	public:
-        ResolveConformsTo(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id);
+        ResolveConformsTo(ConstraintPass* pass, const ConstraintPass::IDType id);
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override;
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::IDType id) const override;
 
         bool doInitialIterationSetup(const Constraint& constraint);
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override;

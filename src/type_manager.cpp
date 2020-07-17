@@ -185,7 +185,7 @@ typecheck::TypeVar typecheck::TypeManager::CreateTypeVar() {
 	return type;
 }
 
-const typecheck::Constraint* typecheck::TypeManager::getConstraint(const IDType id) const {
+const typecheck::Constraint* typecheck::TypeManager::getConstraint(const ConstraintPass::IDType id) const {
 	for (auto& constraint : this->constraints) {
 		if (constraint.id() == id) {
 			return &constraint;

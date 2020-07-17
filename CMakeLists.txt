@@ -126,10 +126,13 @@ set(CMAKE_AUTOGEN_VERBOSE OFF)
 file(GLOB_RECURSE PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/protos/*.proto)
 generateProtos(PROTO_FILES typecheck_protos)
 
+file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.hpp)
+file(GLOB_RECURSE INC_FILES include/*.hpp)
+
 if (ENABLE_IWYU)
 	find_program(iwyu_path NAMES include-what-you-use iwyu REQUIRED)
 	message("Include-What-You-Use Enabled: ${iwyu_path}")
-	set(iwhy_path_and_options "${iwyu_path} --mapping_file=typecheck.imp")
+	set(iwhy_path_and_options "${iwyu_path} --mapping_file=${CMAKE_CURRENT_BINARY_DIR}/typecheck.imp")
 endif()
 
 if (ENABLE_LWYU)
@@ -138,6 +141,8 @@ if (ENABLE_LWYU)
 endif()
 
 if (ENABLE_CPP_CHECK)
+    set(CMAKE_CXX_CLANG_TIDY "")
+
 	find_program(CMAKE_CXX_CPPCHECK cppcheck REQUIRED)
 	if (${CMAKE_CXX_CPPCHECK} STREQUAL "cppcheck_path-NOTFOUND")
 		message(FATAL_ERROR "cppcheck not found")
@@ -145,7 +150,8 @@ if (ENABLE_CPP_CHECK)
 	list(APPEND CMAKE_CXX_CPPCHECK
 		"--enable=warning"
 		"--force"
-		"--std=c++${CMAKE_CXX_STANDARD}")
+		"--std=c++${CMAKE_CXX_STANDARD}"
+        "--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
 endif()
 
 if (ENABLE_CLANG_TIDY)
@@ -156,12 +162,9 @@ if (ENABLE_CLANG_TIDY)
   	set(CMAKE_CXX_CLANG_TIDY "${clang_tidy_path}")
 	list(APPEND CMAKE_CXX_CLANG_TIDY
         "-header-filter=\"${CMAKE_SOURCE_DIRECTORY}\""
-        "-checks=\"*,readability-*\"")
+        "-checks=\"-*,clang-analyzer-*,modernize-*,clang-analyzer-*,cppcoreguidelines-*,cert-*,performance-*,portability-*,readability-*\"")
 	message("Clang-Tidy Enabled: ${clang_tidy_path}")
 endif()
-
-file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.hpp)
-file(GLOB_RECURSE INC_FILES include/*.hpp)
 
 add_library(typecheck ${SRC_FILES} ${INC_FILES})
 target_include_directories(typecheck PUBLIC include)
@@ -169,7 +172,7 @@ target_link_libraries(typecheck PUBLIC typecheck_protos)
 # target_link_libraries(typecheck PUBLIC ortools::ortools)
 
 if (ENABLE_CPP_CHECK)
-	set_property(TARGET typecheck PROPERTY CXX_CPPCHECK ${cppcheck_path})
+	set_property(TARGET typecheck PROPERTY CXX_CPPCHECK ${CMAKE_CXX_CPPCHECK})
 	unset(CMAKE_CXX_CPPCHECK)
 endif()
 
@@ -178,8 +181,8 @@ if (ENABLE_IWYU)
 endif()
 
 if (ENABLE_CLANG_TIDY)
-	set_property(TARGET typecheck PROPERTY CXX_CLANG_TIDY ${clang_tidy_path})
-	unset(CMAKE_CXX_CLANG_TIDY)
+	set_property(TARGET typecheck PROPERTY CXX_CLANG_TIDY ${CMAKE_CXX_CLANG_TIDY})
+	set(CMAKE_CXX_CLANG_TIDY "")
 endif()
 
 if (NOT TARGET Catch2::Catch2)

@@ -8,9 +8,9 @@ namespace typecheck {
 	private:
 		bool has_gotten_resolve = false;
 	public:
-        ResolveEquals(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id);
+        ResolveEquals(ConstraintPass* pass, const ConstraintPass::IDType id);
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override;
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::IDType id) const override;
 
         bool is_valid_constraint(const Constraint& constraint) const;
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override;

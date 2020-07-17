@@ -15,9 +15,9 @@ namespace typecheck {
         std::vector<Type> overloads;
         std::size_t current_overload_i = std::numeric_limits<std::size_t>::max();
     public:
-        ResolveBindOverload(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id);
+        ResolveBindOverload(ConstraintPass* pass, const ConstraintPass::IDType id);
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override;
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::IDType id) const override;
 
         bool is_valid_constraint(const Constraint& constraint) const;
         void doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager);

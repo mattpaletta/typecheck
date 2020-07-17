@@ -13,10 +13,10 @@
 #include <memory>
 #include <typecheck_protos/constraint.pb.h>
 
-typecheck::ResolveConvertible::ResolveConvertible(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::Conversion, pass, id) {}
+typecheck::ResolveConvertible::ResolveConvertible(ConstraintPass* pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Conversion, pass, _id) {}
 
-std::unique_ptr<typecheck::Resolver> typecheck::ResolveConvertible::clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const {
-    return std::make_unique<ResolveConvertible>(pass, id);
+std::unique_ptr<typecheck::Resolver> typecheck::ResolveConvertible::clone(ConstraintPass* pass, const ConstraintPass::IDType _id) const {
+    return std::make_unique<ResolveConvertible>(pass, _id);
 }
 
 bool typecheck::ResolveConvertible::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) {

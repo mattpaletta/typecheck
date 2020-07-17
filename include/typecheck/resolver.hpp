@@ -20,12 +20,12 @@ namespace typecheck {
 	public:
 		// Once set, can't ever be changed
 		const ConstraintKind kind;
-		const ConstraintPass::ConstraintIDType id;
+		const ConstraintPass::IDType id;
 
-        Resolver(ConstraintKind _kind, ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id);
+        Resolver(ConstraintKind _kind, ConstraintPass* _pass, const ConstraintPass::IDType _id);
 		virtual ~Resolver() = default;
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* _pass, const ConstraintPass::ConstraintIDType _id) const;
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const;
 
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager);
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager);

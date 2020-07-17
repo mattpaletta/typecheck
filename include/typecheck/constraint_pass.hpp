@@ -20,18 +20,18 @@ namespace typecheck {
 		// Holds pointer to previous pass (if applicable)
 		ConstraintPass* prev = nullptr;
     public:
-        using ConstraintIDType = long long /* == TypeManager::IDType */;
+        using IDType = long long /* (determined by google protobuf type) */;
 
-        using scoreMapType = std::map<ConstraintIDType, std::size_t>;
+        using scoreMapType = std::map<IDType, std::size_t>;
 	private:
 		scoreMapType scores;
         std::size_t score = std::numeric_limits<std::size_t>::max();
-        std::map<std::string, std::pair<ConstraintIDType, int>> permissions;
+        std::map<std::string, std::pair<IDType, int>> permissions;
 
         // The key must be string, because 'typeVar' not comparable.
         std::map<std::string, Type> resolvedTypes;
 
-        mutable std::map<ConstraintIDType, std::unique_ptr<Resolver>> resolvers;
+        mutable std::map<IDType, std::unique_ptr<Resolver>> resolvers;
 		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);
 		Resolver* GetResolverRec(const Constraint& constraint, const TypeManager* manager) const;
         void ResetResolver(const typecheck::Constraint& constraint);

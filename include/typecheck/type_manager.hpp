@@ -12,12 +12,11 @@
 #include "resolver.hpp"
 
 namespace typecheck {
+    class Resolver;
 	class ConstraintPass;
 	class TypeManager {
 		friend ConstraintPass;
 		friend TypeSolver;
-    public:
-        using IDType = long long;
 	private:
 		std::vector<Constraint> constraints;
 
@@ -69,15 +68,15 @@ namespace typecheck {
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
 
 		typecheck::TypeVar CreateTypeVar();
-		IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
-		IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
-        IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-        IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
-        IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
-        IDType CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
-        IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
+        ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
+        ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
+        ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
+        ConstraintPass::IDType CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
+        ConstraintPass::IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
 
-        const Constraint* getConstraint(const IDType id) const;
+        const Constraint* getConstraint(const ConstraintPass::IDType id) const;
 
 		bool solve();
 		Type getResolvedType(const TypeVar& type) const;
