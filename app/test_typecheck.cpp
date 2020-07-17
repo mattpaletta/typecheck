@@ -169,22 +169,11 @@ TEST_CASE("test resolve bindto conflicting full", "[type_solver]") {
     getDefaultTypeManager(tm);
     auto T1 = tm.CreateTypeVar();
 
-    auto constraint1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
-    auto constraint2 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("float"));
+    tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    tm.CreateBindToConstraint(T1, tm.getRegisteredType("float"));
 
-    CHECK(!tm.solve());
+    REQUIRE(!tm.solve());
 }
-
-//TEST_CASE("test resolve bindto conflicting", "[resolver]") {
-//    getDefaultTypeManager(tm);
-//    auto T1 = tm.CreateTypeVar();
-//
-//    auto constraint1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
-//    auto constraint2 = tm.CreateBindToConstraint(T2, tm.getRegisteredType("int"));
-//    auto constraint2 = tm.CreateConvertibleConstraint(T2, <#const TypeVar &T1#>);
-//
-//    CHECK(!tm.solve());
-//}
 
 TEST_CASE("test resolve equals have both not equal", "[resolver]") {
 	getDefaultTypeManager(tm);
@@ -250,22 +239,6 @@ TEST_CASE("test resolve equals have neither", "[resolver]") {
 	CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 0);
 }
 
-
-TEST_CASE("test generic type generator", "[type_generator]") {
-	typecheck::GenericTypeGenerator g;
-	std::cout << "Starting Test" << std::endl;
-	CHECK(g.next() == "A");
-	CHECK(g.next() == "B");
-	CHECK(g.next() == "C");
-	CHECK(g.next() == "D");
-	for (int i = 4; i < 26; ++i) {
-		// Discard values
-		g.next();
-	}
-	CHECK(g.next() == "BA");
-	CHECK(g.next() == "BB");
-}
-
 TEST_CASE("load basic type load", "[type_manager]") {
 	typecheck::TypeManager tm;
 	CHECK(tm.registerType("int"));
@@ -307,9 +280,9 @@ TEST_CASE("solve basic type int equals constraint", "[constraint]") {
 	auto T1 = tm.CreateTypeVar(); // These are names of type variables, not actual types.
 	auto T2 = tm.CreateTypeVar();
 
-	auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-	auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-	auto constraintT3 = tm.CreateEqualsConstraint(T1, T2);
+	tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+	tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T1, T2);
 
 	CHECK(tm.solve());
 
@@ -326,11 +299,11 @@ TEST_CASE("solve basic type float equals constraint", "[constraint]") {
 	auto T1 = tm.CreateTypeVar();
 	auto T2 = tm.CreateTypeVar();
 
-	auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-	auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
-	auto constraintT3 = tm.CreateEqualsConstraint(T1, T2);
+	tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+	tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+	tm.CreateEqualsConstraint(T1, T2);
 
-	CHECK(tm.solve());
+	REQUIRE(tm.solve());
 
     REQUIRE(tm.getResolvedType(T1).has_raw());
     REQUIRE(tm.getResolvedType(T2).has_raw());
@@ -346,10 +319,10 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
 	auto T2 = tm.CreateTypeVar();
 	auto T3 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateEqualsConstraint(T2, T1);
-	auto constraintT2 = tm.CreateEqualsConstraint(T1, T2);
+    tm.CreateEqualsConstraint(T2, T1);
+	tm.CreateEqualsConstraint(T1, T2);
 
-	CHECK(!tm.solve());
+	REQUIRE(!tm.solve());
 }
 
 TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
@@ -359,11 +332,11 @@ TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
     auto T2 = tm.CreateTypeVar();
     auto T3 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateEqualsConstraint(T3, T1);
-    auto constraintT2 = tm.CreateEqualsConstraint(T1, T2);
-    auto constraintT3 = tm.CreateEqualsConstraint(T2, T3);
+    tm.CreateEqualsConstraint(T3, T1);
+    tm.CreateEqualsConstraint(T1, T2);
+    tm.CreateEqualsConstraint(T2, T3);
 
-    CHECK(!tm.solve());
+    REQUIRE(!tm.solve());
 }
 
 TEST_CASE("solve basic type conforms to triangle solvable constraint", "[constraint]") {
@@ -373,13 +346,13 @@ TEST_CASE("solve basic type conforms to triangle solvable constraint", "[constra
 	auto T2 = tm.CreateTypeVar();
 	auto T3 = tm.CreateTypeVar();
 
-	auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-	auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-    auto constraintT4 = tm.CreateEqualsConstraint(T1, T2);
-    auto constraintT5 = tm.CreateEqualsConstraint(T2, T3);
-    auto constraintT3 = tm.CreateEqualsConstraint(T3, T1);
+	tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+	tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T1, T2);
+    tm.CreateEqualsConstraint(T2, T3);
+    tm.CreateEqualsConstraint(T3, T1);
 
-	CHECK(tm.solve());
+	REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve basic type conforms to triangle conversion solvable constraint", "[constraint]") {
@@ -389,13 +362,13 @@ TEST_CASE("solve basic type conforms to triangle conversion solvable constraint"
 	auto T2 = tm.CreateTypeVar();
 	auto T3 = tm.CreateTypeVar();
 
-	auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-	auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
-	auto constraintT3 = tm.CreateEqualsConstraint(T1, T2);
-	auto constraintT4 = tm.CreateEqualsConstraint(T2, T3);
-	auto constraintT5 = tm.CreateEqualsConstraint(T3, T1);
+	tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+	tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+	tm.CreateEqualsConstraint(T1, T2);
+	tm.CreateEqualsConstraint(T2, T3);
+	tm.CreateEqualsConstraint(T3, T1);
 
-	CHECK(tm.solve());
+	REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve convertible constraint", "[constraint]") {
@@ -404,10 +377,10 @@ TEST_CASE("solve convertible constraint", "[constraint]") {
     auto T1 = tm.CreateTypeVar();
     auto T2 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-    auto constraintT3 = tm.CreateConvertibleConstraint(T1, T2);
+    tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateConvertibleConstraint(T1, T2);
 
-    CHECK(tm.solve());
+    REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve convertible reverse constraint", "[constraint]") {
@@ -416,8 +389,8 @@ TEST_CASE("solve convertible reverse constraint", "[constraint]") {
     auto T1 = tm.CreateTypeVar();
     auto T2 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
-    auto constraintT3 = tm.CreateConvertibleConstraint(T2, T1);
+    tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    tm.CreateConvertibleConstraint(T2, T1);
 
     REQUIRE(!tm.solve());
 }
@@ -428,9 +401,9 @@ TEST_CASE("solve convertible bind reverse constraint", "[constraint]") {
     auto T1 = tm.CreateTypeVar();
     auto T2 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
-    auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
-    auto constraintT3 = tm.CreateConvertibleConstraint(T1, T2);
+    tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    tm.CreateConvertibleConstraint(T1, T2);
 
     REQUIRE(tm.solve());
 }
@@ -441,9 +414,9 @@ TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
     auto T1 = tm.CreateTypeVar();
     auto T2 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
-    auto constraintT2 = tm.CreateBindToConstraint(T2, tm.getRegisteredType("float"));
-    auto constraintT3 = tm.CreateEqualsConstraint(T2, T1);
+    tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    tm.CreateBindToConstraint(T2, tm.getRegisteredType("float"));
+    tm.CreateEqualsConstraint(T2, T1);
 
     REQUIRE(tm.solve());
 
@@ -459,11 +432,11 @@ TEST_CASE("solve function application constraint", "[constraint]") {
     auto T2 = tm.CreateTypeVar();
     auto T3 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateApplicableFunctionConstraint(T0, {tm.getRegisteredType("int"), tm.getRegisteredType("float")}, tm.getRegisteredType("double"));
-    auto constraintT2 = tm.CreateBindFunctionConstraint(T0, {T1, T2}, T3);
+    tm.CreateApplicableFunctionConstraint(T0, {tm.getRegisteredType("int"), tm.getRegisteredType("float")}, tm.getRegisteredType("double"));
+    tm.CreateBindFunctionConstraint(T0, {T1, T2}, T3);
 
     // T0 = (T1, T2) -> T3
-    CHECK(tm.solve());
+    REQUIRE(tm.solve());
     REQUIRE(tm.getResolvedType(T1).has_raw());
     REQUIRE(tm.getResolvedType(T2).has_raw());
     REQUIRE(tm.getResolvedType(T3).has_raw());

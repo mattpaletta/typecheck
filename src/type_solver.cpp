@@ -1,16 +1,14 @@
 #include "typecheck/type_solver.hpp"
 #include "typecheck/type_manager.hpp"
 #include "typecheck/constraint_pass.hpp"
-#include "typecheck/utils.hpp"
 
 #include <numeric>
 #include <set>
 
 typecheck::TypeSolver::TypeSolver() {}
 
-void typecheck::TypeSolver::InitPasses(typecheck::TypeManager* manager) {
-	// this->RemoveDuplicates(manager);
-	this->BuildRefGraph(manager);
+void typecheck::TypeSolver::InitPasses([[maybe_unused]] typecheck::TypeManager* manager) {
+
 }
 
 bool typecheck::TypeSolver::solve(const TypeManager* manager) {
@@ -19,7 +17,7 @@ bool typecheck::TypeSolver::solve(const TypeManager* manager) {
 
 	typecheck::ConstraintPass best_pass;
 	this->DoPass(&best_pass, manager);
-	const auto is_valid = best_pass.IsValid(manager);
+	const auto is_valid = best_pass.IsValid();
 	if (is_valid) {
 		this->last_pass = std::move(best_pass);
 	}

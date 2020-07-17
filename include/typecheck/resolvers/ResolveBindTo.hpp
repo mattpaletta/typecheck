@@ -17,9 +17,9 @@ namespace typecheck {
     private:
         bool has_gotten_resolve = false;
     public:
-        ResolveBindTo(ConstraintPass* pass, const std::size_t id) : Resolver(ConstraintKind::Bind, pass, id) {}
+        ResolveBindTo(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::Bind, pass, id) {}
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const override {
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override {
             return std::make_unique<ResolveBindTo>(pass, id);
         }
 
@@ -27,7 +27,7 @@ namespace typecheck {
             return constraint.has_explicit_() && constraint.explicit_().has_type() && constraint.explicit_().has_var();
         }
 
-        virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override {
+        virtual bool hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) override {
             return !this->has_gotten_resolve && this->is_valid_constraint(constraint);
         }
 

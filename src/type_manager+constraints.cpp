@@ -5,20 +5,23 @@
 
 int typecheck::TypeManager::getConstraintKindScore(const typecheck::ConstraintKind& kind) const {
     switch (kind) {
-        case typecheck::ConstraintKind::Bind:
+        case BindParam:
+        case Bind:
             return 0;
-        case typecheck::ConstraintKind::ApplicableFunction:
+        case ApplicableFunction:
             return 1;
-        case typecheck::ConstraintKind::BindOverload:
+        case BindOverload:
             return 2;
-        case typecheck::ConstraintKind::ConformsTo:
+        case ConformsTo:
             return 3;
-        case typecheck::ConstraintKind::Conversion:
+        case Conversion:
             return 4;
-        case typecheck::ConstraintKind::Equal:
+        case Equal:
             return 5;
-        default:
-            TYPECHECK_ASSERT(false, "Unknown constraint type, cannot get score.");
+        case ConstraintKind_INT_MIN_SENTINEL_DO_NOT_USE_:
+        case ConstraintKind_INT_MAX_SENTINEL_DO_NOT_USE_:
+            return 10;
+            break;
     }
 }
 
@@ -28,8 +31,7 @@ void typecheck::TypeManager::SortConstraints() {
         std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
             return this->getConstraintKindScore(c1.kind()) > this->getConstraintKindScore(c2.kind());
         });
-#if DEBUG
-#else
+#ifdef DEBUG
         std::cout << "Warning: TypeManager using reverse_sort, this is not recommended for production." << std::endl;
 #endif
     } else {
@@ -41,7 +43,7 @@ void typecheck::TypeManager::SortConstraints() {
 
 }
 
-typecheck::Constraint getNewBlankConstraint(typecheck::ConstraintKind kind, const std::size_t& id) {
+typecheck::Constraint getNewBlankConstraint(typecheck::ConstraintKind kind, const long long& id) {
 	typecheck::Constraint constraint;
 	constraint.set_kind(kind);
 	constraint.set_hasrestriction(false);
@@ -52,7 +54,7 @@ typecheck::Constraint getNewBlankConstraint(typecheck::ConstraintKind kind, cons
 	return constraint;
 }
 
-std::size_t typecheck::TypeManager::CreateEqualsConstraint(const typecheck::TypeVar& t0, const typecheck::TypeVar& t1) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateEqualsConstraint(const typecheck::TypeVar& t0, const typecheck::TypeVar& t1) {
 	auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::Equal, this->constraint_generator.next_id());
 	 
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -68,7 +70,7 @@ std::size_t typecheck::TypeManager::CreateEqualsConstraint(const typecheck::Type
 	return constraint.id();
 }
 
-std::size_t typecheck::TypeManager::CreateLiteralConformsToConstraint(const typecheck::TypeVar& t0, const typecheck::KnownProtocolKind_LiteralProtocol& protocol) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateLiteralConformsToConstraint(const typecheck::TypeVar& t0, const typecheck::KnownProtocolKind_LiteralProtocol& protocol) {
 	auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::ConformsTo, this->constraint_generator.next_id());
 
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -81,7 +83,7 @@ std::size_t typecheck::TypeManager::CreateLiteralConformsToConstraint(const type
 	return constraint.id();
 }
 
-std::size_t typecheck::TypeManager::CreateConvertibleConstraint(const typecheck::TypeVar& T0, const typecheck::TypeVar& T1) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateConvertibleConstraint(const typecheck::TypeVar& T0, const typecheck::TypeVar& T1) {
     auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::Conversion, this->constraint_generator.next_id());
     
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -96,7 +98,7 @@ std::size_t typecheck::TypeManager::CreateConvertibleConstraint(const typecheck:
     return constraint.id();
 }
 
-std::size_t typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) {
     // overload to support creating from a vector.
     typecheck::Type funcType;
     for (auto& arg : args) {
@@ -110,7 +112,7 @@ std::size_t typecheck::TypeManager::CreateApplicableFunctionConstraint(const typ
     return this->CreateApplicableFunctionConstraint(T0, funcType);
 }
 
-std::size_t typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) {
     auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::ApplicableFunction, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -125,7 +127,7 @@ std::size_t typecheck::TypeManager::CreateApplicableFunctionConstraint(const typ
     return constraint.id();
 }
 
-std::size_t typecheck::TypeManager::CreateBindFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::TypeVar>& args, const typecheck::TypeVar& returnType) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateBindFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::TypeVar>& args, const typecheck::TypeVar& returnType) {
     auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::BindOverload, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -146,7 +148,7 @@ std::size_t typecheck::TypeManager::CreateBindFunctionConstraint(const typecheck
     return constraint.id();
 }
 
-std::size_t typecheck::TypeManager::CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) {
+typecheck::TypeManager::IDType typecheck::TypeManager::CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) {
     auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::Bind, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");

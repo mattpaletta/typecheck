@@ -8,9 +8,9 @@ namespace typecheck {
 	private:
 		bool has_gotten_resolve = false;
 	public:
-		ResolveEquals(ConstraintPass* pass, const std::size_t id) : Resolver(ConstraintKind::Equal, pass, id) {}
+		ResolveEquals(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::Equal, pass, id) {}
 
-		virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const override {
+		virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override {
 			return std::make_unique<ResolveEquals>(pass, id);
 		}
 
@@ -18,7 +18,7 @@ namespace typecheck {
 			return constraint.has_types() && constraint.types().has_first() && constraint.types().has_second();
 		}
 		
-		virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override {
+		virtual bool hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) override {
 			return this->pass && !has_gotten_resolve && this->is_valid_constraint(constraint);
 		}
 
@@ -65,7 +65,7 @@ namespace typecheck {
 			}
 		}
 
-		virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override {
+		virtual std::size_t score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const override {
 			if (!this->is_valid_constraint(constraint)) {
 				return std::numeric_limits<std::size_t>::max();
 			}

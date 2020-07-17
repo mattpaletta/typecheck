@@ -16,9 +16,9 @@ namespace typecheck {
     private:
         bool has_gotten_resolve = false;
     public:
-        ResolveApplicableFunction(ConstraintPass* pass, const std::size_t id) : Resolver(ConstraintKind::ApplicableFunction, pass, id) {}
+        ResolveApplicableFunction(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::ApplicableFunction, pass, id) {}
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const override {
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override {
             return std::make_unique<ResolveApplicableFunction>(pass, id);
         }
 
@@ -26,20 +26,20 @@ namespace typecheck {
             return constraint.has_explicit_() && constraint.explicit_().has_var() && constraint.explicit_().has_type() && constraint.explicit_().type().has_func();
         }
 
-        virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override {
+        virtual bool hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) override {
             return this->pass && !has_gotten_resolve && this->is_valid_constraint(constraint);
         }
 
-        virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager) override {
+        virtual bool resolveNext(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) override {
             this->has_gotten_resolve = true;
 
             // See bindOverload for selecting the correct implementation
 
             // Don't have a pass, can't resolve.
-            return true;
+            return this->is_valid_constraint(constraint);
         }
 
-        virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override {
+        virtual std::size_t score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const override {
             if (!this->is_valid_constraint(constraint)) {
                 return std::numeric_limits<std::size_t>::max();
             }

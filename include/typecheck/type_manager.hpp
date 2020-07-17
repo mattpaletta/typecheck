@@ -16,6 +16,8 @@ namespace typecheck {
 	class TypeManager {
 		friend ConstraintPass;
 		friend TypeSolver;
+    public:
+        using IDType = long long;
 	private:
 		std::vector<Constraint> constraints;
 
@@ -67,15 +69,15 @@ namespace typecheck {
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
 
 		typecheck::TypeVar CreateTypeVar();
-		std::size_t CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
-		std::size_t CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
-        std::size_t CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-        std::size_t CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
-        std::size_t CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
-        std::size_t CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
-        std::size_t CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
+		IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
+		IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
+        IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
+        IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
+        IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
+        IDType CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
+        IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
 
-        const Constraint* getConstraint(const std::size_t id) const;
+        const Constraint* getConstraint(const IDType id) const;
 
 		bool solve();
 		Type getResolvedType(const TypeVar& type) const;

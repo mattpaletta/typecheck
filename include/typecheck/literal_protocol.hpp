@@ -14,7 +14,7 @@ namespace typecheck {
 
 	public:
 		LiteralProtocol() {}
-		~LiteralProtocol() = default;
+		virtual ~LiteralProtocol() = default;
 
 		virtual std::vector<Type> getPreferredTypes() const { return {}; }
 		virtual std::vector<Type> getOtherTypes() const { return {}; }

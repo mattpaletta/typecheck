@@ -8,30 +8,33 @@
 #include <string>                            // for operator<
 #include "typecheck_protos/type.pb.h"        // for Type
 #include <deque>                             // for deque
+namespace typecheck { class TypeManager; }  // lines 27-35
 namespace typecheck { class Resolver; }  // lines 11-11
-namespace typecheck { class TypeManager; }  // lines 12-12
 namespace typecheck { class TypeSolver; }  // lines 13-13
 
 namespace typecheck {
 	class TypeSolver;
-	class TypeManager;
 	class ConstraintPass {
 		friend TypeSolver;
 
 		// Holds pointer to previous pass (if applicable)
 		ConstraintPass* prev = nullptr;
-	private:
-		std::map<std::size_t, std::size_t> scores;
-        std::size_t score = std::numeric_limits<std::size_t>::max();
-        std::map<std::string, std::pair<std::size_t, std::size_t>> permissions;
-        
-        // The key must be string, because 'typeVar' not comparable.
-		std::map<std::string, Type> resolvedTypes;
+    public:
+        using ConstraintIDType = long long /* == TypeManager::IDType */;
 
-		mutable std::map<std::size_t, std::unique_ptr<Resolver>> resolvers;
+        using scoreMapType = std::map<ConstraintIDType, std::size_t>;
+	private:
+		scoreMapType scores;
+        std::size_t score = std::numeric_limits<std::size_t>::max();
+        std::map<std::string, std::pair<ConstraintIDType, int>> permissions;
+
+        // The key must be string, because 'typeVar' not comparable.
+        std::map<std::string, Type> resolvedTypes;
+
+        mutable std::map<ConstraintIDType, std::unique_ptr<Resolver>> resolvers;
 		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);
 		Resolver* GetResolverRec(const Constraint& constraint, const TypeManager* manager) const;
-        void ResetResolver(const typecheck::Constraint& constraint, const TypeManager* manager);
+        void ResetResolver(const typecheck::Constraint& constraint);
 
     public:
 		ConstraintPass() = default;
@@ -47,12 +50,12 @@ namespace typecheck {
 		void CopyToExisting(ConstraintPass* dest) const;
 
 		std::size_t CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
-        std::map<std::size_t, std::size_t>& CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
+        scoreMapType& CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
 
 
         // Calculated based on score
-		bool IsValid(const TypeManager* manager);
-        static bool IsScoreBetter(const std::map<std::size_t, std::size_t>& s1, const std::map<std::size_t, std::size_t>& s2);
+		bool IsValid();
+        static bool IsScoreBetter(const scoreMapType& s1, const scoreMapType& s2);
 
         bool HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager);
 		Type getResolvedType(const TypeVar& var) const;

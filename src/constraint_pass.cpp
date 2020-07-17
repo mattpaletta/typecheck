@@ -28,10 +28,13 @@ T safe_add(const T& curr_val, const T& add_val) {
     } else if (curr_val <= add_val + curr_val) {
         // Make sure we didn't overflow
         return curr_val + add_val;
+    } else {
+        // Otherwise do nothing.
+        return curr_val;
     }
 }
 
-std::map<std::size_t, std::size_t>& typecheck::ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
+typecheck::ConstraintPass::scoreMapType& typecheck::ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
     if (!cached) {
         // Update map
         this->CalcScore(indices, manager, cached);
@@ -39,7 +42,7 @@ std::map<std::size_t, std::size_t>& typecheck::ConstraintPass::CalcScoreMap(cons
     return this->scores;
 }
 
-bool typecheck::ConstraintPass::IsScoreBetter(const std::map<std::size_t, std::size_t>& s1, const std::map<std::size_t, std::size_t>& s2) {
+bool typecheck::ConstraintPass::IsScoreBetter(const typecheck::ConstraintPass::scoreMapType& s1, const typecheck::ConstraintPass::scoreMapType& s2) {
     // Is s1 better than s2?
 
     if (s1.size() > s2.size()) {
@@ -80,8 +83,8 @@ std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& 
 
     if (cached) {
         // Calculate sum of scores
-        for (auto& score : this->scores) {
-            new_score = safe_add(new_score, score.second);
+        for (auto& this_score : this->scores) {
+            new_score = safe_add(new_score, this_score.second);
         }
 
         if (this->scores.empty()) {
@@ -169,7 +172,7 @@ bool typecheck::ConstraintPass::HasPermission(const Constraint& constraint, cons
         } else if (this_score >= existingPermission.second) {
             // Worse or equal score than previous, denied
             return false;
-        } else if (this_score < existingPermission.second) {
+        } else { // this_score < existingPermission.second)
             // Update permissions
             this->permissions[var.symbol()] = std::make_pair(constraint.id(), this_score);
             return true;
@@ -177,7 +180,7 @@ bool typecheck::ConstraintPass::HasPermission(const Constraint& constraint, cons
     }
 }
 
-bool typecheck::ConstraintPass::IsValid(const TypeManager* manager) {
+bool typecheck::ConstraintPass::IsValid() {
 	return this->score < std::numeric_limits<std::size_t>::max();
 }
 
@@ -197,7 +200,7 @@ typecheck::Resolver* typecheck::ConstraintPass::GetResolverRec(const Constraint&
 	return nullptr;
 }
 
-void typecheck::ConstraintPass::ResetResolver(const typecheck::Constraint& constraint, const TypeManager* manager) {
+void typecheck::ConstraintPass::ResetResolver(const typecheck::Constraint& constraint) {
     if (this->resolvers.find(constraint.id()) != this->resolvers.end()) {
         this->resolvers.erase(constraint.id());
     }
@@ -221,7 +224,7 @@ typecheck::Resolver* typecheck::ConstraintPass::GetResolver(const typecheck::Con
         }
         // Make a `copy` of the resolver
         // taken from: https://www.fluentcpp.com/2017/09/08/make-polymorphic-copy-modern-cpp/
-        this->resolvers.emplace(std::make_pair(constraint.id(), std::move(manager->registeredResolvers.at(constraint.kind())->clone(this, constraint.id()))));
+        this->resolvers.emplace(std::make_pair(constraint.id(), manager->registeredResolvers.at(constraint.kind())->clone(this, constraint.id())));
         return this->resolvers.at(constraint.id()).get();
     }
 }

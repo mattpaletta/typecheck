@@ -21,10 +21,8 @@ namespace typecheck {
 		// Implementations found in `type_solver+init_pass.cpp`
 		void InitPasses(typecheck::TypeManager* manager);
         void RemoveDuplicates(typecheck::TypeManager* manager);
-		void BuildRefGraph(typecheck::TypeManager* manager);
 
 		// Implementations found in `type_solver+solver.cpp`
-		ConstraintPass BuildPass(const std::vector<int>&) const;
 		void DoPass(ConstraintPass* pass, const TypeManager* manager) const;
 		void DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const;
 

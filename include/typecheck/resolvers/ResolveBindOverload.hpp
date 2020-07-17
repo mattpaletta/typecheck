@@ -18,9 +18,9 @@ namespace typecheck {
         std::vector<Type> overloads;
         std::size_t current_overload_i = std::numeric_limits<std::size_t>::max();
     public:
-        ResolveBindOverload(ConstraintPass* pass, const std::size_t id) : Resolver(ConstraintKind::BindOverload, pass, id) {}
+        ResolveBindOverload(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::BindOverload, pass, id) {}
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const override {
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override {
             return std::make_unique<ResolveBindOverload>(pass, id);
         }
 
@@ -70,7 +70,7 @@ namespace typecheck {
                     }
 
                     // try and fill in vars with overload type
-                    for (std::size_t i = 0; i < constraint.overload().argvars_size(); ++i) {
+                    for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
                         const auto arg = constraint.overload().argvars(i);
                         if (this->pass->HasPermission(constraint, arg, manager)) {
                             // Don't override already resolved types, they will fail in score
@@ -93,7 +93,7 @@ namespace typecheck {
             return false;
         }
 
-        virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override {
+        virtual std::size_t score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const override {
             if (!this->is_valid_constraint(constraint)) {
                 return std::numeric_limits<std::size_t>::max();
             }
@@ -101,7 +101,7 @@ namespace typecheck {
             if (this->pass && this->pass->hasResolvedType(constraint.overload().type()) && this->current_overload_i < this->overloads.size()) {
                 const auto currentOverload = this->overloads.at(this->current_overload_i);
 
-                for (std::size_t i = 0; i < constraint.overload().argvars_size(); ++i) {
+                for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
                     const auto arg = constraint.overload().argvars(i);
                     if (this->pass->hasResolvedType(arg)) {
                         // Make sure the arg types match up

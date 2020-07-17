@@ -21,9 +21,9 @@ namespace typecheck {
         std::vector<Type> options;
 
     public:
-        ResolveConvertible(ConstraintPass* pass, const std::size_t id) : Resolver(ConstraintKind::Conversion, pass, id) {}
+        ResolveConvertible(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::Conversion, pass, id) {}
 
-        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const override {
+        virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override {
             return std::make_unique<ResolveConvertible>(pass, id);
         }
 

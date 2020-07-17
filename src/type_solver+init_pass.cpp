@@ -30,11 +30,3 @@ void typecheck::TypeSolver::RemoveDuplicates(typecheck::TypeManager* manager) {
 	}
 	manager->constraints = std::move(newWithoutDuplicates);
 }
-
-void typecheck::TypeSolver::BuildRefGraph(typecheck::TypeManager* manager) {
-
-}
-
-typecheck::ConstraintPass typecheck::TypeSolver::BuildPass(const std::vector<int>&) const {
-	return {};
-}

@@ -6,7 +6,7 @@ namespace typecheck {
 	class ExpressibleByDoubleLiteral : public LiteralProtocol {
 	public:
 		ExpressibleByDoubleLiteral() : LiteralProtocol() {}
-		~ExpressibleByDoubleLiteral() = default;
+		virtual ~ExpressibleByDoubleLiteral() = default;
 
 		std::vector<Type> getPreferredTypes() const;
 		std::vector<Type> getOtherTypes() const;

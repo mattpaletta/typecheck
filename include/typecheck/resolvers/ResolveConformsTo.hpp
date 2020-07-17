@@ -17,18 +17,18 @@
 namespace typecheck {
 	class ResolveConformsTo : public Resolver {
 	private:
-		std::unique_ptr<LiteralProtocol> currLiteralProtocol = nullptr;
+        std::unique_ptr<LiteralProtocol> currLiteralProtocol; // = nullptr;
 		bool is_preferred;
 		std::vector<Type> state;
 		
 	public:
-		ResolveConformsTo(ConstraintPass* pass, const std::size_t id) : Resolver(ConstraintKind::ConformsTo, pass, id) {}
+		ResolveConformsTo(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) : Resolver(ConstraintKind::ConformsTo, pass, id) {}
 
-		virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const std::size_t id) const override {
+		virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::ConstraintIDType id) const override {
 			return std::make_unique<ResolveConformsTo>(pass, id);
 		}
 
-		bool doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) {
+		bool doInitialIterationSetup(const Constraint& constraint) {
 			if (!constraint.has_conforms() || !constraint.conforms().has_protocol() || !constraint.conforms().has_type()) {
 				std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
 				return false;
@@ -40,16 +40,22 @@ namespace typecheck {
 			const auto T1 = constraint.conforms().type();
 			bool did_find_protocol = false;
 			switch (constraint.conforms().protocol().literal()) {
-			case KnownProtocolKind_LiteralProtocol_ExpressibleByFloat:
-				this->currLiteralProtocol = std::make_unique<ExpressibleByFloatLiteral>();
-				did_find_protocol = true;
-				break;
-			case KnownProtocolKind_LiteralProtocol_ExpressibleByInteger:
-				this->currLiteralProtocol = std::make_unique<ExpressibleByIntegerLiteral>();
-				did_find_protocol = true;
-				break;
-			default:
-				throw std::runtime_error("Failed to find protocol");
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByFloat:
+                this->currLiteralProtocol = std::make_unique<ExpressibleByFloatLiteral>();
+                did_find_protocol = true;
+                break;
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByInteger:
+                this->currLiteralProtocol = std::make_unique<ExpressibleByIntegerLiteral>();
+                did_find_protocol = true;
+                break;
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByArray:
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByBoolean:
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByDictionary:
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByString:
+            case KnownProtocolKind_LiteralProtocol_ExpressibleByNil:
+            case KnownProtocolKind_LiteralProtocol_KnownProtocolKind_LiteralProtocol_INT_MIN_SENTINEL_DO_NOT_USE_:
+            case KnownProtocolKind_LiteralProtocol_KnownProtocolKind_LiteralProtocol_INT_MAX_SENTINEL_DO_NOT_USE_:
+            	throw std::runtime_error("Failed to find protocol");
 			}
 			
 			if (did_find_protocol) {
@@ -59,12 +65,12 @@ namespace typecheck {
 			return did_find_protocol;
 		}
 
-		virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override {
+		virtual bool hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) override {
 			// This will be called every time
 			
 			if (!this->currLiteralProtocol) {
 				// The first time do setup
-				return this->doInitialIterationSetup(constraint, manager);
+				return this->doInitialIterationSetup(constraint);
 			} else {
 				if (this->is_preferred) {
 					// Go through preferred first
@@ -100,7 +106,7 @@ namespace typecheck {
 			return false;
 		}
 
-		virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override {
+		virtual std::size_t score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const override {
 			const auto typeVar = constraint.conforms().type();
             TYPECHECK_ASSERT(this->currLiteralProtocol.operator bool(), "Must set protocol before calling score, call this->hasMoreSolutions(...) first");
             TYPECHECK_ASSERT(this->pass, "Must set pass object before calling score.");
