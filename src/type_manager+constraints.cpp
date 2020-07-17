@@ -3,7 +3,7 @@
 
 #include <typecheck_protos/constraint.pb.h>
 
-int getConstraintKindScore(const typecheck::ConstraintKind& kind) {
+int typecheck::TypeManager::getConstraintKindScore(const typecheck::ConstraintKind& kind) const {
     switch (kind) {
         case typecheck::ConstraintKind::Bind:
             return 0;
@@ -25,8 +25,8 @@ int getConstraintKindScore(const typecheck::ConstraintKind& kind) {
 void typecheck::TypeManager::SortConstraints() {
     if (this->use_reverse_sort) {
         // In reverse sort, make it the reverse of the order they need to be resolved, so we can make sure the algorithm can handle it. (worst case)
-        std::sort(this->constraints.begin(), this->constraints.end(), [](const Constraint& c1, const Constraint& c2) {
-            return getConstraintKindScore(c1.kind()) > getConstraintKindScore(c2.kind());
+        std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
+            return this->getConstraintKindScore(c1.kind()) > this->getConstraintKindScore(c2.kind());
         });
 #if DEBUG
 #else
@@ -34,8 +34,8 @@ void typecheck::TypeManager::SortConstraints() {
 #endif
     } else {
         // Sort the constraints by the order in which they need to be resolved
-        std::sort(this->constraints.begin(), this->constraints.end(), [](const Constraint& c1, const Constraint& c2) {
-            return getConstraintKindScore(c1.kind()) < getConstraintKindScore(c2.kind());
+        std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
+            return this->getConstraintKindScore(c1.kind()) < this->getConstraintKindScore(c2.kind());
         });
     }
 

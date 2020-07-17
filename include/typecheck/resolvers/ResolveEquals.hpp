@@ -30,19 +30,23 @@ namespace typecheck {
 			if (this->pass) {
 				const bool hasT0 = this->pass->hasResolvedType(T0);
 				const bool hasT1 = this->pass->hasResolvedType(T1);
+
+                const bool hasT0Permission = this->pass->HasPermission(constraint, T0, manager);
+                const bool hasT1Permission = this->pass->HasPermission(constraint, T1, manager);
+
 				if (hasT0 && hasT1) {
 					// We will determine if they are the same in the 'score'
 //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
                     return true;
 
-				} else if (hasT0) {
+				} else if (hasT0 && hasT1Permission) {
 					// Don't have T1
 					this->pass->setResolvedType(T1, this->pass->getResolvedType(T0));
 //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
 
 					return true;
 
-				} else if (hasT1) {
+				} else if (hasT1 && hasT0Permission) {
 					// Don't have T0
 					this->pass->setResolvedType(T0, this->pass->getResolvedType(T1));
 //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
@@ -51,6 +55,7 @@ namespace typecheck {
 
 				} else {
 					// Don't have either, can't resolve
+                    // Or don't have permission to set the other
 					return false;
 				}
 

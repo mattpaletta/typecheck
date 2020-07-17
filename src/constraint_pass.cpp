@@ -31,6 +31,46 @@ T safe_add(const T& curr_val, const T& add_val) {
     }
 }
 
+std::map<std::size_t, std::size_t>& typecheck::ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
+    if (!cached) {
+        // Update map
+        this->CalcScore(indices, manager, cached);
+    }
+    return this->scores;
+}
+
+bool typecheck::ConstraintPass::IsScoreBetter(const std::map<std::size_t, std::size_t>& s1, const std::map<std::size_t, std::size_t>& s2) {
+    // Is s1 better than s2?
+
+    if (s1.size() > s2.size()) {
+        // Bigger score automatically better
+        return true;
+    } else {
+        std::size_t s1Score = 0;
+        std::size_t s2Score = 0;
+
+        // Calculate sum of scores
+        for (auto& score : s1) {
+            s1Score = safe_add(s1Score, score.second);
+        }
+        for (auto& score : s2) {
+            s2Score = safe_add(s2Score, score.second);
+        }
+
+        if (s1.empty()) {
+            s1Score = std::numeric_limits<std::size_t>::max();
+        }
+
+        if (s2.empty()) {
+            s2Score = std::numeric_limits<std::size_t>::max();
+        }
+
+        // A lower score is better
+        return s1Score < s2Score;
+    }
+}
+
+
 std::size_t typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) {
     if (this->resolvedTypes.size() == 0) {
         return std::numeric_limits<std::size_t>::max();
@@ -102,11 +142,39 @@ bool typecheck::ConstraintPass::hasResolvedType(const TypeVar& var) const {
 
 void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, const typecheck::Type& type) {
     if ((type.has_raw() || type.has_func()) && !var.symbol().empty()) {
-        if (this->hasResolvedType(var)) {
-            std::cout << "warning, overriding existing type." << std::endl;
-        }
         this->resolvedTypes[var.symbol()] = type;
 	}
+}
+
+bool typecheck::ConstraintPass::HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) {
+    if (this->prev) {
+        // Store all permission globally, so they are consistent.
+        return this->prev->HasPermission(constraint, var, manager);
+    }
+
+    // Make sure no conflicting binds exist.
+    const auto this_score = manager->getConstraintKindScore(constraint.kind());
+
+    if (this->permissions.find(var.symbol()) == this->permissions.end()) {
+        // Ask recursively
+        this->permissions[var.symbol()] = std::make_pair(constraint.id(), this_score);
+        return true;
+    } else {
+        const auto existingPermission = this->permissions.at(var.symbol());
+        // Permission: lower is better
+
+        if (constraint.id() == existingPermission.first) {
+            // This is the same one, may proceed
+            return true;
+        } else if (this_score >= existingPermission.second) {
+            // Worse or equal score than previous, denied
+            return false;
+        } else if (this_score < existingPermission.second) {
+            // Update permissions
+            this->permissions[var.symbol()] = std::make_pair(constraint.id(), this_score);
+            return true;
+        }
+    }
 }
 
 bool typecheck::ConstraintPass::IsValid(const TypeManager* manager) {

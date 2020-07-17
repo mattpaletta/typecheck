@@ -34,8 +34,10 @@ namespace typecheck {
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager) override {
             this->has_gotten_resolve = true;
             if (this->is_valid_constraint(constraint)) {
-                if (!this->pass->hasResolvedType(constraint.explicit_().var())) {
+                if (this->pass->HasPermission(constraint, constraint.explicit_().var(), manager)) {
                     this->pass->setResolvedType(constraint.explicit_().var(), constraint.explicit_().type());
+                } else {
+                    return false;
                 }
             }
             return true;
@@ -46,7 +48,7 @@ namespace typecheck {
                 return std::numeric_limits<std::size_t>::max();
             }
 
-            if (this->pass->hasResolvedType(constraint.explicit_().var())) {
+            if (this->pass->HasPermission(constraint, constraint.explicit_().var(), manager) && this->pass->hasResolvedType(constraint.explicit_().var())) {
                 // If var is resolved, and it's type equals what it's supposed to be.
                 if (google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(constraint.explicit_().var()), constraint.explicit_().type())) {
                     // All args found, and matched up, and return types found and match up.

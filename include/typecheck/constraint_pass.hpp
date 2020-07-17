@@ -23,6 +23,7 @@ namespace typecheck {
 	private:
 		std::map<std::size_t, std::size_t> scores;
         std::size_t score = std::numeric_limits<std::size_t>::max();
+        std::map<std::string, std::pair<std::size_t, std::size_t>> permissions;
         
         // The key must be string, because 'typeVar' not comparable.
 		std::map<std::string, Type> resolvedTypes;
@@ -46,10 +47,14 @@ namespace typecheck {
 		void CopyToExisting(ConstraintPass* dest) const;
 
 		std::size_t CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
+        std::map<std::size_t, std::size_t>& CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
+
 
         // Calculated based on score
 		bool IsValid(const TypeManager* manager);
+        static bool IsScoreBetter(const std::map<std::size_t, std::size_t>& s1, const std::map<std::size_t, std::size_t>& s2);
 
+        bool HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager);
 		Type getResolvedType(const TypeVar& var) const;
 		bool hasResolvedType(const TypeVar& var) const;
 		void setResolvedType(const TypeVar& var, const Type& type);

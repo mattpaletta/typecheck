@@ -26,7 +26,7 @@ namespace typecheck {
 		// Implementations found in `type_solver+solver.cpp`
 		ConstraintPass BuildPass(const std::vector<int>&) const;
 		void DoPass(ConstraintPass* pass, const TypeManager* manager) const;
-		void DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed = std::numeric_limits<std::size_t>::max()) const;
+		void DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const;
 
 	public:
 		TypeSolver();

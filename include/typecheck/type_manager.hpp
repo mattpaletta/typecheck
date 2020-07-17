@@ -30,6 +30,7 @@ namespace typecheck {
 		GenericTypeGenerator constraint_generator;
 
         void SortConstraints();
+        int getConstraintKindScore(const typecheck::ConstraintKind& kind) const;
 
 	public:
         bool use_reverse_sort = false;

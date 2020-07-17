@@ -62,19 +62,28 @@ namespace typecheck {
                     // Only proceed if we found an overload with the same number of arguments
 
                     const auto typeVar = constraint.overload().type();
-                    this->pass->setResolvedType(typeVar, nextOverload);
+                    if (this->pass->HasPermission(constraint, typeVar, manager)) {
+                        // Only proceed if we have permission to do so.
+                        this->pass->setResolvedType(typeVar, nextOverload);
+                    } else {
+                        return false;
+                    }
 
                     // try and fill in vars with overload type
                     for (std::size_t i = 0; i < constraint.overload().argvars_size(); ++i) {
                         const auto arg = constraint.overload().argvars(i);
-                        if (!this->pass->hasResolvedType(arg)) {
+                        if (this->pass->HasPermission(constraint, arg, manager)) {
                             // Don't override already resolved types, they will fail in score
                             this->pass->setResolvedType(arg, nextOverload.func().args(i));
+                        } else {
+                            return false;
                         }
                     }
 
-                    if (!this->pass->hasResolvedType(constraint.overload().returnvar())) {
+                    if (this->pass->HasPermission(constraint, constraint.overload().returnvar(), manager)) {
                         this->pass->setResolvedType(constraint.overload().returnvar(), nextOverload.func().returntype());
+                    } else {
+                        return false;
                     }
 
                     return true;

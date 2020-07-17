@@ -137,7 +137,8 @@ bool typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const
 		return false;
 	}
 
-    if (!t0_ptr.raw().name().empty() && !t1_ptr.raw().name().empty() && this->convertible.at(T0.raw().name()).find(t1_ptr.raw().name()) != this->convertible.at(T0.raw().name()).end()) {
+    if (!t0_ptr.raw().name().empty() && !t1_ptr.raw().name().empty() && \
+        this->convertible.at(T0.raw().name()).find(t1_ptr.raw().name()) != this->convertible.at(T0.raw().name()).end()) {
 		// Convertible from T0 -> T1
 		return true;
 	}

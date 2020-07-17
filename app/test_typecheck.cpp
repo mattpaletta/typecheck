@@ -148,16 +148,43 @@ TEST_CASE("test resolve bindto conflicting", "[resolver]") {
     getDefaultTypeManager(tm);
     auto T1 = tm.CreateTypeVar();
 
-    auto constraintID = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    auto constraint1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    auto constraint2 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("float"));
 
     typecheck::ConstraintPass pass;
-    pass.setResolvedType(T1, tm.getRegisteredType("float"));
-    auto resolver = typecheck::ResolveBindTo(&pass, constraintID);
-    CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
-    CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
+    auto resolver1 = typecheck::ResolveBindTo(&pass, constraint1);
+    auto resolver2 = typecheck::ResolveBindTo(&pass, constraint2);
 
-    CHECK(resolver.score(*tm.getConstraint(constraintID), &tm) > 0);
+    CHECK(resolver1.hasMoreSolutions(*tm.getConstraint(constraint1), &tm));
+    CHECK(resolver2.hasMoreSolutions(*tm.getConstraint(constraint2), &tm));
+
+    CHECK( resolver1.resolveNext(*tm.getConstraint(constraint1), &tm));
+    CHECK(!resolver2.resolveNext(*tm.getConstraint(constraint2), &tm));
+
+    CHECK(resolver1.score(*tm.getConstraint(constraint1), &tm) == 0);
+    CHECK(resolver2.score(*tm.getConstraint(constraint2), &tm) > 0);
 }
+
+TEST_CASE("test resolve bindto conflicting full", "[type_solver]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+
+    auto constraint1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    auto constraint2 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("float"));
+
+    CHECK(!tm.solve());
+}
+
+//TEST_CASE("test resolve bindto conflicting", "[resolver]") {
+//    getDefaultTypeManager(tm);
+//    auto T1 = tm.CreateTypeVar();
+//
+//    auto constraint1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+//    auto constraint2 = tm.CreateBindToConstraint(T2, tm.getRegisteredType("int"));
+//    auto constraint2 = tm.CreateConvertibleConstraint(T2, <#const TypeVar &T1#>);
+//
+//    CHECK(!tm.solve());
+//}
 
 TEST_CASE("test resolve equals have both not equal", "[resolver]") {
 	getDefaultTypeManager(tm);
@@ -401,14 +428,11 @@ TEST_CASE("solve convertible bind reverse constraint", "[constraint]") {
     auto T1 = tm.CreateTypeVar();
     auto T2 = tm.CreateTypeVar();
 
-    auto constraintT1 = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
-    auto constraintT2 = tm.CreateBindToConstraint(T2, tm.getRegisteredType("int"));
-    auto constraintT3 = tm.CreateConvertibleConstraint(T2, T1);
+    auto constraintT1 = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    auto constraintT2 = tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+    auto constraintT3 = tm.CreateConvertibleConstraint(T1, T2);
 
-    REQUIRE(!tm.solve());
-
-    CHECK(tm.getResolvedType(T1).raw().name() == "int");
-    CHECK(tm.getResolvedType(T2).raw().name() == "int");
+    REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {

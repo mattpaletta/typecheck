@@ -55,11 +55,15 @@ namespace typecheck {
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager) override {
             if (this->options.size() > 0) {
                 auto nextType = this->options.back();
-                this->options.pop_back();
 
                 auto typeVar = constraint.types().second();
-                this->pass->setResolvedType(typeVar, nextType);
-                return true;
+                if (this->pass->HasPermission(constraint, typeVar, manager)) {
+                    // Only pop if replacing
+                    this->options.pop_back();
+
+                    this->pass->setResolvedType(typeVar, nextType);
+                    return true;
+                }
             }
             return false;
         }

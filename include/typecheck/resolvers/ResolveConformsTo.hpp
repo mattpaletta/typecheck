@@ -90,10 +90,12 @@ namespace typecheck {
 				this->state.pop_back();
 
 				auto typeVar = constraint.conforms().type();
-				this->pass->setResolvedType(typeVar, nextType);
-//                std::cout << typeVar.symbol() << " : " << nextType.raw().name() << std::endl;
-
-				return true;
+                if (this->pass->HasPermission(constraint, typeVar, manager)) {
+                    this->pass->setResolvedType(typeVar, nextType);
+                    return true;
+                } else {
+                    return false;
+                }
 			}
 			return false;
 		}
