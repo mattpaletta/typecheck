@@ -67,7 +67,7 @@ namespace typecheck {
 		// `Register` resolvers
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
 
-		typecheck::TypeVar CreateTypeVar();
+		const typecheck::TypeVar CreateTypeVar();
         ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
         ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
         ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
@@ -79,6 +79,6 @@ namespace typecheck {
         const Constraint* getConstraint(const ConstraintPass::IDType id) const;
 
 		bool solve();
-		Type getResolvedType(const TypeVar& type) const;
+		const Type getResolvedType(const TypeVar& type) const;
 	};
 }

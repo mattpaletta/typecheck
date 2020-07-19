@@ -106,7 +106,7 @@ auto typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) -> b
 	return false;
 }
 
-auto typecheck::TypeManager::getResolvedType(const typecheck::TypeVar& type) const -> typecheck::Type {
+auto typecheck::TypeManager::getResolvedType(const typecheck::TypeVar& type) const -> const typecheck::Type {
 	return this->solver.getResolvedType(type);
 }
 
@@ -175,7 +175,7 @@ auto typecheck::TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolv
 	return will_insert;
 }
 
-auto typecheck::TypeManager::CreateTypeVar() -> typecheck::TypeVar {
+auto typecheck::TypeManager::CreateTypeVar() -> const typecheck::TypeVar {
 	const auto var = this->type_generator.next();
 
 	this->registeredTypeVars.insert(var);
