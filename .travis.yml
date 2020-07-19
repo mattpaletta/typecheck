@@ -92,7 +92,7 @@ script:
     # Only build in parallel if not using checks, makes printing easier to follow.
   - if [[ $USE_CPP_CHECK == "ON" || $USE_CLANG_TIDY == "ON" ]]; then
       cmake --build . --target test_typecheck;
-    else;
+    else
       cmake --build . -j 4 --target test_typecheck;
     fi;
   - ./test_typecheck
