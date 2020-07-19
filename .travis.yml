@@ -1,90 +1,98 @@
---- 
-addons: 
-  apt: 
-    packages: 
-      - clang-tidy
-      - cppcheck
-    source: 
-      - ubuntu-toolchain-r-test
-    update: true
-before_install: 
-  - "if [[ $TRAVIS_OS_NAME == \"linux\" ]]; then export CMAKE_MAJOR_VERSION=3.17; export CMAKE_MINOR_VERSION=2; wget -q https://cmake.org/files/v${CMAKE_MAJOR_VERSION}/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && mkdir /opt/cmake && sh ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh --prefix=/opt/cmake --skip-license && sudo ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake && rm ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && export PATH=/usr/local/bin:$PATH; fi;"
-  - "if [[ $TRAVIS_OS_NAME == \"windows\" ]]; then choco upgrade cmake -y --version=3.17.2; fi;"
-cache: ccache
-dist: bionic
 languages: cpp
-matrix: 
-  include: 
-    - 
+
+os: linux
+dist: bionic
+cache: ccache
+
+matrix:
+  include:
+    - os: windows
+      if: branch = master
       compiler: msvc
-      env: 
-        - BUILD=Debug
-        - USE_CLANG_TIDY=OFF
-        - USE_CPP_CHECK=OFF
-        - USE_WERROR=OFF
-      if: "branch = master"
-      os: windows
-    - 
+      env:
+      - BUILD=Debug
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=OFF
+    - os: linux
+      if: branch = master
       compiler: gcc
-      env: 
-        - BUILD=Release
-        - USE_CLANG_TIDY=ON
-        - USE_CPP_CHECK=ON
-        - USE_WERROR=ON
-      if: "branch = master"
-      os: linux
-    - 
+      env:
+      - BUILD=Release
+      - USE_CLANG_TIDY=ON
+      - USE_CPP_CHECK=ON
+      - USE_WERROR=ON
+    - os: linux
+      if: branch = master
       compiler: gcc
-      env: 
-        - BUILD=RelWithDebInfo
-        - USE_CLANG_TIDY=OFF
-        - USE_CPP_CHECK=OFF
-        - USE_WERROR=ON
-      if: "branch = master"
-      os: linux
-    - 
+      env:
+      - BUILD=RelWithDebInfo
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - os: linux
+      if: branch = master
       compiler: gcc
-      env: 
-        - BUILD=MinSizeRel
-        - USE_CLANG_TIDY=OFF
-        - USE_CPP_CHECK=OFF
-        - USE_WERROR=ON
-      if: "branch = master"
-      os: linux
-    - 
+      env:
+      - BUILD=MinSizeRel
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - os: linux
       compiler: gcc
-      env: 
-        - BUILD=Debug
-        - USE_CLANG_TIDY=ON
-        - USE_CPP_CHECK=ON
-        - USE_WERROR=ON
-      os: linux
-    - 
+      env:
+      - BUILD=Debug
+      - USE_CLANG_TIDY=ON
+      - USE_CPP_CHECK=ON
+      - USE_WERROR=ON
+    - os: linux
+      if: branch = master
       compiler: clang
-      env: 
-        - BUILD=Debug
-        - USE_CLANG_TIDY=OFF
-        - USE_CPP_CHECK=OFF
-        - USE_WERROR=ON
-      if: "branch = master"
-      os: linux
-    - 
-      addons: 
-        homebrew: 
-          packages: 
+      env:
+      - BUILD=Debug
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - os: osx
+      if: branch = master
+      env:
+      - BUILD=Debug
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+      addons:
+        homebrew:
+          packages:
             - cmake
           update: true
-      env: 
-        - BUILD=Debug
-        - USE_CLANG_TIDY=OFF
-        - USE_CPP_CHECK=OFF
-        - USE_WERROR=ON
-      if: "branch = master"
-      os: osx
-os: linux
-script: 
-  - "mkdir build"
-  - "cd build"
-  - "cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} .."
-  - "if [[ $USE_CPP_CHECK == "ON" || $USE_CLANG_TIDY == "ON" ]]; then cmake --build . --target test_typecheck else; cmake --build . -j 4 --target test_typecheck fi;"
+
+addons:
+  apt:
+    update: true
+    source:
+      # - sourceline: 'ppa:mhier/libboost-latest'
+      - ubuntu-toolchain-r-test
+    packages:
+      - clang-tidy
+      - cppcheck
+
+before_install:
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+      export CMAKE_MAJOR_VERSION=3.17;
+      export CMAKE_MINOR_VERSION=2;
+      wget -q https://cmake.org/files/v${CMAKE_MAJOR_VERSION}/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && mkdir /opt/cmake && sh ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh --prefix=/opt/cmake --skip-license && sudo ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake && rm ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && export PATH=/usr/local/bin:$PATH;
+    fi;
+  - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
+      choco upgrade cmake -y --version=3.17.2;
+    fi;
+script:
+  - mkdir build
+  - cd build
+  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
+    # Only build in parallel if not using checks, makes printing easier to follow.
+  - if [[ $USE_CPP_CHECK == "ON" || $USE_CLANG_TIDY == "ON" ]]; then
+      cmake --build . --target test_typecheck;
+    else;
+      cmake --build . -j 4 --target test_typecheck;
+    fi;
   - ./test_typecheck
