@@ -13,7 +13,7 @@ To save this document from getting too long, this has been moved to a separate d
 
 ## Code Style
 Code style is checked by clang-tidy (*ON* by default).  You can check it by running with:
-```
+```bash
 cd ${PROJECT_ROOT}/build
 cmake -DENABLE_CLANG_TIDY=ON ..
 ```
@@ -38,16 +38,16 @@ Libraries this project depends on:
 ## How to use?
 This project was build for, and is used in my own project: [Pseudocode](https://github.com/mattpaletta/pseudocode)
 (Soon to be opensourced, if not already.)
-```
+```cmake
 fetch_extern(typecheck https://github.com/mattpaletta/typecheck master)
 ```
 I use `FetchContent` to along with a helper function to grab this library.  You can see that function here: [fetch_extern](https://github.com/mattpaletta/typecheck/blob/master/cmake/fetch_extern.cmake).
 Alternatively, you can add it as a submodule include the directory:
-```
+```cmake
 add_subdirectory(typecheck)
 ```
 You can then link it to your project:
-```
+```cmake
 add_library(my_library ...)
 target_link_libraries(my_library PUBLIC ... typecheck ...)
 ```
