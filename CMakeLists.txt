@@ -124,21 +124,37 @@ if (ENABLE_CPP_CHECK)
 	list(APPEND CMAKE_CXX_CPPCHECK
 		"--enable=warning"
 		"--force"
-		"--std=c++${CMAKE_CXX_STANDARD}"
-        "--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
+        	"--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	    #list(APPEND CMAKE_CXX_CPPCHECK "--std=1z")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	    #list(APPEND CMAKE_CXX_CPPCHECK "--std=c++${CMAKE_CXX_STANDARD}")
+    else()
+        message(FATAL_ERROR "Only Clang or GCC Supported for cppcheck")
+    endif()
 endif()
 
 if (ENABLE_CLANG_TIDY)
-	find_program(clang_tidy_path clang-tidy REQUIRED)
-	if (${clang_tidy_path} STREQUAL "clang_tidy_path-NOTFOUND")
-		message(FATAL_ERROR "clang-tidy not found")
-	endif()
-  	set(CMAKE_CXX_CLANG_TIDY "${clang_tidy_path}")
-	list(APPEND CMAKE_CXX_CLANG_TIDY
+    find_program(clang_tidy_path clang-tidy REQUIRED)
+    if (${clang_tidy_path} STREQUAL "clang_tidy_path-NOTFOUND")
+        message(FATAL_ERROR "clang-tidy not found")
+    endif()
+    set(CMAKE_CXX_CLANG_TIDY "${clang_tidy_path}")
+    list(APPEND CMAKE_CXX_CLANG_TIDY
         "-header-filter=\"${CMAKE_SOURCE_DIRECTORY}\""
-        "-checks=\"-*,clang-analyzer-*,modernize-*,clang-analyzer-*,cppcoreguidelines-*,cert-*,performance-*,portability-*,readability-*\"")
+        "-checks=\"-*,clang-analyzer-*,modernize-*,clang-analyzer-*,cppcoreguidelines-*,cert-*,performance-*,portability-*,readability-*\""
+	"-extra-arg=-Wno-unknown-warning-option")
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	    #list(APPEND CMAKE_CXX_CLANG_TIDY "-std=1z")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	    #list(APPEND CMAKE_CXX_CLANG_TIDY "-std=c++${CMAKE_CXX_STANDARD}")
+    else()
+        message(FATAL_ERROR "Only Clang or GCC Supported for Clang-tidy")
+    endif()
+
     if (TYPECHECK_FIX_ERRORS)
-    list(APPEND CMAKE_CXX_CLANG_TIDY "--fix")
+        list(APPEND CMAKE_CXX_CLANG_TIDY "--fix")
     endif()
 	message("Clang-Tidy Enabled: ${clang_tidy_path}")
 endif()
