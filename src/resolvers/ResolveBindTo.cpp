@@ -42,7 +42,7 @@ auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const T
     return true;
 }
 
-auto typecheck::ResolveBindTo::score(const Constraint& constraint, const TypeManager* manager) const -> std::size_t {
+auto typecheck::ResolveBindTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint)) {
         return std::numeric_limits<std::size_t>::max();
     }
