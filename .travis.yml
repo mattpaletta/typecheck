@@ -85,6 +85,7 @@ before_install:
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       choco upgrade cmake -y --version=3.17.2;
     fi;
+
 script:
   - mkdir build
   - cd build
@@ -95,4 +96,8 @@ script:
     else
       cmake --build . -j 4 --target test_typecheck;
     fi;
-  - ./test_typecheck
+  - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
+      ./${BUILD}/test_typecheck.exe
+    else
+      ./test_typecheck
+    fi;
