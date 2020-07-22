@@ -35,24 +35,15 @@ auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const T
 
         if (hasT0 && hasT1) {
             // We will determine if they are the same in the 'score'
-            //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
             return true;
 
         } else if (hasT0 && hasT1Permission) {
             // Don't have T1
-            this->pass->RequestPermission(constraint, T1, manager);
-            this->pass->setResolvedType(T1, this->pass->getResolvedType(T0));
-            //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
-
-            return true;
+            return this->pass->setResolvedType(constraint, T1, this->pass->getResolvedType(T0), manager);
 
         } else if (hasT1 && hasT0Permission) {
             // Don't have T0
-            this->pass->RequestPermission(constraint, T0, manager);
-            this->pass->setResolvedType(T0, this->pass->getResolvedType(T1));
-            //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
-
-            return true;
+            return this->pass->setResolvedType(constraint, T0, this->pass->getResolvedType(T1), manager);
 
         } else {
             // Don't have either, can't resolve

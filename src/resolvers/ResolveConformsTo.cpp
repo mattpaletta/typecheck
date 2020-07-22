@@ -92,12 +92,7 @@ auto typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, con
         this->state.pop_back();
 
         auto typeVar = constraint.conforms().type();
-        if (this->pass->RequestPermission(constraint, typeVar, manager)) {
-            this->pass->setResolvedType(typeVar, nextType);
-            return true;
-        } else {
-            return false;
-        }
+        return this->pass->setResolvedType(constraint, typeVar, nextType, manager);
     }
     return false;
 }

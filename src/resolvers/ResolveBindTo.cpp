@@ -27,11 +27,17 @@ auto typecheck::ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[
 auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
     if (this->is_valid_constraint(constraint)) {
-        if (this->pass->RequestPermission(constraint, constraint.explicit_().var(), manager)) {
-            this->pass->setResolvedType(constraint.explicit_().var(), constraint.explicit_().type());
-        } else {
-            return false;
+        const auto var = constraint.explicit_().var();
+        const auto type = constraint.explicit_().type();
+        if (this->pass->hasResolvedType(var)) {
+            // It's already been resolved, but it's the same, so we're happy
+            if (google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(var), type)) {
+                return true;
+            }
         }
+
+        // it's either not assigned, or it's not the same, so try and modify it.
+        return this->pass->setResolvedType(constraint, var, constraint.explicit_().type(), manager);
     }
     return true;
 }
@@ -41,7 +47,7 @@ auto typecheck::ResolveBindTo::score(const Constraint& constraint, const TypeMan
         return std::numeric_limits<std::size_t>::max();
     }
 
-    if (this->pass->HasPermission(constraint, constraint.explicit_().var(), manager) && this->pass->hasResolvedType(constraint.explicit_().var())) {
+    if (this->pass->hasResolvedType(constraint.explicit_().var())) {
         // If var is resolved, and it's type equals what it's supposed to be.
         if (google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(constraint.explicit_().var()), constraint.explicit_().type())) {
             // All args found, and matched up, and return types found and match up.

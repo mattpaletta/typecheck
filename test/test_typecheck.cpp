@@ -32,7 +32,6 @@ void setupTypeManager(typecheck::TypeManager* tm) {
 	typecheck::TypeManager tm; \
 	setupTypeManager(&tm)
 
-/*
 TEST_CASE("test resolve conforms to", "[resolver]") {
 	getDefaultTypeManager(tm);
 	auto T1 = tm.CreateTypeVar();
@@ -64,7 +63,10 @@ TEST_CASE("test resolve conforms to has one", "[resolver]") {
     auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
-    pass.setResolvedType(T1, tm.getRegisteredType("int"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+    pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
     auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
     CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 
@@ -78,7 +80,10 @@ TEST_CASE("test resolve conforms to has not conform", "[resolver]") {
     auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
-    pass.setResolvedType(T1, tm.getRegisteredType("string"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+    pass.setResolvedType(constraint, T1, tm.getRegisteredType("string"), &tm);
     auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
     CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 
@@ -92,7 +97,10 @@ TEST_CASE("test resolve conforms to has not preferred", "[resolver]") {
     auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
-    pass.setResolvedType(T1, tm.getRegisteredType("float"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+    pass.setResolvedType(constraint, T1, tm.getRegisteredType("float"), &tm);
     auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
     CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 
@@ -107,8 +115,14 @@ TEST_CASE("test resolve equals have both", "[resolver]") {
     auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
     typecheck::ConstraintPass pass;
-    pass.setResolvedType(T1, tm.getRegisteredType("int"));
-    pass.setResolvedType(T2, tm.getRegisteredType("int"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+    typecheck::Constraint constraint1;
+    constraint1.set_kind(typecheck::ConstraintKind::Bind);
+    constraint1.set_id(2);
+    pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
+    pass.setResolvedType(constraint1, T2, tm.getRegisteredType("int"), &tm);
     auto resolver = typecheck::ResolveEquals(&pass, constraintID);
     CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
     CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -137,7 +151,10 @@ TEST_CASE("test resolve bindto already resolved", "[resolver]") {
     auto constraintID = tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
 
     typecheck::ConstraintPass pass;
-    pass.setResolvedType(T1, tm.getRegisteredType("int"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+    pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
     auto resolver = typecheck::ResolveBindTo(&pass, constraintID);
     CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
     CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -184,8 +201,14 @@ TEST_CASE("test resolve equals have both not equal", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T1, tm.getRegisteredType("int"));
-	pass.setResolvedType(T2, tm.getRegisteredType("float"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+    typecheck::Constraint constraint1;
+    constraint1.set_kind(typecheck::ConstraintKind::Bind);
+    constraint1.set_id(2);
+	pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
+	pass.setResolvedType(constraint1, T2, tm.getRegisteredType("float"), &tm);
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -201,7 +224,10 @@ TEST_CASE("test resolve equals have t0", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T1, tm.getRegisteredType("int"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+	pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -217,7 +243,10 @@ TEST_CASE("test resolve equals have t1", "[resolver]") {
 	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
 
 	typecheck::ConstraintPass pass;
-	pass.setResolvedType(T2, tm.getRegisteredType("int"));
+    typecheck::Constraint constraint;
+    constraint.set_kind(typecheck::ConstraintKind::Bind);
+    constraint.set_id(1);
+	pass.setResolvedType(constraint, T2, tm.getRegisteredType("int"), &tm);
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -445,7 +474,7 @@ TEST_CASE("solve function application constraint", "[constraint]") {
     CHECK(tm.getResolvedType(T1).raw().name() == "int");
     CHECK(tm.getResolvedType(T2).raw().name() == "float");
     CHECK(tm.getResolvedType(T3).raw().name() == "double");
-}*/
+}
 
 TEST_CASE("solve for-loop constraints", "[constraint]") {
     getDefaultTypeManager(tm);

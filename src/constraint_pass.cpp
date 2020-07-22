@@ -143,10 +143,13 @@ auto typecheck::ConstraintPass::hasResolvedType(const TypeVar& var) const -> boo
     return this->resolvedTypes.find(var.symbol()) != this->resolvedTypes.end();
 }
 
-void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, const typecheck::Type& type) {
-    if ((type.has_raw() || type.has_func()) && !var.symbol().empty()) {
+auto typecheck::ConstraintPass::setResolvedType(const Constraint& constraint, const typecheck::TypeVar& var, const typecheck::Type& type, const TypeManager* manager) -> bool {
+    auto hasPermission = this->RequestPermission(constraint, var, manager);
+    if (hasPermission && (type.has_raw() || type.has_func()) && !var.symbol().empty()) {
         this->resolvedTypes[var.symbol()] = type;
 	}
+
+    return hasPermission;
 }
 
 auto typecheck::ConstraintPass::RequestPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) -> bool {

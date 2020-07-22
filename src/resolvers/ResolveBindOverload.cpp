@@ -55,30 +55,31 @@ auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, c
             // Only proceed if we found an overload with the same number of arguments
 
             const auto typeVar = constraint.overload().type();
-            if (this->pass->RequestPermission(constraint, typeVar, manager)) {
-                // Only proceed if we have permission to do so.
-                this->pass->setResolvedType(typeVar, nextOverload);
-            } else {
+            if (!this->pass->HasPermission(constraint, typeVar, manager)) {
                 return false;
             }
 
             // try and fill in vars with overload type
             for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
                 const auto arg = constraint.overload().argvars(i);
-                if (this->pass->RequestPermission(constraint, arg, manager)) {
-                    // Don't override already resolved types, they will fail in score
-                    this->pass->setResolvedType(arg, nextOverload.func().args(i));
-                } else {
+                if (!this->pass->HasPermission(constraint, arg, manager)) {
                     return false;
                 }
             }
 
-            if (this->pass->RequestPermission(constraint, constraint.overload().returnvar(), manager)) {
-                this->pass->setResolvedType(constraint.overload().returnvar(), nextOverload.func().returntype());
-            } else {
+            if (!this->pass->HasPermission(constraint, constraint.overload().returnvar(), manager)) {
                 return false;
             }
 
+            // Repeat steps, actually applying work, this is because we don't want partial application
+            this->pass->setResolvedType(constraint, typeVar, nextOverload, manager);
+
+            for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
+                const auto arg = constraint.overload().argvars(i);
+                this->pass->setResolvedType(constraint, arg, nextOverload.func().args(i), manager);
+            }
+
+            this->pass->setResolvedType(constraint, constraint.overload().returnvar(), nextOverload.func().returntype(), manager);
             return true;
         }
     }

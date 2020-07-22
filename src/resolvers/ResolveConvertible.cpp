@@ -49,13 +49,13 @@ auto typecheck::ResolveConvertible::resolveNext(const Constraint& constraint, co
         auto nextType = this->options.back();
 
         auto typeVar = constraint.types().second();
-        if (this->pass->RequestPermission(constraint, typeVar, manager)) {
+        const auto hasPermission = this->pass->setResolvedType(constraint, typeVar, nextType, manager);
+        if (hasPermission) {
             // Only pop if replacing
             this->options.pop_back();
-
-            this->pass->setResolvedType(typeVar, nextType);
-            return true;
         }
+
+        return hasPermission;
     }
     return false;
 }

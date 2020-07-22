@@ -61,6 +61,6 @@ namespace typecheck {
         bool RequestPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager);
 		Type getResolvedType(const TypeVar& var) const;
 		bool hasResolvedType(const TypeVar& var) const;
-		void setResolvedType(const TypeVar& var, const Type& type);
+		bool setResolvedType(const Constraint& constraint, const TypeVar& var, const Type& type, const TypeManager* manager);
 	};
 }
