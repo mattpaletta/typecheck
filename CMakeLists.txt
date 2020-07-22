@@ -124,12 +124,11 @@ if (ENABLE_CPP_CHECK)
 	list(APPEND CMAKE_CXX_CPPCHECK
 		"--enable=warning"
 		"--force"
-		"--std=c++${CMAKE_CXX_STANDARD}"
-        "--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
+        	"--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	list(APPEND CMAKE_CXX_CPPCHECK "--std=1z")
+	    #list(APPEND CMAKE_CXX_CPPCHECK "--std=1z")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	list(APPEND CMAKE_CXX_CPPCHECK "--std=c++${CMAKE_CXX_STANDARD}")
+	    #list(APPEND CMAKE_CXX_CPPCHECK "--std=c++${CMAKE_CXX_STANDARD}")
     else()
         message(FATAL_ERROR "Only Clang or GCC Supported for cppcheck")
     endif()
@@ -147,9 +146,9 @@ if (ENABLE_CLANG_TIDY)
 	"-extra-arg=-Wno-unknown-warning-option")
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        list(APPEND CMAKE_CXX_CLANG_TIDY "-std=1z")
+	    #list(APPEND CMAKE_CXX_CLANG_TIDY "-std=1z")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	list(APPEND CMAKE_CXX_CLANG_TIDY "-std=c++${CMAKE_CXX_STANDARD}")
+	    #list(APPEND CMAKE_CXX_CLANG_TIDY "-std=c++${CMAKE_CXX_STANDARD}")
     else()
         message(FATAL_ERROR "Only Clang or GCC Supported for Clang-tidy")
     endif()
