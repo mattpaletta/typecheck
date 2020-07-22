@@ -170,6 +170,13 @@ target_compile_options(typecheck PRIVATE "${TYPECHECK_EXTRA_FLAGS}")
 target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>)
 target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:typecheck_protos,INTERFACE_INCLUDE_DIRECTORIES>)
 
+if (TYPECHECK_PRINT_DEBUG_CONSTRAINTS)
+    target_compile_definitions(typecheck PUBLIC "-DTYPECHECK_PRINT_DEBUG_CONSTRAINTS=0")
+	if (TYPECHECK_PRINT_SHORT_DEBUG)
+    	target_compile_definitions(typecheck PUBLIC "-DTYPECHECK_PRINT_SHORT_DEBUG=0")
+	endif()
+endif()
+
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Release>:RELEASE>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:RelWithDebInfo>:DEBUG>")

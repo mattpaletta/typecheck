@@ -13,3 +13,6 @@ set_option_if_not_set(TYPECHECK_FIX_ERRORS "Only relevant if ENABLE_CLANG_TIDY e
 set_option_if_not_set(ENABLE_CPP_CHECK "Use cppcheck" ON)
 set_option_if_not_set(TYPECHECK_WERROR "Use Werror" OFF)
 set_option_if_not_set(TYPECHECK_BUILD_TESTS "Build tests, defaults to true if in-source directory" OFF)
+
+set_option_if_not_set(TYPECHECK_PRINT_DEBUG_CONSTRAINTS "Prints debug information when creating constraints" OFF)
+set_option_if_not_set(TYPECHECK_PRINT_SHORT_DEBUG "Prints shorter debug description information, only active if TYPECHECK_PRINT_DEBUG_CONSTRAINTS=ON" ON)
