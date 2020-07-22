@@ -50,8 +50,8 @@ matrix:
       compiler: clang
       env:
       - BUILD=Debug
-      - USE_CLANG_TIDY=OFF
-      - USE_CPP_CHECK=OFF
+      - USE_CLANG_TIDY=ON
+      - USE_CPP_CHECK=ON
       - USE_WERROR=ON
     - os: osx
       if: branch = master
