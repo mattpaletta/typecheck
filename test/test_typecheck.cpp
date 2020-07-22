@@ -32,6 +32,7 @@ void setupTypeManager(typecheck::TypeManager* tm) {
 	typecheck::TypeManager tm; \
 	setupTypeManager(&tm)
 
+/*
 TEST_CASE("test resolve conforms to", "[resolver]") {
 	getDefaultTypeManager(tm);
 	auto T1 = tm.CreateTypeVar();
@@ -444,4 +445,66 @@ TEST_CASE("solve function application constraint", "[constraint]") {
     CHECK(tm.getResolvedType(T1).raw().name() == "int");
     CHECK(tm.getResolvedType(T2).raw().name() == "float");
     CHECK(tm.getResolvedType(T3).raw().name() == "double");
+}*/
+
+TEST_CASE("solve for-loop constraints", "[constraint]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("bool");
+    tm.registerType("void");
+
+    auto T0 = tm.CreateTypeVar();
+    auto T1 = tm.CreateTypeVar();
+    auto T2 = tm.CreateTypeVar();
+    auto T3 = tm.CreateTypeVar();
+    auto T4 = tm.CreateTypeVar();
+    auto T5 = tm.CreateTypeVar();
+    auto T6 = tm.CreateTypeVar();
+    auto T7 = tm.CreateTypeVar();
+    auto T8 = tm.CreateTypeVar();
+    auto T9 = tm.CreateTypeVar();
+    auto T10 = tm.CreateTypeVar();
+    auto T11 = tm.CreateTypeVar();
+    auto T12 = tm.CreateTypeVar();
+
+    tm.CreateEqualsConstraint(T0, T3);
+    tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind_LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T3, T4);
+    tm.CreateLiteralConformsToConstraint(T4, typecheck::KnownProtocolKind_LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T5, T3);
+    tm.CreateBindToConstraint(T6, tm.getRegisteredType("bool"));
+    tm.CreateEqualsConstraint(T7, T0);
+    tm.CreateLiteralConformsToConstraint(T8, typecheck::KnownProtocolKind_LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T9, T7);
+    tm.CreateBindToConstraint(T10, tm.getRegisteredType("int"));
+    tm.CreateLiteralConformsToConstraint(T11, typecheck::KnownProtocolKind_LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateBindToConstraint(T12, tm.getRegisteredType("void"));
+
+    REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T1).has_raw());
+    REQUIRE(tm.getResolvedType(T2).has_raw());
+    REQUIRE(tm.getResolvedType(T3).has_raw());
+    REQUIRE(tm.getResolvedType(T4).has_raw());
+    REQUIRE(tm.getResolvedType(T5).has_raw());
+    REQUIRE(tm.getResolvedType(T6).has_raw());
+    REQUIRE(tm.getResolvedType(T7).has_raw());
+    REQUIRE(tm.getResolvedType(T8).has_raw());
+    REQUIRE(tm.getResolvedType(T9).has_raw());
+    REQUIRE(tm.getResolvedType(T10).has_raw());
+    REQUIRE(tm.getResolvedType(T11).has_raw());
+    REQUIRE(tm.getResolvedType(T12).has_raw());
+
+    CHECK(tm.getResolvedType(T1).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T2).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T3).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T4).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T5).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T6).raw().name()  == "bool");
+    CHECK(tm.getResolvedType(T7).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T8).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T9).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T10).raw().name() == "int");
+    CHECK(tm.getResolvedType(T11).raw().name() == "int");
+    CHECK(tm.getResolvedType(T12).raw().name() == "void");
+
 }

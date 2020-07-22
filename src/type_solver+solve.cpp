@@ -33,6 +33,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
         auto original_indices = indexes;
         std::size_t i = indexes.front();
         auto* current_constraint = &manager->constraints.at(i);
+
         indexes.pop_front();
 
         auto iterPass = pass->CreateCopy();

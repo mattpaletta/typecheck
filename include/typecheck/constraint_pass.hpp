@@ -57,7 +57,8 @@ namespace typecheck {
 		bool IsValid();
         static bool IsScoreBetter(const scoreMapType& s1, const scoreMapType& s2);
 
-        bool HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager);
+        bool HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) const;
+        bool RequestPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager);
 		Type getResolvedType(const TypeVar& var) const;
 		bool hasResolvedType(const TypeVar& var) const;
 		void setResolvedType(const TypeVar& var, const Type& type);

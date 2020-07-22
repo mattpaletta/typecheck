@@ -149,10 +149,10 @@ void typecheck::ConstraintPass::setResolvedType(const typecheck::TypeVar& var, c
 	}
 }
 
-auto typecheck::ConstraintPass::HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) -> bool {
+auto typecheck::ConstraintPass::RequestPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) -> bool {
     if (this->prev) {
         // Store all permission globally, so they are consistent.
-        return this->prev->HasPermission(constraint, var, manager);
+        return this->prev->RequestPermission(constraint, var, manager);
     }
 
     // Make sure no conflicting binds exist.
@@ -175,6 +175,34 @@ auto typecheck::ConstraintPass::HasPermission(const Constraint& constraint, cons
         } else { // this_score < existingPermission.second)
             // Update permissions
             this->permissions[var.symbol()] = std::make_pair(constraint.id(), this_score);
+            return true;
+        }
+    }
+}
+
+auto typecheck::ConstraintPass::HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) const -> bool {
+    if (this->prev) {
+        // Store all permission globally, so they are consistent.
+        return this->prev->HasPermission(constraint, var, manager);
+    }
+
+    // Make sure no conflicting binds exist.
+    const auto this_score = manager->getConstraintKindScore(constraint.kind());
+
+    if (this->permissions.find(var.symbol()) == this->permissions.end()) {
+        return true;
+    } else {
+        const auto existingPermission = this->permissions.at(var.symbol());
+
+        // Permission: lower is better
+        if (constraint.id() == existingPermission.first) {
+            // This is the same one, may proceed
+            return true;
+        } else if (this_score >= existingPermission.second) {
+            // Worse or equal score than previous, denied
+            return false;
+        } else { // this_score < existingPermission.second)
+            // Update permissions
             return true;
         }
     }

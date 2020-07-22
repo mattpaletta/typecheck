@@ -27,7 +27,7 @@ auto typecheck::ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[
 auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
     if (this->is_valid_constraint(constraint)) {
-        if (this->pass->HasPermission(constraint, constraint.explicit_().var(), manager)) {
+        if (this->pass->RequestPermission(constraint, constraint.explicit_().var(), manager)) {
             this->pass->setResolvedType(constraint.explicit_().var(), constraint.explicit_().type());
         } else {
             return false;

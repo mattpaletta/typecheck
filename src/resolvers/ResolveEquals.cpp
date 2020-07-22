@@ -40,6 +40,7 @@ auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const T
 
         } else if (hasT0 && hasT1Permission) {
             // Don't have T1
+            this->pass->RequestPermission(constraint, T1, manager);
             this->pass->setResolvedType(T1, this->pass->getResolvedType(T0));
             //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
 
@@ -47,6 +48,7 @@ auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const T
 
         } else if (hasT1 && hasT0Permission) {
             // Don't have T0
+            this->pass->RequestPermission(constraint, T0, manager);
             this->pass->setResolvedType(T0, this->pass->getResolvedType(T1));
             //                    std::cout << T0.symbol() << ":" << this->pass->getResolvedType(T0).raw().name() << " " << T1.symbol() << ":" << this->pass->getResolvedType(T1).raw().name() << std::endl;
 
