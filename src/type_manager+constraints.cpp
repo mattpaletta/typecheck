@@ -129,45 +129,35 @@ auto typecheck::TypeManager::CreateConvertibleConstraint(const typecheck::TypeVa
     return constraint.id();
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) -> typecheck::ConstraintPass::IDType {
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) -> typecheck::ConstraintPass::IDType {
     // overload to support creating from a vector.
-    typecheck::Type funcType;
+    typecheck::FunctionDefinition funcType;
+    funcType.set_id(functionid);
     for (auto& arg : args) {
-        funcType.mutable_func()->add_args()->CopyFrom(arg);
+        funcType.add_args()->CopyFrom(arg);
         if (arg.has_raw()) {
             // These types are 'type': int, float, etc., so don't have to look them up as registered TypeVars.
             TYPECHECK_ASSERT(!arg.raw().name().empty(), "Cannot use empty type when creating constraint.");
         }
     }
-    funcType.mutable_func()->mutable_returntype()->CopyFrom(return_type);
-    return this->CreateApplicableFunctionConstraint(T0, funcType);
+    funcType.mutable_returntype()->CopyFrom(return_type);
+    return this->CreateApplicableFunctionConstraint(functionid, funcType);
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type) -> typecheck::ConstraintPass::IDType {
-    auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::ApplicableFunction, this->constraint_generator.next_id());
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const typecheck::FunctionDefinition& type) -> typecheck::ConstraintPass::IDType {
+    TYPECHECK_ASSERT(type.id() == functionid, "Function type ID should match function id and be set.");
 
-    TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
-    TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
-
-    TYPECHECK_ASSERT(type.has_func(), "Must use a function type when creating function constraint.");
-
-    constraint.mutable_explicit_()->mutable_var()->CopyFrom(T0);
-    constraint.mutable_explicit_()->mutable_type()->CopyFrom(type);
-
-#ifdef TYPECHECK_PRINT_DEBUG_CONSTRAINTS
-    std::cout << debug_constraint_headers(constraint) << std::endl;
-#endif
-
-    this->constraints.emplace_back(constraint);
-    return constraint.id();
+    this->functions.push_back(type);
+    return type.id();
 }
 
-auto typecheck::TypeManager::CreateBindFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::TypeVar>& args, const typecheck::TypeVar& returnType) -> typecheck::ConstraintPass::IDType {
+auto typecheck::TypeManager::CreateBindFunctionConstraint(const ConstraintPass::IDType& functionid, const typecheck::TypeVar& T0, const std::vector<typecheck::TypeVar>& args, const typecheck::TypeVar& returnType) -> typecheck::ConstraintPass::IDType {
     auto constraint = getNewBlankConstraint(typecheck::ConstraintKind::BindOverload, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
     TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
     constraint.mutable_overload()->mutable_type()->CopyFrom(T0);
+    constraint.mutable_overload()->set_functionid(functionid);
 
     for (auto& arg : args) {
         TYPECHECK_ASSERT(!arg.symbol().empty(), "Cannot use empty type when creating constraint.");

@@ -63,13 +63,12 @@ auto typecheck::TypeManager::getRegisteredType(const Type& name) const noexcept 
 	return {};
 }
 
-auto typecheck::TypeManager::getFunctionOverloads(const TypeVar& var) const -> std::vector<typecheck::Type> {
-    std::vector<typecheck::Type> overloads;
-    for (auto& constraint : this->constraints) {
+auto typecheck::TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID) const -> std::vector<typecheck::FunctionDefinition> {
+    std::vector<typecheck::FunctionDefinition> overloads;
+    for (auto& overload : this->functions) {
         // Lookup by 'var', to deal with anonymous functions.
-        if (constraint.kind() == ConstraintKind::ApplicableFunction &&
-            google::protobuf::util::MessageDifferencer::Equals(constraint.explicit_().var(), var)) {
-            overloads.push_back(constraint.explicit_().type());
+        if (overload.id() == funcID) {
+            overloads.push_back(overload);
         }
     }
 
@@ -84,6 +83,26 @@ auto typecheck::TypeManager::setConvertible(const std::string& T0, const std::st
     t1.mutable_raw()->set_name(T1);
 
     return this->setConvertible(t0, t1);
+}
+
+std::string join(const std::string& separator, const std::vector<std::string>& input) {
+    std::string out;
+    for (std::size_t i = 0; i < input.size() - 1; ++i) {
+        out += (input.at(i) + separator);
+    }
+    if (input.size() > 1) {
+        out += input.back();
+    }
+    return out;
+}
+
+auto typecheck::TypeManager::CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const -> ConstraintPass::IDType {
+    return std::hash<std::string>()(name + join(":", argNames));
+}
+
+auto typecheck::TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const -> ConstraintPass::IDType {
+    // Lambda functions use the address of the arguments as part of the name
+    return this->CreateFunctionHash("lambda" + std::to_string(reinterpret_cast<size_t>(&argNames)), argNames);
 }
 
 auto typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {

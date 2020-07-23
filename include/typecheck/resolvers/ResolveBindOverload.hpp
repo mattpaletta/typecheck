@@ -12,7 +12,7 @@ namespace typecheck {
     class ResolveBindOverload : public Resolver {
     private:
         bool did_find_overloads = false;
-        std::vector<Type> overloads;
+        std::vector<FunctionDefinition> overloads;
         std::size_t current_overload_i = std::numeric_limits<std::size_t>::max();
     public:
         ResolveBindOverload(ConstraintPass* pass, const ConstraintPass::IDType id);
@@ -24,6 +24,5 @@ namespace typecheck {
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override;
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager) override;
         virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override;
-
     };
 }

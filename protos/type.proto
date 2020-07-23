@@ -7,6 +7,7 @@ message FunctionDefinition {
 	repeated Type args = 1;
 	Type returnType = 2;
 	string name = 3;
+	int64 id = 4; // Unique function ID
 }
 
 message RawType {

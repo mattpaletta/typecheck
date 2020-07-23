@@ -62,18 +62,20 @@ namespace typecheck {
 
 		// 'Register' function definition using Constraint
         // Warning, this method is slow and should not be used frequently.
-        std::vector<Type> getFunctionOverloads(const TypeVar& var) const;
+        std::vector<FunctionDefinition> getFunctionOverloads(const ConstraintPass::IDType& var) const;
 
 		// `Register` resolvers
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
 
 		const typecheck::TypeVar CreateTypeVar();
+		ConstraintPass::IDType CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const;
+		ConstraintPass::IDType CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const;
         ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
         ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
         ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
-        ConstraintPass::IDType CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const FunctionDefinition& type);
+        ConstraintPass::IDType CreateBindFunctionConstraint( const ConstraintPass::IDType& functionid, const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
         ConstraintPass::IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
 
         const Constraint* getConstraint(const ConstraintPass::IDType id) const;

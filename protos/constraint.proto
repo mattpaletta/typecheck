@@ -112,7 +112,7 @@ message Constraint {
 
 	message Overload {
 		typecheck.TypeVar type = 1;
-		int64 overloadChoice = 2;
+		int64 functionID = 2;
 		repeated typecheck.TypeVar argVars = 3;
 		typecheck.TypeVar returnVar = 4;
 //		int64 declContextPtr = 3; // Pointer to the declaration context

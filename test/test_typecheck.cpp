@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include <typecheck/type_manager.hpp>
 #include <typecheck/generic_type_generator.hpp>
@@ -26,6 +27,14 @@ void setupTypeManager(typecheck::TypeManager* tm) {
 	CHECK(tm->setConvertible("double", "double"));
 	CHECK(tm->setConvertible("float", "float"));
 	CHECK(tm->setConvertible("float", "double"));
+}
+
+auto CreatMultipleSymbols(typecheck::TypeManager& tm, const std::size_t& num) -> std::vector<typecheck::TypeVar> {
+    std::vector<typecheck::TypeVar> out;
+    for (std::size_t i = 0; i < num; ++i) {
+        out.push_back(tm.CreateTypeVar());
+    }
+    return out;
 }
 
 #define getDefaultTypeManager(tm) \
@@ -109,10 +118,9 @@ TEST_CASE("test resolve conforms to has not preferred", "[resolver]") {
 
 TEST_CASE("test resolve equals have both", "[resolver]") {
     getDefaultTypeManager(tm);
-    auto T1 = tm.CreateTypeVar();
-    auto T2 = tm.CreateTypeVar();
+    auto T = CreatMultipleSymbols(tm, 2);
 
-    auto constraintID = tm.CreateEqualsConstraint(T1, T2);
+    auto constraintID = tm.CreateEqualsConstraint(T.at(0), T.at(1));
 
     typecheck::ConstraintPass pass;
     typecheck::Constraint constraint;
@@ -121,8 +129,8 @@ TEST_CASE("test resolve equals have both", "[resolver]") {
     typecheck::Constraint constraint1;
     constraint1.set_kind(typecheck::ConstraintKind::Bind);
     constraint1.set_id(2);
-    pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
-    pass.setResolvedType(constraint1, T2, tm.getRegisteredType("int"), &tm);
+    pass.setResolvedType(constraint, T.at(0), tm.getRegisteredType("int"), &tm);
+    pass.setResolvedType(constraint1, T.at(1), tm.getRegisteredType("int"), &tm);
     auto resolver = typecheck::ResolveEquals(&pass, constraintID);
     CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
     CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -195,10 +203,9 @@ TEST_CASE("test resolve bindto conflicting full", "[type_solver]") {
 
 TEST_CASE("test resolve equals have both not equal", "[resolver]") {
 	getDefaultTypeManager(tm);
-	auto T1 = tm.CreateTypeVar();
-	auto T2 = tm.CreateTypeVar();
+    auto T = CreatMultipleSymbols(tm, 2);
 
-	auto constraintID = tm.CreateEqualsConstraint(T1, T2);
+	auto constraintID = tm.CreateEqualsConstraint(T.at(0), T.at(1));
 
 	typecheck::ConstraintPass pass;
     typecheck::Constraint constraint;
@@ -207,8 +214,8 @@ TEST_CASE("test resolve equals have both not equal", "[resolver]") {
     typecheck::Constraint constraint1;
     constraint1.set_kind(typecheck::ConstraintKind::Bind);
     constraint1.set_id(2);
-	pass.setResolvedType(constraint, T1, tm.getRegisteredType("int"), &tm);
-	pass.setResolvedType(constraint1, T2, tm.getRegisteredType("float"), &tm);
+	pass.setResolvedType(constraint, T.at(0), tm.getRegisteredType("int"), &tm);
+	pass.setResolvedType(constraint1, T.at(1), tm.getRegisteredType("float"), &tm);
 	auto resolver = typecheck::ResolveEquals(&pass, constraintID);
 	CHECK(resolver.hasMoreSolutions(*tm.getConstraint(constraintID), &tm));
 	CHECK(resolver.resolveNext(*tm.getConstraint(constraintID), &tm));
@@ -347,7 +354,6 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
 
 	auto T1 = tm.CreateTypeVar();
 	auto T2 = tm.CreateTypeVar();
-	auto T3 = tm.CreateTypeVar();
 
     tm.CreateEqualsConstraint(T2, T1);
 	tm.CreateEqualsConstraint(T1, T2);
@@ -358,13 +364,11 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
 TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    auto T1 = tm.CreateTypeVar();
-    auto T2 = tm.CreateTypeVar();
-    auto T3 = tm.CreateTypeVar();
+    const auto T = CreatMultipleSymbols(tm, 3);
 
-    tm.CreateEqualsConstraint(T3, T1);
-    tm.CreateEqualsConstraint(T1, T2);
-    tm.CreateEqualsConstraint(T2, T3);
+    tm.CreateEqualsConstraint(T.at(2) , T.at(0));
+    tm.CreateEqualsConstraint(T.at(0), T.at(1));
+    tm.CreateEqualsConstraint(T.at(1), T.at(2));
 
     REQUIRE(!tm.solve());
 }
@@ -457,23 +461,87 @@ TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
 TEST_CASE("solve function application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    auto T0 = tm.CreateTypeVar();
-    auto T1 = tm.CreateTypeVar();
-    auto T2 = tm.CreateTypeVar();
-    auto T3 = tm.CreateTypeVar();
+    const auto T = CreatMultipleSymbols(tm, 4);
 
-    tm.CreateApplicableFunctionConstraint(T0, {tm.getRegisteredType("int"), tm.getRegisteredType("float")}, tm.getRegisteredType("double"));
-    tm.CreateBindFunctionConstraint(T0, {T1, T2}, T3);
+    const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
+    tm.CreateApplicableFunctionConstraint(T0FuncHash, {tm.getRegisteredType("int"), tm.getRegisteredType("float")}, tm.getRegisteredType("double"));
+    tm.CreateBindFunctionConstraint(T0FuncHash, T.at(0), {T.at(1), T.at(2)}, T.at(3));
 
     // T0 = (T1, T2) -> T3
     REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T1).has_raw());
-    REQUIRE(tm.getResolvedType(T2).has_raw());
-    REQUIRE(tm.getResolvedType(T3).has_raw());
+    CHECK(tm.getResolvedType(T.at(0)).has_func());
+    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(3)).has_raw());
 
-    CHECK(tm.getResolvedType(T1).raw().name() == "int");
-    CHECK(tm.getResolvedType(T2).raw().name() == "float");
-    CHECK(tm.getResolvedType(T3).raw().name() == "double");
+    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "float");
+    CHECK(tm.getResolvedType(T.at(3)).raw().name() == "double");
+}
+
+TEST_CASE("solve function different num args application constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    const auto T = CreatMultipleSymbols(tm, 3);
+
+    // func foo(a: Int, b: Float) -> Double
+    const auto T0FuncHash = std::hash<std::string>()("foo:a:b");
+    tm.CreateApplicableFunctionConstraint(T0FuncHash, { tm.getRegisteredType("int"), tm.getRegisteredType("float") }, tm.getRegisteredType("double"));
+
+    // func foo(a: Int) -> Double
+    const auto T1FuncHash = std::hash<std::string>()("foo:a");
+    tm.CreateApplicableFunctionConstraint(T1FuncHash, { tm.getRegisteredType("int") }, tm.getRegisteredType("double"));
+
+    tm.CreateBindFunctionConstraint(T1FuncHash, T.at(0), { T.at(1) }, T.at(2));
+
+    // T0 = (T1, T2) -> T3
+    REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T.at(0)).has_func());
+    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+
+    // Check it got bound to: func foo(a: Int) -> Double
+    CHECK(tm.getResolvedType(T.at(0)).func().args_size() == 1);
+    REQUIRE(tm.getResolvedType(T.at(0)).func().args(0).has_raw());
+    CHECK(tm.getResolvedType(T.at(0)).func().args(0).raw().name() == "int");
+    REQUIRE(tm.getResolvedType(T.at(0)).func().has_returntype());
+    REQUIRE(tm.getResolvedType(T.at(0)).func().returntype().has_raw());
+    CHECK(tm.getResolvedType(T.at(0)).func().returntype().raw().name() == "double");
+
+    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
+}
+
+TEST_CASE("solve function same num args different types application constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    const auto T = CreatMultipleSymbols(tm, 3);
+
+    // func foo(a: Int) -> Double
+    tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), { tm.getRegisteredType("int") }, tm.getRegisteredType("double"));
+
+    // func foo(a: Float) -> Double
+    tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", { "a" }), { tm.getRegisteredType("float") }, tm.getRegisteredType("double"));
+
+    tm.CreateBindFunctionConstraint(tm.CreateFunctionHash("foo", { "a" }), T.at(0), { T.at(1) }, T.at(2));
+    tm.CreateLiteralConformsToConstraint(T.at(1), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+
+    // T0 = (T1, T2) -> T3
+    REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T.at(0)).has_func());
+    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+
+    // Check it got bound to: func foo(a: Int) -> Double
+    CHECK(tm.getResolvedType(T.at(0)).func().args_size() == 1);
+    REQUIRE(tm.getResolvedType(T.at(0)).func().args(0).has_raw());
+    CHECK(tm.getResolvedType(T.at(0)).func().args(0).raw().name() == "int");
+    REQUIRE(tm.getResolvedType(T.at(0)).func().has_returntype());
+    REQUIRE(tm.getResolvedType(T.at(0)).func().returntype().has_raw());
+    CHECK(tm.getResolvedType(T.at(0)).func().returntype().raw().name() == "double");
+
+    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
 }
 
 TEST_CASE("solve for-loop constraints", "[constraint]") {
@@ -535,5 +603,4 @@ TEST_CASE("solve for-loop constraints", "[constraint]") {
     CHECK(tm.getResolvedType(T10).raw().name() == "int");
     CHECK(tm.getResolvedType(T11).raw().name() == "int");
     CHECK(tm.getResolvedType(T12).raw().name() == "void");
-
 }

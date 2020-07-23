@@ -24,7 +24,7 @@ auto typecheck::ResolveBindOverload::is_valid_constraint(const Constraint& const
 auto typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> void {
     if (this->pass && this->is_valid_constraint(constraint)) {
         // Try and get registered overloads
-        this->overloads = manager->getFunctionOverloads(constraint.overload().type());
+        this->overloads = manager->getFunctionOverloads(constraint.overload().functionid());
         // Reset index to 0.
         this->current_overload_i = 0;
         this->did_find_overloads = true;
@@ -44,14 +44,14 @@ auto typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constrai
 
 auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->did_find_overloads) {
-        typecheck::Type nextOverload = this->overloads.at(this->current_overload_i);
+        typecheck::FunctionDefinition nextOverload = this->overloads.at(this->current_overload_i);
 
-        while (nextOverload.has_func() && nextOverload.func().args_size() != constraint.overload().argvars_size() && this->current_overload_i < this->overloads.size()) {
+        while (nextOverload.args_size() != constraint.overload().argvars_size() && this->current_overload_i < this->overloads.size()) {
             nextOverload = this->overloads.at(this->current_overload_i++);
             // Skip over any that don't have the same number of arguments.
         }
 
-        if (nextOverload.has_func() && nextOverload.func().args_size() == constraint.overload().argvars_size()) {
+        if (nextOverload.args_size() == constraint.overload().argvars_size()) {
             // Only proceed if we found an overload with the same number of arguments
 
             const auto typeVar = constraint.overload().type();
@@ -72,14 +72,16 @@ auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, c
             }
 
             // Repeat steps, actually applying work, this is because we don't want partial application
-            this->pass->setResolvedType(constraint, typeVar, nextOverload, manager);
+            typecheck::Type typeVarTy;
+            typeVarTy.mutable_func()->CopyFrom(nextOverload);
+            this->pass->setResolvedType(constraint, typeVar, typeVarTy, manager);
 
             for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
                 const auto arg = constraint.overload().argvars(i);
-                this->pass->setResolvedType(constraint, arg, nextOverload.func().args(i), manager);
+                this->pass->setResolvedType(constraint, arg, nextOverload.args(i), manager);
             }
 
-            this->pass->setResolvedType(constraint, constraint.overload().returnvar(), nextOverload.func().returntype(), manager);
+            this->pass->setResolvedType(constraint, constraint.overload().returnvar(), nextOverload.returntype(), manager);
             return true;
         }
     }
@@ -99,7 +101,7 @@ auto typecheck::ResolveBindOverload::score(const Constraint& constraint, [[maybe
             const auto arg = constraint.overload().argvars(i);
             if (this->pass->hasResolvedType(arg)) {
                 // Make sure the arg types match up
-                if (!google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(arg), currentOverload.func().args(i))) {
+                if (!google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(arg), currentOverload.args(i))) {
                     return std::numeric_limits<std::size_t>::max();
                 }
             }
@@ -107,7 +109,7 @@ auto typecheck::ResolveBindOverload::score(const Constraint& constraint, [[maybe
 
         if (this->pass->hasResolvedType(constraint.overload().returnvar())) {
             // Make sure the return types match up
-            if (!google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(constraint.overload().returnvar()), currentOverload.func().returntype())) {
+            if (!google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(constraint.overload().returnvar()), currentOverload.returntype())) {
                 return std::numeric_limits<std::size_t>::max();
             }
         }
