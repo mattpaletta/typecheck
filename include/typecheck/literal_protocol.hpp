@@ -6,7 +6,7 @@
 namespace typecheck {
 	class LiteralProtocol {
 	protected:
-		Type ty(const std::string& _ty) const {
+		Type ty(const std::string& _ty) const noexcept {
 			Type ty;
             ty.mutable_raw()->set_name(_ty);
 			return ty;
@@ -16,7 +16,9 @@ namespace typecheck {
 		LiteralProtocol() {}
 		virtual ~LiteralProtocol() = default;
 
-		virtual std::vector<Type> getPreferredTypes() const { return {}; }
-		virtual std::vector<Type> getOtherTypes() const { return {}; }
+        // LCOV_EXCL_START
+		virtual std::vector<Type> getPreferredTypes() const noexcept { return {}; }
+		virtual std::vector<Type> getOtherTypes() const noexcept { return {}; }
+        // LCOV_EXCL_STOP
 	};
 }

@@ -8,7 +8,7 @@ namespace typecheck {
 		ExpressibleByDoubleLiteral() : LiteralProtocol() {}
 		virtual ~ExpressibleByDoubleLiteral() = default;
 
-		std::vector<Type> getPreferredTypes() const;
-		std::vector<Type> getOtherTypes() const;
+		std::vector<Type> getPreferredTypes() const noexcept override;
+		std::vector<Type> getOtherTypes() const noexcept override;
 	};
 }

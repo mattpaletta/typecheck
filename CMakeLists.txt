@@ -10,6 +10,16 @@ endif()
 
 # Loads all of the options
 include(cmake/options.cmake)
+add_library(coverage_config INTERFACE)
+if (TYPECHECK_ENABLE_COVERAGE)
+	# Only require lcov if code coverage enabled
+	include(cmake/CodeCoverage.cmake)
+	set(TYPECHECK_LCOV_ARGS -q --rc lcov_branch_coverage=1 --no-external)
+	set(COVERAGE_EXCLUDES "_deps/*" "typecheck_protos/*" "${CMAKE_CURRENT_BINARY_DIR}/_deps/*" ${CMAKE_CURRENT_BINARY_DIR}/typecheck_protos/*)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Set the build type." FORCE)
+
+	append_coverage_compiler_flags()
+endif()
 
 if (ENABLE_ASAN)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
@@ -192,11 +202,65 @@ if (${TYPECHECK_BUILD_TESTS})
     enable_testing()
 
 	file(GLOB_RECURSE TEST_INC_FILES test/*.hpp)
-	add_executable(test_typecheck test/test_typecheck.cpp ${TEST_INC_FILES})
-    target_link_libraries(test_typecheck typecheck Catch2::Catch2)
-    target_include_directories(test_typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
-	target_precompile_headers(test_typecheck PRIVATE <TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 
-    target_include_directories(test_typecheck PRIVATE test)
+	# Test everything (default test with `make test`
+	add_executable(test_typecheck test/test_typecheck.cpp ${TEST_INC_FILES})
+    target_link_libraries(test_typecheck typecheck Catch2::Catch2 coverage_config)
+    target_include_directories(test_typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(test_typecheck PUBLIC "-DTEST_RESOLVERS")
+	target_compile_definitions(test_typecheck PUBLIC "-DTEST_TYPE_MANAGER")
+	target_compile_definitions(test_typecheck PUBLIC "-DTEST_TYPE_CONSTRAINTS")
+
+	if (TYPECHECK_ENABLE_COVERAGE)
+		setup_target_for_coverage_lcov(
+			NAME coverage_typecheck
+			EXECUTABLE $<TARGET_FILE:test_typecheck>
+			LCOV_ARGS ${TYPECHECK_LCOV_ARGS}
+			GENHTML_ARGS --legend --branch-coverage
+		DEPENDENCIES test_typecheck)
+	endif()
     add_test(typecheck test_typecheck)
+
+
+	# Test just resolvers
+	add_executable(test_resolvers test/test_typecheck.cpp ${TEST_INC_FILES})
+    target_link_libraries(test_resolvers typecheck Catch2::Catch2 coverage_config)
+    target_include_directories(test_resolvers SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(test_resolvers PUBLIC "-DTEST_RESOLVERS")
+	if (TYPECHECK_ENABLE_COVERAGE)
+		setup_target_for_coverage_lcov(
+			NAME coverage_resolvers
+			EXECUTABLE $<TARGET_FILE:test_resolvers>
+			LCOV_ARGS ${TYPECHECK_LCOV_ARGS}
+			GENHTML_ARGS --legend --branch-coverage
+			DEPENDENCIES test_resolvers)
+	endif()
+
+	# Test just constraints
+	add_executable(test_constraints test/test_typecheck.cpp ${TEST_INC_FILES})
+    target_link_libraries(test_constraints typecheck Catch2::Catch2 coverage_config)
+    target_include_directories(test_constraints SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(test_constraints PUBLIC "-DTEST_TYPE_CONSTRAINTS")
+	if (TYPECHECK_ENABLE_COVERAGE)
+		setup_target_for_coverage_lcov(
+			NAME coverage_constraints
+			EXECUTABLE $<TARGET_FILE:test_constraints>
+			LCOV_ARGS ${TYPECHECK_LCOV_ARGS}
+			GENHTML_ARGS --legend --branch-coverage
+			DEPENDENCIES test_constraints)
+	endif()
+
+	# Test just type manager
+	add_executable(test_type_manager test/test_typecheck.cpp ${TEST_INC_FILES})
+    target_link_libraries(test_type_manager typecheck Catch2::Catch2 coverage_config)
+    target_include_directories(test_type_manager SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(test_type_manager PUBLIC "-DTEST_TYPE_MANAGER")
+	if (TYPECHECK_ENABLE_COVERAGE)
+		setup_target_for_coverage_lcov(
+			NAME coverage_type_manager
+			EXECUTABLE $<TARGET_FILE:test_type_manager>
+			LCOV_ARGS ${TYPECHECK_LCOV_ARGS}
+			GENHTML_ARGS --legend --branch-coverage
+			DEPENDENCIES test_type_manager)
+	endif()
 endif()
