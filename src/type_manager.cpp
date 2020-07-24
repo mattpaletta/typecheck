@@ -4,6 +4,8 @@
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
 #include "typecheck/generic_type_generator.hpp"       // for GenericTypeGene...
+#include <sstream>                                    // for std::stringstream
+#include <string>                                     // for std::string
 
 #include "typecheck/resolver.hpp"                     // for Resolver
 #include "typecheck/resolvers/ResolveConformsTo.hpp"  // for ResolveConformsTo
@@ -97,12 +99,17 @@ std::string join(const std::string& separator, const std::vector<std::string>& i
 }
 
 auto typecheck::TypeManager::CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const -> ConstraintPass::IDType {
-    return std::hash<std::string>()(name + join(":", argNames));
+    return static_cast<ConstraintPass::IDType>(std::hash<std::string>()(name + join(":", argNames)));
 }
 
 auto typecheck::TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const -> ConstraintPass::IDType {
     // Lambda functions use the address of the arguments as part of the name
-    return this->CreateFunctionHash("lambda" + std::to_string(reinterpret_cast<size_t>(&argNames)), argNames);
+    const void* address = static_cast<const void*>(&argNames);
+    std::stringstream ss;
+    ss << address;
+    std::string lambdaAddress = ss.str();
+
+    return this->CreateFunctionHash("lambda" + lambdaAddress, argNames);
 }
 
 auto typecheck::TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
