@@ -7,6 +7,17 @@
 #pragma once
 #include "utils.hpp"
 
+
+TEST_CASE("test resolve bindto conflicting full", "[constraints]") {
+    getDefaultTypeManager(tm);
+    auto T1 = tm.CreateTypeVar();
+
+    tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
+    tm.CreateBindToConstraint(T1, tm.getRegisteredType("float"));
+
+    REQUIRE(!tm.solve());
+}
+
 TEST_CASE("solve basic type int equals constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 

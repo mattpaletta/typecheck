@@ -89,8 +89,10 @@ auto typecheck::TypeManager::setConvertible(const std::string& T0, const std::st
 
 auto join(const std::string& separator, const std::vector<std::string>& input) -> std::string {
     std::string out;
-    for (std::size_t i = 0; i < input.size() - 1; ++i) {
-        out += (input.at(i) + separator);
+    if (input.size() > 1) {
+        for (std::size_t i = 0; i < input.size() - 1; ++i) {
+            out += (input.at(i) + separator);
+        }
     }
     if (input.size() > 1) {
         out += input.back();

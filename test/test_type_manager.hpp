@@ -7,14 +7,34 @@
 #pragma once
 #include "utils.hpp"
 
-TEST_CASE("test resolve bindto conflicting full", "[type_manager]") {
-    getDefaultTypeManager(tm);
-    auto T1 = tm.CreateTypeVar();
+TEST_CASE("create function hash no args", "[type_manager]") {
+    typecheck::TypeManager tm;
+    CHECK(tm.CreateFunctionHash("foo", {}) != 0);
+}
 
-    tm.CreateBindToConstraint(T1, tm.getRegisteredType("int"));
-    tm.CreateBindToConstraint(T1, tm.getRegisteredType("float"));
+TEST_CASE("create lambda hash no args", "[type_manager]") {
+    typecheck::TypeManager tm;
+    CHECK(tm.CreateLambdaFunctionHash({}) != 0);
+}
 
-    REQUIRE(!tm.solve());
+TEST_CASE("create function hash 1 args", "[type_manager]") {
+    typecheck::TypeManager tm;
+    CHECK(tm.CreateFunctionHash("foo", {"a"}) != 0);
+}
+
+TEST_CASE("create lambda hash 1 arg", "[type_manager]") {
+    typecheck::TypeManager tm;
+    CHECK(tm.CreateLambdaFunctionHash({"a"}) != 0);
+}
+
+TEST_CASE("create function hash 2 args", "[type_manager]") {
+    typecheck::TypeManager tm;
+    CHECK(tm.CreateFunctionHash("foo", {"a", "b"}) != 0);
+}
+
+TEST_CASE("create lambda hash 2 args", "[type_manager]") {
+    typecheck::TypeManager tm;
+    CHECK(tm.CreateLambdaFunctionHash({"a", "b"}) != 0);
 }
 
 TEST_CASE("load basic type load", "[type_manager]") {
