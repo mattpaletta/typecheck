@@ -128,14 +128,8 @@ if (ENABLE_CPP_CHECK)
 	list(APPEND CMAKE_CXX_CPPCHECK
 		"--enable=warning"
 		"--force"
-        	"--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	    #list(APPEND CMAKE_CXX_CPPCHECK "--std=1z")
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	    #list(APPEND CMAKE_CXX_CPPCHECK "--std=c++${CMAKE_CXX_STANDARD}")
-    else()
-        message(FATAL_ERROR "Only Clang or GCC Supported for cppcheck")
-    endif()
+        "--suppress=*:${CMAKE_BINARY_DIR}/_deps/*") # Exclude all external dependencies
+	message("CPPCheck Enabled: ${CMAKE_CXX_CPPCHECK}")
 endif()
 
 if (ENABLE_CLANG_TIDY)
@@ -149,18 +143,10 @@ if (ENABLE_CLANG_TIDY)
         "-checks=\"-*,clang-analyzer-*,modernize-*,clang-analyzer-*,cppcoreguidelines-*,cert-*,performance-*,portability-*,readability-*\""
 	"-extra-arg=-Wno-unknown-warning-option")
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	    #list(APPEND CMAKE_CXX_CLANG_TIDY "-std=1z")
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	    #list(APPEND CMAKE_CXX_CLANG_TIDY "-std=c++${CMAKE_CXX_STANDARD}")
-    else()
-        message(FATAL_ERROR "Only Clang or GCC Supported for Clang-tidy")
-    endif()
-
     if (TYPECHECK_FIX_ERRORS)
         list(APPEND CMAKE_CXX_CLANG_TIDY "--fix")
     endif()
-	message("Clang-Tidy Enabled: ${clang_tidy_path}")
+	message("Clang-Tidy Enabled: ${CMAKE_CXX_CLANG_TIDY}")
 endif()
 
 add_library(typecheck ${SRC_FILES} ${INC_FILES})
@@ -202,12 +188,14 @@ target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Release>:RELEASE>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:RelWithDebInfo>:DEBUG>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:MinSizeRel>:RELEASE>")
 
-if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} OR ${TYPECHECK_BUILD_TESTS})
+if (${TYPECHECK_BUILD_TESTS})
     enable_testing()
 
-    add_executable(test_typecheck test/test_typecheck.cpp)
+	file(GLOB_RECURSE TEST_INC_FILES test/*.hpp)
+	add_executable(test_typecheck test/test_typecheck.cpp ${TEST_INC_FILES})
     target_link_libraries(test_typecheck typecheck Catch2::Catch2)
     target_include_directories(test_typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_precompile_headers(test_typecheck PRIVATE <TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 
     target_include_directories(test_typecheck PRIVATE test)
     add_test(typecheck test_typecheck)
