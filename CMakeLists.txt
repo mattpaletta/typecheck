@@ -10,7 +10,6 @@ endif()
 
 # Loads all of the options
 include(cmake/options.cmake)
-add_library(coverage_config INTERFACE)
 if (TYPECHECK_ENABLE_COVERAGE)
 	# Only require lcov if code coverage enabled
 	include(cmake/CodeCoverage.cmake)
@@ -205,7 +204,7 @@ if (${TYPECHECK_BUILD_TESTS})
 
 	# Test everything (default test with `make test`
 	add_executable(test_typecheck test/test_typecheck.cpp ${TEST_INC_FILES})
-    target_link_libraries(test_typecheck typecheck Catch2::Catch2 coverage_config)
+    target_link_libraries(test_typecheck typecheck Catch2::Catch2)
     target_include_directories(test_typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_typecheck PUBLIC "-DTEST_RESOLVERS")
 	target_compile_definitions(test_typecheck PUBLIC "-DTEST_TYPE_MANAGER")
@@ -224,7 +223,7 @@ if (${TYPECHECK_BUILD_TESTS})
 
 	# Test just resolvers
 	add_executable(test_resolvers test/test_typecheck.cpp ${TEST_INC_FILES})
-    target_link_libraries(test_resolvers typecheck Catch2::Catch2 coverage_config)
+    target_link_libraries(test_resolvers typecheck Catch2::Catch2)
     target_include_directories(test_resolvers SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_resolvers PUBLIC "-DTEST_RESOLVERS")
 	if (TYPECHECK_ENABLE_COVERAGE)
@@ -238,7 +237,7 @@ if (${TYPECHECK_BUILD_TESTS})
 
 	# Test just constraints
 	add_executable(test_constraints test/test_typecheck.cpp ${TEST_INC_FILES})
-    target_link_libraries(test_constraints typecheck Catch2::Catch2 coverage_config)
+    target_link_libraries(test_constraints typecheck Catch2::Catch2)
     target_include_directories(test_constraints SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_constraints PUBLIC "-DTEST_TYPE_CONSTRAINTS")
 	if (TYPECHECK_ENABLE_COVERAGE)
@@ -252,7 +251,7 @@ if (${TYPECHECK_BUILD_TESTS})
 
 	# Test just type manager
 	add_executable(test_type_manager test/test_typecheck.cpp ${TEST_INC_FILES})
-    target_link_libraries(test_type_manager typecheck Catch2::Catch2 coverage_config)
+    target_link_libraries(test_type_manager typecheck Catch2::Catch2)
     target_include_directories(test_type_manager SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_type_manager PUBLIC "-DTEST_TYPE_MANAGER")
 	if (TYPECHECK_ENABLE_COVERAGE)
