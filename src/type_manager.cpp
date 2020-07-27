@@ -148,25 +148,27 @@ auto typecheck::TypeManager::isConvertible(const std::string& T0, const std::str
 }
 
 auto typecheck::TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept -> bool {
+    if (T0.raw().name().empty() || T1.raw().name().empty()) {
+        // Undefined types, stop here.
+        return false;
+    }
+
+    // Function types not convertible
+    if (T0.has_func() || T1.has_func()) {
+        return false;
+    }
+
     if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
 		return true;
 	}
 
-	const auto t0_ptr = this->getRegisteredType(T0);
-	const auto t1_ptr = this->getRegisteredType(T1);
-
-    // Function types not convertible
-    if (t0_ptr.has_func() || t1_ptr.has_func()) {
-        return false;
-    }
-
+    // Because they're not functions, they must both be raw.
     if (this->convertible.find(T0.raw().name()) == this->convertible.end()) {
 		// T0 is not in the map, meaning the conversion won't be there.
 		return false;
 	}
 
-    if (!t0_ptr.raw().name().empty() && !t1_ptr.raw().name().empty() && \
-        this->convertible.at(T0.raw().name()).find(t1_ptr.raw().name()) != this->convertible.at(T0.raw().name()).end()) {
+    if (this->convertible.at(T0.raw().name()).find(T1.raw().name()) != this->convertible.at(T0.raw().name()).end()) {
 		// Convertible from T0 -> T1
 		return true;
 	}
