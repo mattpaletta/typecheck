@@ -239,6 +239,16 @@ auto typecheck::TypeManager::CreateTypeVar() -> const typecheck::TypeVar {
 	return type;
 }
 
+auto typecheck::TypeManager::getConstraintInternal(const ConstraintPass::IDType id) -> typecheck::Constraint* {
+    for (auto& constraint : this->constraints) {
+        if (constraint.id() == id) {
+            return &constraint;
+        }
+    }
+
+    return nullptr;
+}
+
 auto typecheck::TypeManager::getConstraint(const ConstraintPass::IDType id) const -> const typecheck::Constraint* {
 	for (auto& constraint : this->constraints) {
 		if (constraint.id() == id) {

@@ -33,6 +33,9 @@ namespace typecheck {
         void SortConstraints();
         int getConstraintKindScore(const typecheck::ConstraintKind& kind) const;
 
+        // Internal helper
+        Constraint* getConstraintInternal(const ConstraintPass::IDType id);
+
 	public:
 		TypeManager();
 		~TypeManager() = default;
@@ -72,9 +75,9 @@ namespace typecheck {
         ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
         ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
         ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type, const std::vector<ConstraintPass::IDType>& nested = {});
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar, const std::vector<ConstraintPass::IDType>& nested = {});
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const FunctionVar& type, const std::vector<ConstraintPass::IDType>& nested = {});
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const FunctionVar& type);
         ConstraintPass::IDType CreateBindFunctionConstraint( const ConstraintPass::IDType& functionid, const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
         ConstraintPass::IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
 

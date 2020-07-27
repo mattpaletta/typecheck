@@ -118,24 +118,24 @@ auto typecheck::TypeManager::CreateConvertibleConstraint(const typecheck::TypeVa
     return constraint.id();
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type, const std::vector<ConstraintPass::IDType>& nested) -> typecheck::ConstraintPass::IDType {
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) -> typecheck::ConstraintPass::IDType {
     const auto returnVar = this->CreateTypeVar();
     std::vector<TypeVar> argVars;
-    for (auto& arg : args) {
+    for (std::size_t i = 0; i < args.size(); ++i) {
         argVars.emplace_back(this->CreateTypeVar());
     }
-    const auto constraintID = this->CreateApplicableFunctionConstraint(functionid, argVars, returnVar, nested);
+    const auto constraintID = this->CreateApplicableFunctionConstraint(functionid, argVars, returnVar);
 
     // Wait until after we created the constraint before creating constraints, othersise, could have loose ends
-    const auto returnConstraint = this->CreateBindToConstraint(returnVar, return_type);
+    this->CreateBindToConstraint(returnVar, return_type);
     for (std::size_t i = 0; i < args.size(); ++i) {
-        const auto argConstraint = this->CreateBindToConstraint(argVars.at(i), args.at(i));
+        this->CreateBindToConstraint(argVars.at(i), args.at(i));
     }
 
     return constraintID;
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar, const std::vector<ConstraintPass::IDType>& nested) -> ConstraintPass::IDType {
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar) -> ConstraintPass::IDType {
     typecheck::FunctionVar funcVar;
     funcVar.set_id(functionid);
     for (auto& arg : argVars) {
@@ -143,10 +143,10 @@ auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const Constraint
     }
 
     funcVar.mutable_returnvar()->CopyFrom(returnTypeVar);
-    return this->CreateApplicableFunctionConstraint(functionid, funcVar, nested);
+    return this->CreateApplicableFunctionConstraint(functionid, funcVar);
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const typecheck::FunctionVar& type, const std::vector<ConstraintPass::IDType>& nested) -> typecheck::ConstraintPass::IDType {
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const typecheck::FunctionVar& type) -> typecheck::ConstraintPass::IDType {
     TYPECHECK_ASSERT(type.id() == functionid, "Function type ID should match function id and be set.");
 
     this->functions.push_back(type);
