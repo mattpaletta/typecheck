@@ -90,6 +90,7 @@ message Constraint {
 	bool isFavoured = 6;
 
 	int64 id = 7;
+	repeated int64 nested = 8; // ID's of nested constraints
 
 	message Types {
 		typecheck.TypeVar first = 1;
@@ -124,10 +125,10 @@ message Constraint {
 	}
 
 	oneof constraint {
-		Types types = 8;
-		Member member = 9;
-		Overload overload = 10;
-		Conforms conforms = 11;
-		ExplicitType explicit = 12;
+		Types types = 9;
+		Member member = 10;
+		Overload overload = 11;
+		Conforms conforms = 12;
+		ExplicitType explicit = 13;
 	}
 };

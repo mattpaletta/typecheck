@@ -21,20 +21,23 @@ auto typecheck::ResolveBindOverload::is_valid_constraint(const Constraint& const
     return constraint.has_overload() && constraint.overload().has_type();
 }
 
-auto typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> void {
-    if (this->pass && this->is_valid_constraint(constraint)) {
+auto typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> bool {
+    if (this->pass && this->is_valid_constraint(constraint) && manager->canGetFunctionOverloads(constraint.overload().functionid(), this->pass)) {
         // Try and get registered overloads
-        this->overloads = manager->getFunctionOverloads(constraint.overload().functionid());
+        this->overloads = manager->getFunctionOverloads(constraint.overload().functionid(), this->pass);
         // Reset index to 0.
         this->current_overload_i = 0;
         this->did_find_overloads = true;
+        return this->overloads.size() > 0;
     }
+
+    return false;
 }
 
 auto typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (!this->did_find_overloads) {
         // The first time do setup
-        this->doInitialIterationSetup(constraint, manager);
+        return this->doInitialIterationSetup(constraint, manager);
     } else {
         this->current_overload_i++;
     }

@@ -23,7 +23,7 @@ namespace typecheck {
 		std::vector<Type> registeredTypes;
 		std::set<std::string> registeredTypeVars;
 		std::map<std::string, std::set<std::string>> convertible;
-		std::vector<FunctionDefinition> functions;
+		std::vector<FunctionVar> functions;
 		std::map<ConstraintKind, std::unique_ptr<Resolver>> registeredResolvers;
 
 		TypeSolver solver;
@@ -34,8 +34,6 @@ namespace typecheck {
         int getConstraintKindScore(const typecheck::ConstraintKind& kind) const;
 
 	public:
-        bool use_reverse_sort = false;
-
 		TypeManager();
 		~TypeManager() = default;
 
@@ -62,7 +60,8 @@ namespace typecheck {
 
 		// 'Register' function definition using Constraint
         // Warning, this method is slow and should not be used frequently.
-        std::vector<FunctionDefinition> getFunctionOverloads(const ConstraintPass::IDType& var) const;
+        std::vector<FunctionDefinition> getFunctionOverloads(const ConstraintPass::IDType& var, const ConstraintPass* pass) const;
+        bool canGetFunctionOverloads(const ConstraintPass::IDType& var, const ConstraintPass* pass) const;
 
 		// `Register` resolvers
 		bool registerResolver(std::unique_ptr<Resolver>&& resolver);
@@ -73,8 +72,9 @@ namespace typecheck {
         ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
         ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
         ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type);
-        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const FunctionDefinition& type);
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type, const std::vector<ConstraintPass::IDType>& nested = {});
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar, const std::vector<ConstraintPass::IDType>& nested = {});
+        ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const FunctionVar& type, const std::vector<ConstraintPass::IDType>& nested = {});
         ConstraintPass::IDType CreateBindFunctionConstraint( const ConstraintPass::IDType& functionid, const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
         ConstraintPass::IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
 

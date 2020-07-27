@@ -11,9 +11,6 @@
 
 // Utility function to avoid boilerplate code in testing.
 void setupTypeManager(typecheck::TypeManager* tm) {
-    // Turn this on for testing
-    tm->use_reverse_sort = true;
-
     CHECK(tm->registerType("int"));
     CHECK(tm->registerType("float"));
     CHECK(tm->registerType("double"));

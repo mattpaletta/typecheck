@@ -20,7 +20,7 @@ namespace typecheck {
         virtual std::unique_ptr<Resolver> clone(ConstraintPass* pass, const ConstraintPass::IDType id) const override;
 
         bool is_valid_constraint(const Constraint& constraint) const;
-        void doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager);
+        bool doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager);
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override;
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager) override;
         virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override;

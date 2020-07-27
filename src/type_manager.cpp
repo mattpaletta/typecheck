@@ -65,12 +65,36 @@ auto typecheck::TypeManager::getRegisteredType(const Type& name) const noexcept 
 	return {};
 }
 
-auto typecheck::TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID) const -> std::vector<typecheck::FunctionDefinition> {
+auto typecheck::TypeManager::canGetFunctionOverloads(const ConstraintPass::IDType& funcID, const ConstraintPass* pass) const -> bool {
+    for (auto& overload : this->functions) {
+        if (overload.id() == funcID) {
+            // Check if it's `ready`
+            for (auto& arg : overload.args()) {
+                if (!pass->hasResolvedType(arg)) {
+                    return false;
+                }
+            }
+            if (!pass->hasResolvedType(overload.returnvar())) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+auto typecheck::TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID, const ConstraintPass* pass) const -> std::vector<typecheck::FunctionDefinition> {
     std::vector<typecheck::FunctionDefinition> overloads;
     for (auto& overload : this->functions) {
         // Lookup by 'var', to deal with anonymous functions.
         if (overload.id() == funcID) {
-            overloads.push_back(overload);
+            // Copy it over, and hand it over a 'function definition'.
+            typecheck::FunctionDefinition funcDef;
+            for (auto& arg : overload.args()) {
+                funcDef.add_args()->CopyFrom(pass->getResolvedType(arg));
+            }
+            funcDef.mutable_returntype()->CopyFrom(pass->getResolvedType(overload.returnvar()));
+
+            overloads.push_back(funcDef);
         }
     }
 

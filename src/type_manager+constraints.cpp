@@ -32,21 +32,10 @@ auto typecheck::TypeManager::getConstraintKindScore(const typecheck::ConstraintK
 }
 
 void typecheck::TypeManager::SortConstraints() {
-    if (this->use_reverse_sort) {
-        // In reverse sort, make it the reverse of the order they need to be resolved, so we can make sure the algorithm can handle it. (worst case)
-        std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
-            return this->getConstraintKindScore(c1.kind()) > this->getConstraintKindScore(c2.kind());
-        });
-#ifdef DEBUG
-        std::cout << "Warning: TypeManager using reverse_sort, this is not recommended for production." << std::endl;
-#endif
-    } else {
-        // Sort the constraints by the order in which they need to be resolved
-        std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
-            return this->getConstraintKindScore(c1.kind()) < this->getConstraintKindScore(c2.kind());
-        });
-    }
-
+    // Sort the constraints by the order in which they need to be resolved
+    std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
+        return this->getConstraintKindScore(c1.kind()) < this->getConstraintKindScore(c2.kind());
+    });
 }
 
 auto getNewBlankConstraint(typecheck::ConstraintKind kind, const long long& id) -> typecheck::Constraint {
@@ -129,22 +118,35 @@ auto typecheck::TypeManager::CreateConvertibleConstraint(const typecheck::TypeVa
     return constraint.id();
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type) -> typecheck::ConstraintPass::IDType {
-    // overload to support creating from a vector.
-    typecheck::FunctionDefinition funcType;
-    funcType.set_id(functionid);
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type, const std::vector<ConstraintPass::IDType>& nested) -> typecheck::ConstraintPass::IDType {
+    const auto returnVar = this->CreateTypeVar();
+    std::vector<TypeVar> argVars;
     for (auto& arg : args) {
-        funcType.add_args()->CopyFrom(arg);
-        if (arg.has_raw()) {
-            // These types are 'type': int, float, etc., so don't have to look them up as registered TypeVars.
-            TYPECHECK_ASSERT(!arg.raw().name().empty(), "Cannot use empty type when creating constraint.");
-        }
+        argVars.emplace_back(this->CreateTypeVar());
     }
-    funcType.mutable_returntype()->CopyFrom(return_type);
-    return this->CreateApplicableFunctionConstraint(functionid, funcType);
+    const auto constraintID = this->CreateApplicableFunctionConstraint(functionid, argVars, returnVar, nested);
+
+    // Wait until after we created the constraint before creating constraints, othersise, could have loose ends
+    const auto returnConstraint = this->CreateBindToConstraint(returnVar, return_type);
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const auto argConstraint = this->CreateBindToConstraint(argVars.at(i), args.at(i));
+    }
+
+    return constraintID;
 }
 
-auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const typecheck::FunctionDefinition& type) -> typecheck::ConstraintPass::IDType {
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar, const std::vector<ConstraintPass::IDType>& nested) -> ConstraintPass::IDType {
+    typecheck::FunctionVar funcVar;
+    funcVar.set_id(functionid);
+    for (auto& arg : argVars) {
+        funcVar.add_args()->CopyFrom(arg);
+    }
+
+    funcVar.mutable_returnvar()->CopyFrom(returnTypeVar);
+    return this->CreateApplicableFunctionConstraint(functionid, funcVar, nested);
+}
+
+auto typecheck::TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const typecheck::FunctionVar& type, const std::vector<ConstraintPass::IDType>& nested) -> typecheck::ConstraintPass::IDType {
     TYPECHECK_ASSERT(type.id() == functionid, "Function type ID should match function id and be set.");
 
     this->functions.push_back(type);

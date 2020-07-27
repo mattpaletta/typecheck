@@ -21,6 +21,13 @@ message Type {
 	}
 };
 
+message FunctionVar {
+	repeated TypeVar args = 1;
+	TypeVar returnVar = 2;
+	string name = 3;
+	int64 id = 4; // Unique function ID, must match FunctionDefinition
+}
+
 message TypeVar {
 	string symbol = 1;
 }

@@ -135,6 +135,10 @@ auto typecheck::ConstraintPass::CalcScore(const std::deque<std::size_t>& indices
 
 auto typecheck::ConstraintPass::getResolvedType(const TypeVar& var) const -> typecheck::Type {
 	Type type;
+    if (!this->hasResolvedType(var)) {
+        std::cout << "Typecheck Error: asking for unresolved type: " << var.symbol() << std::endl;
+        return type;
+    }
     type.CopyFrom(this->resolvedTypes.at(var.symbol()));
 	return type;
 }

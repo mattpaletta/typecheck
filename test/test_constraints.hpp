@@ -187,6 +187,54 @@ TEST_CASE("solve function application constraint", "[constraint]") {
     CHECK(tm.getResolvedType(T.at(3)).raw().name() == "double");
 }
 
+TEST_CASE("solve inferred function application constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    const auto T = CreatMultipleSymbols(tm, 7);
+
+    const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
+    tm.CreateApplicableFunctionConstraint(T0FuncHash, {T.at(1), T.at(2)}, T.at(3));
+    tm.CreateBindFunctionConstraint(T0FuncHash, T.at(0), {T.at(4), T.at(5)}, T.at(6));
+
+    // 'internal' constraints to the function
+    tm.CreateBindToConstraint(T.at(1), tm.getRegisteredType("int"));
+    tm.CreateBindToConstraint(T.at(2), tm.getRegisteredType("float"));
+    tm.CreateBindToConstraint(T.at(3), tm.getRegisteredType("double"));
+
+    // T0 = (T1, T2) -> T3
+    REQUIRE(tm.solve());
+    CHECK(tm.getResolvedType(T.at(0)).has_func());
+    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(3)).has_raw());
+
+    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "float");
+    CHECK(tm.getResolvedType(T.at(3)).raw().name() == "double");
+}
+
+TEST_CASE("solve inferred function application constraint no args", "[constraint]") {
+    getDefaultTypeManager(tm);
+
+    const auto T = CreatMultipleSymbols(tm, 3);
+
+    const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
+    tm.CreateApplicableFunctionConstraint(T0FuncHash, {}, T.at(1));
+    tm.CreateBindFunctionConstraint(T0FuncHash, T.at(0), {}, T.at(2));
+
+    // 'internal' constraints to the function
+    tm.CreateBindToConstraint(T.at(1), tm.getRegisteredType("double"));
+
+    // T0 = (T1, T2) -> T3
+    REQUIRE(tm.solve());
+    CHECK(tm.getResolvedType(T.at(0)).has_func());
+    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
+    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+
+    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "double");
+    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
+}
+
 TEST_CASE("solve function different num args application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
