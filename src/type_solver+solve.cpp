@@ -44,7 +44,12 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
             auto computed = iterPass.CreateCopy();
             if (did_resolve) {
                 did_any_resolve = true;
-                this->DoPass_internal(&computed, indexes, manager, prev_failed, prev_emplaced);
+                if (prev_failed == i) {
+                    // It was the last one to fail, but we resolved it.
+                    this->DoPass_internal(&computed, indexes, manager, std::numeric_limits<std::size_t>::max(), prev_emplaced);
+                } else {
+                    this->DoPass_internal(&computed, indexes, manager, prev_failed, prev_emplaced);
+                }
             } else if (indexes.size() > 1 && prev_failed != i && prev_emplaced == std::numeric_limits<std::size_t>::max()) {
                 auto new_list = indexes;
                 // It failed, add it to the end of the queue
@@ -69,7 +74,15 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
                 // It failed, add it to the end of the queue
                 new_list.push_back(i);
 
-                this->DoPass_internal(&computed, new_list, manager, prev_failed, prev_emplaced == std::numeric_limits<std::size_t>::max() ? i : prev_emplaced);
+                // Reset this if the 'prev_emplaced' isn't in the list
+                auto contains_last = false;
+                for (auto& contains : new_list) {
+                    if (contains == prev_emplaced) {
+                        contains_last = true;
+                        break;
+                    }
+                }
+                this->DoPass_internal(&computed, new_list, manager, prev_failed, (!contains_last ||  prev_emplaced == std::numeric_limits<std::size_t>::max()) ? i : prev_emplaced);
 
                 if (typecheck::ConstraintPass::IsScoreBetter(computed.CalcScoreMap(new_list, manager), best_pass.CalcScoreMap(new_list, manager, false))) {
                     computed.CopyToExisting(&best_pass);
