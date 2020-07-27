@@ -300,6 +300,41 @@ TEST_CASE("solve function same num args different types application constraint",
     CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
 }
 
+TEST_CASE("solve function infer args later constraint", "[constraint]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("void");
+
+    const auto T = CreatMultipleSymbols(tm, 9);
+
+    const auto functionID = tm.CreateFunctionHash("foo", {});
+    tm.CreateApplicableFunctionConstraint(functionID, {}, T.at(0));
+
+    tm.CreateBindToConstraint(T.at(2), tm.getRegisteredType("void"));
+    tm.CreateBindToConstraint(T.at(3), tm.getRegisteredType("int"));
+    tm.CreateLiteralConformsToConstraint(T.at(4), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T.at(4), T.at(3));
+    tm.CreateEqualsConstraint(T.at(5), T.at(3));
+    tm.CreateEqualsConstraint(T.at(6), T.at(5));
+    tm.CreateEqualsConstraint(T.at(0), T.at(6));
+    tm.CreateBindFunctionConstraint(functionID, T.at(8), {}, T.at(7));
+
+    /*
+     T8 = () -> T7
+     T8() -> T7 {
+        ...
+        T6
+     }
+     */
+    REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T.at(8)).has_func());
+    REQUIRE(tm.getResolvedType(T.at(7)).has_raw());
+
+    // Check it got bound to: func foo() -> Int
+    REQUIRE(tm.getResolvedType(T.at(8)).func().has_returntype());
+    REQUIRE(tm.getResolvedType(T.at(8)).func().returntype().has_raw());
+    CHECK(tm.getResolvedType(T.at(8)).func().returntype().raw().name() == "int");
+}
+
 TEST_CASE("solve for-loop constraints", "[constraint]") {
     getDefaultTypeManager(tm);
     tm.registerType("bool");
