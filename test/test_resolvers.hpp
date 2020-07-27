@@ -82,7 +82,7 @@ TEST_CASE("test resolve conforms to has not preferred", "[resolver]") {
 
 TEST_CASE("test resolve equals have both", "[resolver]") {
     getDefaultTypeManager(tm);
-    auto T = CreatMultipleSymbols(tm, 2);
+    auto T = CreateMultipleSymbols(tm, 2);
 
     auto constraintID = tm.CreateEqualsConstraint(T.at(0), T.at(1));
 
@@ -157,7 +157,7 @@ TEST_CASE("test resolve bindto conflicting", "[resolver]") {
 
 TEST_CASE("test resolve equals have both not equal", "[resolver]") {
     getDefaultTypeManager(tm);
-    auto T = CreatMultipleSymbols(tm, 2);
+    auto T = CreateMultipleSymbols(tm, 2);
 
     auto constraintID = tm.CreateEqualsConstraint(T.at(0), T.at(1));
 

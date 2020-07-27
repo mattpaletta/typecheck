@@ -22,7 +22,7 @@ void setupTypeManager(typecheck::TypeManager* tm) {
     CHECK(tm->setConvertible("float", "double"));
 }
 
-auto CreatMultipleSymbols(typecheck::TypeManager& tm, const std::size_t& num) -> std::vector<typecheck::TypeVar> {
+auto CreateMultipleSymbols(typecheck::TypeManager& tm, const std::size_t& num) -> std::vector<typecheck::TypeVar> {
     std::vector<typecheck::TypeVar> out;
     for (std::size_t i = 0; i < num; ++i) {
         out.push_back(tm.CreateTypeVar());

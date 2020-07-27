@@ -72,7 +72,7 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
 TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreatMultipleSymbols(tm, 3);
+    const auto T = CreateMultipleSymbols(tm, 3);
 
     tm.CreateEqualsConstraint(T.at(2) , T.at(0));
     tm.CreateEqualsConstraint(T.at(0), T.at(1));
@@ -169,7 +169,7 @@ TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
 TEST_CASE("solve function application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreatMultipleSymbols(tm, 4);
+    const auto T = CreateMultipleSymbols(tm, 4);
 
     const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
     tm.CreateApplicableFunctionConstraint(T0FuncHash, {tm.getRegisteredType("int"), tm.getRegisteredType("float")}, tm.getRegisteredType("double"));
@@ -190,7 +190,7 @@ TEST_CASE("solve function application constraint", "[constraint]") {
 TEST_CASE("solve inferred function application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreatMultipleSymbols(tm, 7);
+    const auto T = CreateMultipleSymbols(tm, 7);
 
     const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
     tm.CreateApplicableFunctionConstraint(T0FuncHash, {T.at(1), T.at(2)}, T.at(3));
@@ -216,7 +216,7 @@ TEST_CASE("solve inferred function application constraint", "[constraint]") {
 TEST_CASE("solve inferred function application constraint no args", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreatMultipleSymbols(tm, 3);
+    const auto T = CreateMultipleSymbols(tm, 3);
 
     const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
     tm.CreateApplicableFunctionConstraint(T0FuncHash, {}, T.at(1));
@@ -238,7 +238,7 @@ TEST_CASE("solve inferred function application constraint no args", "[constraint
 TEST_CASE("solve function different num args application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreatMultipleSymbols(tm, 3);
+    const auto T = CreateMultipleSymbols(tm, 3);
 
     // func foo(a: Int, b: Float) -> Double
     const auto T0FuncHash = std::hash<std::string>()("foo:a:b");
@@ -271,7 +271,7 @@ TEST_CASE("solve function different num args application constraint", "[constrai
 TEST_CASE("solve function same num args different types application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreatMultipleSymbols(tm, 3);
+    const auto T = CreateMultipleSymbols(tm, 3);
 
     // func foo(a: Int) -> Double
     tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), { tm.getRegisteredType("int") }, tm.getRegisteredType("double"));
@@ -304,7 +304,7 @@ TEST_CASE("solve function infer args later constraint", "[constraint]") {
     getDefaultTypeManager(tm);
     tm.registerType("void");
 
-    const auto T = CreatMultipleSymbols(tm, 9);
+    const auto T = CreateMultipleSymbols(tm, 9);
 
     const auto functionID = tm.CreateFunctionHash("foo", {});
     tm.CreateApplicableFunctionConstraint(functionID, {}, T.at(0));
@@ -394,4 +394,86 @@ TEST_CASE("solve for-loop constraints", "[constraint]") {
     CHECK(tm.getResolvedType(T10).raw().name() == "int");
     CHECK(tm.getResolvedType(T11).raw().name() == "int");
     CHECK(tm.getResolvedType(T12).raw().name() == "void");
+}
+
+
+TEST_CASE("mutually-recursive solve for-loop constraints", "[constraint]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("bool");
+    tm.registerType("void");
+
+    const auto T = CreateMultipleSymbols(tm, 16);
+    /*
+     Typecheck: Creating constraint: explicit { var { symbol: "T0" } type { raw { name: "void" } } }
+     Typecheck: Creating constraint: id: 1 explicit { var { symbol: "T2" } type { raw { name: "void" } } }
+     Typecheck: Creating constraint: id: 2 explicit { var { symbol: "T3" } type { raw { name: "int" } } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 3 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T4" } }
+     Typecheck: Creating constraint: kind: Equal id: 4 types { first { symbol: "T4" } second { symbol: "T3" } }
+     Typecheck: Creating constraint: kind: Equal id: 5 types { first { symbol: "T5" } second { symbol: "T1" } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 6 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T6" } }
+     Typecheck: Creating constraint: kind: Equal id: 7 types { first { symbol: "T5" } second { symbol: "T6" } }
+     Typecheck: Creating constraint: kind: Equal id: 8 types { first { symbol: "T7" } second { symbol: "T5" } }
+     Typecheck: Creating constraint: id: 9 explicit { var { symbol: "T8" } type { raw { name: "bool" } } }
+     Typecheck: Creating constraint: kind: Equal id: 10 types { first { symbol: "T9" } second { symbol: "T1" } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 11 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T10" } }
+     Typecheck: Creating constraint: kind: Equal id: 12 types { first { symbol: "T9" } second { symbol: "T10" } }
+     Typecheck: Creating constraint: kind: Equal id: 13 types { first { symbol: "T11" } second { symbol: "T9" } }
+     Typecheck: Creating constraint: id: 14 explicit { var { symbol: "T8" } type { raw { name: "bool" } } }
+     Typecheck: Creating constraint: kind: Equal id: 15 types { first { symbol: "T3" } second { symbol: "T11" } }
+     Typecheck: Creating constraint: kind: Equal id: 16 types { first { symbol: "T1" } second { symbol: "T11" } }
+     Typecheck: Creating constraint: id: 17 explicit { var { symbol: "T12" } type { raw { name: "void" } } }
+     Typecheck: Creating constraint: id: 18 explicit { var { symbol: "T13" } type { raw { name: "int" } } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 19 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T14" } }
+     Typecheck: Creating constraint: kind: Equal id: 20 types { first { symbol: "T14" } second { symbol: "T13" } }
+     Typecheck: Creating constraint: id: 21 explicit { var { symbol: "T15" } type { raw { name: "void" } } }
+     */
+
+    const auto intType = tm.getRegisteredType("int");
+    const auto voidType = tm.getRegisteredType("void");
+    const auto boolType = tm.getRegisteredType("bool");
+
+    tm.CreateBindToConstraint(T.at(0), voidType);
+    tm.CreateBindToConstraint(T.at(2), voidType);
+    tm.CreateBindToConstraint(T.at(3), intType);
+    tm.CreateBindToConstraint(T.at(8), boolType);
+    tm.CreateBindToConstraint(T.at(12), voidType);
+    tm.CreateBindToConstraint(T.at(13), intType);
+    tm.CreateBindToConstraint(T.at(15), voidType);
+
+    tm.CreateLiteralConformsToConstraint(T.at(4), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateLiteralConformsToConstraint(T.at(6), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateLiteralConformsToConstraint(T.at(10), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateLiteralConformsToConstraint(T.at(14), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+
+    tm.CreateEqualsConstraint(T.at(4), T.at(3));
+    tm.CreateEqualsConstraint(T.at(5), T.at(1));
+    tm.CreateEqualsConstraint(T.at(5), T.at(6));
+    tm.CreateEqualsConstraint(T.at(7), T.at(5));
+    tm.CreateEqualsConstraint(T.at(9), T.at(1));
+    tm.CreateEqualsConstraint(T.at(9), T.at(10));
+    tm.CreateEqualsConstraint(T.at(11), T.at(9));
+    tm.CreateEqualsConstraint(T.at(3), T.at(11));
+    tm.CreateEqualsConstraint(T.at(1), T.at(11));
+    tm.CreateEqualsConstraint(T.at(14), T.at(13));
+
+    REQUIRE(tm.solve());
+    for (std::size_t i = 0; i < 16; ++i) {
+        REQUIRE(tm.getResolvedType(T.at(i)).has_raw());
+    }
+    CHECK(tm.getResolvedType(T.at(0)).raw().name()  == "void");
+    CHECK(tm.getResolvedType(T.at(1)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(2)).raw().name()  == "void");
+    CHECK(tm.getResolvedType(T.at(3)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(4)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(5)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(6)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(7)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(8)).raw().name()  == "bool");
+    CHECK(tm.getResolvedType(T.at(9)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(10)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(11)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(12)).raw().name()  == "void");
+    CHECK(tm.getResolvedType(T.at(13)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(14)).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T.at(15)).raw().name()  == "void");
 }
