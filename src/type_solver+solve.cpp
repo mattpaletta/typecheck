@@ -52,6 +52,11 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
         // Add all the ones we skipped back to the front
         indexes.erase(indexes.begin() + static_cast<long>(skippedItems));
 
+        if (current_constraint == nullptr) {
+            // Got an invalid result, exit early.
+            return;
+        }
+
         bool did_any_resolve = false;
         // Early stop if best_score reaches zero
         while (best_pass.CalcScore(original_indices, manager) > 0 && iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {

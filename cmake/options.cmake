@@ -21,7 +21,8 @@ set_option_if_not_set(TYPECHECK_FIX_ERRORS "Only relevant if ENABLE_CLANG_TIDY e
 set_option_if_not_set(ENABLE_CPP_CHECK "Use cppcheck - ${in_source_msg}" ${default_if_in_dir})
 set_option_if_not_set(TYPECHECK_WERROR "Use Werror" OFF)
 set_option_if_not_set(TYPECHECK_BUILD_TESTS "Build tests - ${in_source_msg}" ${default_if_in_dir})
-set_option_if_not_set(TYPECHECK_ENABLE_COVERAGE "Build code coverage targets ${in_source_msg}" OFF)
+set_option_if_not_set(TYPECHECK_ENABLE_COVERAGE "Build code coverage targets, default OFF" OFF)
+set_option_if_not_set(TYPECHECK_ENABLE_BLOATY "Build bloaty target (unfinished, WIP)" OFF)
 
 set_option_if_not_set(TYPECHECK_PRINT_DEBUG_CONSTRAINTS "Prints debug information when creating constraints" OFF)
 set_option_if_not_set(TYPECHECK_PRINT_SHORT_DEBUG "Prints shorter debug description information, only active if TYPECHECK_PRINT_DEBUG_CONSTRAINTS=ON" ON)

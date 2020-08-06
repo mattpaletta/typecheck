@@ -97,7 +97,13 @@ include(cmake/generate_protos.cmake)
 #set(USE_SCIP ON)
 #set(USE_XPRESS ON)
 # fetch_extern(or-tools https://github.com/google/or-tools.git 45770b833997f827d322e929b1ed4781c4e60d44)
-if (NOT TARGET protobuf::libprotobuf)
+
+# This includes protobuf
+if (${TYPECHECK_ENABLE_BLOATY})
+	fetch_extern(bloaty https://github.com/google/bloaty.git 3cf5c3feca15ab88730d6526b2f06302597926b5)
+endif()
+
+if (NOT TARGET protobuf::libprotobuf AND NOT ${TYPECHECK_ENABLE_BLOATY})
 	set(protobuf_BUILD_TESTS OFF)
 	set(protobuf_BUILD_CONFORMANCE OFF)
 	set(protobuf_BUILD_EXAMPLES OFF)
@@ -182,7 +188,9 @@ if (NOT TARGET Catch2::Catch2)
 endif()
 
 target_compile_options(typecheck PRIVATE "${TYPECHECK_EXTRA_FLAGS}")
-target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>)
+if (NOT ${TYPECHECK_ENABLE_BLOATY})
+	target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>)
+endif()
 target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:typecheck_protos,INTERFACE_INCLUDE_DIRECTORIES>)
 
 if (TYPECHECK_PRINT_DEBUG_CONSTRAINTS)
@@ -196,6 +204,15 @@ target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:Release>:RELEASE>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:RelWithDebInfo>:DEBUG>")
 target_compile_definitions(typecheck PUBLIC "$<$<CONFIG:MinSizeRel>:RELEASE>")
+
+if(${TYPECHECK_ENABLE_BLOATY})
+	set(bloatyBin $<TARGET_FILE:bloaty>)
+	add_custom_target("typecheck_bloaty"
+			COMMAND ${bloatyBin} $<TARGET_FILE:typecheck>
+			DEPENDS bloaty typecheck
+			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+			COMMENT "Running Bloaty")
+endif()
 
 if (${TYPECHECK_BUILD_TESTS})
     enable_testing()
