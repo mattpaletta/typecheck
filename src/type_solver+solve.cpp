@@ -33,7 +33,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
         // Create an original copy, used for score.
         auto original_indices = indexes;
         std::size_t i = 0;
-        const typecheck::Constraint* current_constraint;
+        const typecheck::Constraint* current_constraint = nullptr;
 
         std::size_t skippedItems = 0;
 
