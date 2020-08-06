@@ -18,7 +18,28 @@ auto typecheck::ResolveEquals::is_valid_constraint(const Constraint& constraint)
 }
 
 auto typecheck::ResolveEquals::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
-    return this->pass && !has_gotten_resolve && this->is_valid_constraint(constraint);
+    return this->pass && !this->has_gotten_resolve && this->is_valid_constraint(constraint);
+}
+
+auto typecheck::ResolveEquals::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
+    if (!this->pass) {
+        return false;
+    }
+
+    const auto T0 = constraint.types().first();
+    const auto T1 = constraint.types().second();
+
+    const bool hasT0 = this->pass->hasResolvedType(T0);
+    const bool hasT1 = this->pass->hasResolvedType(T1);
+
+//    const bool hasT0Permission = this->pass->HasPermission(constraint, T0, manager);
+//    const bool hasT1Permission = this->pass->HasPermission(constraint, T1, manager);
+
+//    const bool hasT0Only = hasT0 && hasT1Permission;
+//    const bool hasT1Only = hasT1 && hasT0Permission;
+//    const bool hasBoth = hasT0 && hasT1;
+
+    return hasT0 || hasT1;
 }
 
 auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {

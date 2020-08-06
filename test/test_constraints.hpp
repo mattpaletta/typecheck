@@ -396,6 +396,45 @@ TEST_CASE("solve for-loop constraints", "[constraint]") {
     CHECK(tm.getResolvedType(T12).raw().name() == "void");
 }
 
+TEST_CASE("multiple independent statements", "[constraint]") {
+    getDefaultTypeManager(tm);
+    /*
+     Typecheck: Creating constraint: kind: ConformsTo conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T3" } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 1 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T4" } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 4 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T6" } }
+     Typecheck: Creating constraint: kind: ConformsTo id: 5 conforms { protocol { literal: ExpressibleByInteger } type { symbol: "T7" } }
+
+     Typecheck: Creating constraint: kind: Equal id: 2 types { first { symbol: "T3" } second { symbol: "T4" } }
+     Typecheck: Creating constraint: kind: Equal id: 3 types { first { symbol: "T5" } second { symbol: "T3" } }
+     Typecheck: Creating constraint: kind: Equal id: 6 types { first { symbol: "T6" } second { symbol: "T7" } }
+     Typecheck: Creating constraint: kind: Equal id: 7 types { first { symbol: "T8" } second { symbol: "T6" } }
+     Typecheck: Creating constraint: kind: Equal id: 8 types { first { symbol: "T9" } second { symbol: "T8" } }
+     Typecheck: Creating constraint: kind: Equal id: 9 types { first { symbol: "T1" } second { symbol: "T9" } }
+
+     Typecheck: Creating constraint: kind: BindOverload id: 10 overload { type { symbol: "T11" } functionID: -5066554659805476548 returnVar { symbol: "T10" } }
+     */
+    const auto T = CreateMultipleSymbols(tm, 12);
+    const auto intType = tm.getRegisteredType("int");
+
+    tm.CreateLiteralConformsToConstraint(T.at(3), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateLiteralConformsToConstraint(T.at(4), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateLiteralConformsToConstraint(T.at(6), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateLiteralConformsToConstraint(T.at(7), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateBindToConstraint(T.at(0), intType);
+
+    tm.CreateEqualsConstraint(T.at(3), T.at(4));
+    tm.CreateEqualsConstraint(T.at(5), T.at(3));
+    tm.CreateEqualsConstraint(T.at(6), T.at(7));
+    tm.CreateEqualsConstraint(T.at(8), T.at(6));
+    tm.CreateEqualsConstraint(T.at(9), T.at(8));
+    tm.CreateEqualsConstraint(T.at(1), T.at(9));
+
+    const auto funcHash = tm.CreateFunctionHash("foo", {});
+
+    tm.CreateApplicableFunctionConstraint(funcHash, {}, T.at(0));
+    tm.CreateBindFunctionConstraint(funcHash, T.at(11), {}, T.at(10));
+    REQUIRE(tm.solve());
+}
 
 TEST_CASE("mutually-recursive solve for-loop constraints", "[constraint]") {
     getDefaultTypeManager(tm);

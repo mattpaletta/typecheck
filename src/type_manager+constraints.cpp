@@ -16,13 +16,13 @@ auto typecheck::TypeManager::getConstraintKindScore(const typecheck::ConstraintK
         case ApplicableFunction:
             return 1; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case BindOverload:
-            return 5; // return 2; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+            return 9; // return 2; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case ConformsTo:
             return 6; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case Conversion:
             return 3; // return 4; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case Equal:
-            return 2;// return 5; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+            return 8;// return 5; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case ConstraintKind_INT_MIN_SENTINEL_DO_NOT_USE_:
         case ConstraintKind_INT_MAX_SENTINEL_DO_NOT_USE_:
             return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)

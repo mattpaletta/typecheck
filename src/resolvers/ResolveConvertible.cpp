@@ -29,8 +29,8 @@ auto typecheck::ResolveConvertible::doInitialIterationSetup(const Constraint& co
         this->options = manager->getConvertible( this->pass->getResolvedType(constraint.types().first()) );
     }
 
-    did_find_convertible = this->options.size() > 0;
-    return did_find_convertible;
+    this->did_find_convertible = this->options.size() > 0;
+    return this->did_find_convertible;
 }
 
 auto typecheck::ResolveConvertible::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
@@ -42,6 +42,15 @@ auto typecheck::ResolveConvertible::hasMoreSolutions(const Constraint& constrain
     } else {
         return this->options.size() > 0;
     }
+}
+
+auto typecheck::ResolveConvertible::readyToResolve(const Constraint& constraint, const TypeManager* manager) const -> bool {
+    const auto typeVar = constraint.types().second();
+    const auto hasResolved = this->pass->hasResolvedType(typeVar);
+    const auto hasPermission = this->pass->HasPermission(constraint, typeVar, manager);
+    auto result = /*this->options.size() > 0 && */ ((!hasResolved && hasPermission) || hasResolved);
+
+    return true; //result;
 }
 
 auto typecheck::ResolveConvertible::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {

@@ -14,6 +14,7 @@ namespace typecheck {
 
         bool is_valid_constraint(const Constraint& constraint) const;
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) override;
+        virtual bool readyToResolve(const Constraint& constraint, const TypeManager* manager) const override;
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager) override;
         virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const override;
 	};

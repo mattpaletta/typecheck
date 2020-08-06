@@ -28,6 +28,7 @@ namespace typecheck {
         virtual std::unique_ptr<Resolver> clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const;
 
         virtual bool hasMoreSolutions(const Constraint& constraint, const TypeManager* manager);
+        virtual bool readyToResolve(const Constraint& constraint, const TypeManager* manager) const;
         virtual bool resolveNext(const Constraint& constraint, const TypeManager* manager);
         virtual std::size_t score(const Constraint& constraint, const TypeManager* manager) const;
 	};

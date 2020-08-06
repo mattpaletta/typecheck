@@ -85,13 +85,22 @@ auto typecheck::ResolveConformsTo::hasMoreSolutions(const Constraint& constraint
     }
 }
 
+auto typecheck::ResolveConformsTo::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
+    auto typeVar = constraint.conforms().type();
+
+    const auto hasResolved = this->pass->hasResolvedType(typeVar);
+    const auto hasPermission = this->pass->HasPermission(constraint, typeVar, manager);
+    return true; // this->currLiteralProtocol.operator bool() && ((!hasResolved  && hasPermission) || hasResolved);
+}
+
 auto typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->currLiteralProtocol) {
+        auto typeVar = constraint.conforms().type();
+
         // TODO: Switch to list, so we can pop_front
         auto nextType = this->state.back();
         this->state.pop_back();
 
-        auto typeVar = constraint.conforms().type();
         return this->pass->setResolvedType(constraint, typeVar, nextType, manager);
     }
     return false;

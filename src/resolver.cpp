@@ -19,6 +19,10 @@ auto typecheck::Resolver::hasMoreSolutions([[maybe_unused]] const Constraint& co
     return false;
 }
 
+auto typecheck::Resolver::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
+    return false;
+}
+
 auto typecheck::Resolver::resolveNext([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     // Called subsequent times.
     return false;

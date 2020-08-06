@@ -27,19 +27,34 @@ void typecheck::TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* mana
 
 void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const {
     auto best_pass = pass->CreateCopy();
-    
+    auto iterPass = pass->CreateCopy();
+
     if (!indexes.empty()) {
         // Create an original copy, used for score.
         auto original_indices = indexes;
-        std::size_t i = indexes.front();
-        auto* current_constraint = &manager->constraints.at(i);
+        std::size_t i = 0;
+        const typecheck::Constraint* current_constraint;
 
-        indexes.pop_front();
+        std::size_t skippedItems = 0;
 
-        auto iterPass = pass->CreateCopy();
+        for (auto& j : indexes) {
+            // Skip ahead until we find one that's ready.
+            current_constraint = &manager->constraints.at(j);
+
+            if (iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager) && iterPass.GetResolver(*current_constraint, manager)->readyToResolve(*current_constraint, manager)) {
+                i = j;
+                break;
+            }
+
+            ++skippedItems;
+        }
+
+        // Add all the ones we skipped back to the front
+        indexes.erase(indexes.begin() + static_cast<long>(skippedItems));
 
         bool did_any_resolve = false;
-        while (iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
+        // Early stop if best_score reaches zero
+        while (best_pass.CalcScore(original_indices, manager) > 0 && iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
             const auto did_resolve = iterPass.GetResolver(*current_constraint, manager)->resolveNext(*current_constraint, manager);
             auto computed = iterPass.CreateCopy();
             if (did_resolve) {
@@ -66,6 +81,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
             }
         }
 
+        // Incur no penalty if not ready to resolve.
         if (!did_any_resolve && prev_emplaced != i) {
             if (original_indices.size() > 1) {
                 auto computed = pass->CreateCopy();
@@ -82,6 +98,8 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
                         break;
                     }
                 }
+
+                // Said it was ready, and then nothing resolved, so treat as failure
                 this->DoPass_internal(&computed, new_list, manager, prev_failed, (!contains_last ||  prev_emplaced == std::numeric_limits<std::size_t>::max()) ? i : prev_emplaced);
 
                 if (typecheck::ConstraintPass::IsScoreBetter(computed.CalcScoreMap(new_list, manager), best_pass.CalcScoreMap(new_list, manager, false))) {

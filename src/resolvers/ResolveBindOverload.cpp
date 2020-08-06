@@ -37,15 +37,33 @@ auto typecheck::ResolveBindOverload::doInitialIterationSetup(const Constraint& c
 auto typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (!this->did_find_overloads) {
         // The first time do setup
+        this->waitingForResolve = true;
         return this->doInitialIterationSetup(constraint, manager);
-    } else {
+    } else if (!this->waitingForResolve) {
         this->current_overload_i++;
+        this->waitingForResolve = true;
     }
-
     return this->is_valid_constraint(constraint) && this->overloads.size() > 0 && this->current_overload_i < this->overloads.size();
 }
 
+auto typecheck::ResolveBindOverload::readyToResolve(const Constraint& constraint, const TypeManager* manager) const -> bool {
+    const auto result = this->did_find_overloads && manager->canGetFunctionOverloads(constraint.overload().functionid(), this->pass);
+    return result;
+}
+
+auto typecheck::ResolveBindOverload::hasPermissionIfDifferent(const TypeVar& from, const Type& to, const Constraint& constraint, const TypeManager* manager) const -> bool {
+    if (!this->pass->hasResolvedType(from)) {
+        return true;
+    }
+    const auto isDifferent = !google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(from), to);
+
+    // Either they're the same, or we have permission, and they're different
+    return !isDifferent || (isDifferent && this->pass->HasPermission(constraint, from, manager));
+}
+
 auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+    this->waitingForResolve = false;
+
     if (this->did_find_overloads) {
         typecheck::FunctionDefinition nextOverload = this->overloads.at(this->current_overload_i);
 
@@ -53,30 +71,35 @@ auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, c
             nextOverload = this->overloads.at(this->current_overload_i++);
             // Skip over any that don't have the same number of arguments.
         }
-
+        
+        // Only proceed if we found an overload with the same number of arguments
         if (nextOverload.args_size() == constraint.overload().argvars_size()) {
-            // Only proceed if we found an overload with the same number of arguments
+
 
             const auto typeVar = constraint.overload().type();
-            if (!this->pass->HasPermission(constraint, typeVar, manager)) {
+            typecheck::Type typeVarTy;
+            typeVarTy.mutable_func()->CopyFrom(nextOverload);
+            if (!this->hasPermissionIfDifferent(typeVar, typeVarTy, constraint, manager)) {
                 return false;
             }
 
             // try and fill in vars with overload type
             for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
                 const auto arg = constraint.overload().argvars(i);
-                if (!this->pass->HasPermission(constraint, arg, manager)) {
+
+                // We need to change it, but can't.
+                if (!this->hasPermissionIfDifferent(arg, nextOverload.args(i), constraint, manager)) {
                     return false;
                 }
             }
 
-            if (!this->pass->HasPermission(constraint, constraint.overload().returnvar(), manager)) {
+            if (!this->hasPermissionIfDifferent(constraint.overload().returnvar(), nextOverload.returntype(), constraint, manager)) {
                 return false;
             }
 
             // Repeat steps, actually applying work, this is because we don't want partial application
-            typecheck::Type typeVarTy;
-            typeVarTy.mutable_func()->CopyFrom(nextOverload);
+
+            // These will fail if we don't have permission, but that's already accounted for above
             this->pass->setResolvedType(constraint, typeVar, typeVarTy, manager);
 
             for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
@@ -85,6 +108,7 @@ auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, c
             }
 
             this->pass->setResolvedType(constraint, constraint.overload().returnvar(), nextOverload.returntype(), manager);
+
             return true;
         }
     }
