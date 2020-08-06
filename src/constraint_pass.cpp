@@ -215,7 +215,7 @@ auto typecheck::ConstraintPass::HasPermission(const Constraint& constraint, cons
     }
 }
 
-auto typecheck::ConstraintPass::IsValid() -> bool {
+auto typecheck::ConstraintPass::IsValid() const -> bool {
 	return this->score < std::numeric_limits<std::size_t>::max();
 }
 

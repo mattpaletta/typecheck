@@ -52,9 +52,8 @@ namespace typecheck {
 		std::size_t CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
         scoreMapType& CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
 
-
         // Calculated based on score
-		bool IsValid();
+		bool IsValid() const;
         static bool IsScoreBetter(const scoreMapType& s1, const scoreMapType& s2);
 
         bool HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) const;

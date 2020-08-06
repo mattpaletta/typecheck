@@ -32,13 +32,6 @@ auto typecheck::ResolveEquals::readyToResolve([[maybe_unused]] const Constraint&
     const bool hasT0 = this->pass->hasResolvedType(T0);
     const bool hasT1 = this->pass->hasResolvedType(T1);
 
-//    const bool hasT0Permission = this->pass->HasPermission(constraint, T0, manager);
-//    const bool hasT1Permission = this->pass->HasPermission(constraint, T1, manager);
-
-//    const bool hasT0Only = hasT0 && hasT1Permission;
-//    const bool hasT1Only = hasT1 && hasT0Permission;
-//    const bool hasBoth = hasT0 && hasT1;
-
     return hasT0 || hasT1;
 }
 

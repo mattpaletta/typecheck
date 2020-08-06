@@ -24,10 +24,6 @@ auto typecheck::ResolveApplicableFunction::hasMoreSolutions(const Constraint& co
     return this->pass && !has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-auto typecheck::ResolveApplicableFunction::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
-    return true;
-}
-
 auto typecheck::ResolveApplicableFunction::resolveNext(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
 

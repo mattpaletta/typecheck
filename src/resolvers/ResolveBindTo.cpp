@@ -24,15 +24,6 @@ auto typecheck::ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[
     return !this->has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-auto typecheck::ResolveBindTo::readyToResolve(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
-    const auto var = constraint.explicit_().var();
-    const auto hasResolved = this->pass->hasResolvedType(var);
-    const auto hasPermission = this->pass->HasPermission(constraint, var, manager);
-    const auto canProceed = (hasResolved || hasPermission);
-    const auto isValid = this->is_valid_constraint(constraint);
-    return true; // isValid && canProceed;
-}
-
 auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
     if (!this->is_valid_constraint(constraint)) {

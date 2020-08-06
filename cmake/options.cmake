@@ -4,10 +4,8 @@
 include(cmake/utils.cmake)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	message("In-Source Build")
 	set(default_if_in_dir ON)
 else()
-	message("Subproject Source Build")
 	set(default_if_in_dir OFF)
 endif()
 

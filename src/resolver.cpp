@@ -20,7 +20,7 @@ auto typecheck::Resolver::hasMoreSolutions([[maybe_unused]] const Constraint& co
 }
 
 auto typecheck::Resolver::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
-    return false;
+    return true;
 }
 
 auto typecheck::Resolver::resolveNext([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {

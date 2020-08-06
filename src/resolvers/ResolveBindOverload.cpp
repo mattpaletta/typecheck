@@ -47,8 +47,7 @@ auto typecheck::ResolveBindOverload::hasMoreSolutions(const Constraint& constrai
 }
 
 auto typecheck::ResolveBindOverload::readyToResolve(const Constraint& constraint, const TypeManager* manager) const -> bool {
-    const auto result = this->did_find_overloads && manager->canGetFunctionOverloads(constraint.overload().functionid(), this->pass);
-    return result;
+    return this->did_find_overloads && manager->canGetFunctionOverloads(constraint.overload().functionid(), this->pass);
 }
 
 auto typecheck::ResolveBindOverload::hasPermissionIfDifferent(const TypeVar& from, const Type& to, const Constraint& constraint, const TypeManager* manager) const -> bool {

@@ -44,15 +44,6 @@ auto typecheck::ResolveConvertible::hasMoreSolutions(const Constraint& constrain
     }
 }
 
-auto typecheck::ResolveConvertible::readyToResolve(const Constraint& constraint, const TypeManager* manager) const -> bool {
-    const auto typeVar = constraint.types().second();
-    const auto hasResolved = this->pass->hasResolvedType(typeVar);
-    const auto hasPermission = this->pass->HasPermission(constraint, typeVar, manager);
-    auto result = /*this->options.size() > 0 && */ ((!hasResolved && hasPermission) || hasResolved);
-
-    return true; //result;
-}
-
 auto typecheck::ResolveConvertible::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->options.size() > 0) {
         auto nextType = this->options.back();
