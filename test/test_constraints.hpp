@@ -516,3 +516,34 @@ TEST_CASE("mutually-recursive solve for-loop constraints", "[constraint]") {
     CHECK(tm.getResolvedType(T.at(14)).raw().name()  == "int");
     CHECK(tm.getResolvedType(T.at(15)).raw().name()  == "void");
 }
+
+TEST_CASE("regression test 1 constraints", "[constraint]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("bool");
+    tm.registerType("void");
+
+    const auto T = CreateMultipleSymbols(tm, 23);
+    const auto intType = tm.getRegisteredType("int");
+    const auto voidType = tm.getRegisteredType("void");
+    const auto boolType = tm.getRegisteredType("bool");
+
+//    T7: int
+//    T10 == T7
+//    T11: ExpressibleByInt
+//    T10 == T11
+//    T12 == T10
+//    T21 == T7
+//    T21 == T22
+//    T22: ExpressibleByInteger
+    tm.CreateBindToConstraint(T.at(7), intType);
+    tm.CreateEqualsConstraint(T.at(10), T.at(7));
+    tm.CreateLiteralConformsToConstraint(T.at(11), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T.at(10), T.at(11));
+    tm.CreateEqualsConstraint(T.at(12), T.at(10));
+    tm.CreateEqualsConstraint(T.at(21), T.at(7));
+    tm.CreateEqualsConstraint(T.at(21), T.at(22));
+    tm.CreateLiteralConformsToConstraint(T.at(22), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T.at(11)).has_raw());
+    CHECK(tm.getResolvedType(T.at(11)).raw().name()  == "int");
+}

@@ -11,7 +11,7 @@
 auto typecheck::ConstraintPass::CreateCopy() -> typecheck::ConstraintPass {
 	typecheck::ConstraintPass new_pass;
     new_pass.prev = this;
-    this->CopyToExisting(&new_pass);
+    new_pass.resolvedTypes = this->resolvedTypes;
 	return new_pass;
 }
 
@@ -19,6 +19,12 @@ void typecheck::ConstraintPass::CopyToExisting(ConstraintPass* dest) const {
 	dest->resolvedTypes = this->resolvedTypes;
     dest->score = this->score;
  	dest->scores = this->scores;
+}
+
+void typecheck::ConstraintPass::MoveToExisting(ConstraintPass* dest) {
+    dest->resolvedTypes = std::move(this->resolvedTypes);
+    dest->score = this->score;
+    dest->scores = std::move(this->scores);
 }
 
 template<class T>

@@ -48,6 +48,7 @@ namespace typecheck {
 
 		ConstraintPass CreateCopy();
 		void CopyToExisting(ConstraintPass* dest) const;
+        void MoveToExisting(ConstraintPass* dest);
 
 		std::size_t CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
         scoreMapType& CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);

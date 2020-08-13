@@ -82,7 +82,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
             }
 
             if (typecheck::ConstraintPass::IsScoreBetter(computed.CalcScoreMap(original_indices, manager), best_pass.CalcScoreMap(original_indices, manager, false))) {
-                computed.CopyToExisting(&best_pass);
+                computed.MoveToExisting(&best_pass);
             }
         }
 
@@ -108,12 +108,12 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
                 this->DoPass_internal(&computed, new_list, manager, prev_failed, (!contains_last ||  prev_emplaced == std::numeric_limits<std::size_t>::max()) ? i : prev_emplaced);
 
                 if (typecheck::ConstraintPass::IsScoreBetter(computed.CalcScoreMap(new_list, manager), best_pass.CalcScoreMap(new_list, manager, false))) {
-                    computed.CopyToExisting(&best_pass);
+                    computed.MoveToExisting(&best_pass);
                 }
             }
         }
     }
 
     // Merge best_pass in 'pass'
-    best_pass.CopyToExisting(pass);
+    best_pass.MoveToExisting(pass);
 }
