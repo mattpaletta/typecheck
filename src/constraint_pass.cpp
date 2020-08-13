@@ -11,6 +11,12 @@
 auto typecheck::ConstraintPass::CreateCopy() -> typecheck::ConstraintPass {
 	typecheck::ConstraintPass new_pass;
     new_pass.prev = this;
+    if (this->root) {
+        new_pass.root = this->root;
+    } else {
+        new_pass.root = this;
+    }
+
     new_pass.resolvedTypes = this->resolvedTypes;
 	return new_pass;
 }
@@ -163,7 +169,10 @@ auto typecheck::ConstraintPass::setResolvedType(const Constraint& constraint, co
 }
 
 auto typecheck::ConstraintPass::RequestPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) -> bool {
-    if (this->prev) {
+    if (this->root) {
+        // Jump straight if we can
+        return this->root->RequestPermission(constraint, var, manager);
+    } else if (this->prev) {
         // Store all permission globally, so they are consistent.
         return this->prev->RequestPermission(constraint, var, manager);
     }
@@ -194,7 +203,9 @@ auto typecheck::ConstraintPass::RequestPermission(const Constraint& constraint, 
 }
 
 auto typecheck::ConstraintPass::HasPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager) const -> bool {
-    if (this->prev) {
+    if (this->root) {
+        return this->root->HasPermission(constraint, var, manager);
+    } else if (this->prev) {
         // Store all permission globally, so they are consistent.
         return this->prev->HasPermission(constraint, var, manager);
     }
@@ -253,12 +264,7 @@ auto typecheck::ConstraintPass::GetResolver(const typecheck::Constraint& constra
 		auto& stored_resolver = this->resolvers.at(constraint.id());
 		// We need the resolver for the parent
         return stored_resolver.get();
-    } /*else if (this->prev) {
-        // Ask the previous
-        return this->prev->GetResolver(constraint, manager);
-    } */ else {
-        // Did not find, don't have a previous
-
+    } else {
         if (manager->registeredResolvers.find(constraint.kind()) == manager->registeredResolvers.end()) {
             // It's not in the manager either
             throw std::runtime_error("Constraint resolver not registered: " + std::to_string(constraint.kind()));

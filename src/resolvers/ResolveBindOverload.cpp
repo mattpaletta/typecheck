@@ -73,8 +73,6 @@ auto typecheck::ResolveBindOverload::resolveNext(const Constraint& constraint, c
         
         // Only proceed if we found an overload with the same number of arguments
         if (nextOverload.args_size() == constraint.overload().argvars_size()) {
-
-
             const auto typeVar = constraint.overload().type();
             typecheck::Type typeVarTy;
             typeVarTy.mutable_func()->CopyFrom(nextOverload);

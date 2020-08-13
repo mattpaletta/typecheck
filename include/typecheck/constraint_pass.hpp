@@ -19,6 +19,7 @@ namespace typecheck {
 
 		// Holds pointer to previous pass (if applicable)
 		ConstraintPass* prev = nullptr;
+        ConstraintPass* root = nullptr; // Some things are stored in the root, store a direct pointer.
     public:
         using IDType = long long /* (determined by google protobuf type) */;
 
