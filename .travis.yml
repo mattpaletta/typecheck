@@ -6,57 +6,99 @@ cache: ccache
 
 matrix:
   include:
-    - os: windows
+    - name: "Windows"
+      os: windows
       if: branch = master
       compiler: msvc
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=OFF
-    - os: linux
+    - name: "GCC Release clang-tidy & cppcheck (linux)" 
+      os: linux
       if: branch = master
       compiler: gcc
       env:
       - BUILD=Release
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - os: linux
+    - name: "GCC Release Undefined Behaviour (linux)"
+      os: linux
       if: branch = master
       compiler: gcc
       env:
       - BUILD=RelWithDebInfo
+      - USE_ASAN=OFF
+      - USE_UBSAN=ON
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=ON
-    - os: linux
+    - name: "GCC Release Address Sanitizer (linux)"
+      os: linux
+      if: branch = master
+      compiler: gcc
+      env:
+      - BUILD=RelWithDebInfo
+      - USE_ASAN=ON
+      - USE_UBSAN=OFF
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - name: "GCC Release (linux)"
+      os: linux
+      if: branch = master
+      compiler: gcc
+      env:
+      - BUILD=RelWithDebInfo
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - name: "GCC MinSizeRel (linux)"
+      os: linux
       if: branch = master
       compiler: gcc
       env:
       - BUILD=MinSizeRel
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=ON
-    - os: linux
+    - name: "GCC Debug (linux)"
+      os: linux
       compiler: gcc
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - os: linux
+    - name: "clang Debug (linux)"
+      os: linux
       if: branch = master
       compiler: clang
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - os: osx
+    - name: "Clang Debug (osx)"
       if: branch = master
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=ON
@@ -89,7 +131,7 @@ before_install:
 script:
   - mkdir build
   - cd build
-  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
+  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
     # Only build in parallel if not using checks, makes printing easier to follow.
   - if [[ $USE_CPP_CHECK == "ON" || $USE_CLANG_TIDY == "ON" ]]; then
       cmake --build . --target test_typecheck;
