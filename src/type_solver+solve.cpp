@@ -49,8 +49,13 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
             ++skippedItems;
         }
 
-        // Add all the ones we skipped back to the front
-        indexes.erase(indexes.begin() + static_cast<long>(skippedItems));
+        // For Undefined Behavior
+        if (skippedItems >= indexes.size()) {
+            return;
+        } else {
+            // Add all the ones we skipped back to the front
+            indexes.erase(indexes.begin() + static_cast<long>(skippedItems));
+        }
 
         if (current_constraint == nullptr) {
             // Got an invalid result, exit early.
