@@ -87,7 +87,7 @@ auto ResolveEquals::score(const Constraint& constraint, [[maybe_unused]] const T
 
         //                std::cout << "Score Equals: " << constraint.id() << " " << T0.raw().name() << " == " << T1.raw().name() << std::endl;
 
-        if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
+        if (T0.GetDescriptor() == T1.GetDescriptor()) {
             // Perfect score or not.
             return 0;
         }

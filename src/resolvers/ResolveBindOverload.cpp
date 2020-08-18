@@ -9,8 +9,6 @@
 #include "typecheck/type_manager.hpp"
 #include "typecheck/debug.hpp"
 
-#include <google/protobuf/util/message_differencer.h>
-
 using namespace typecheck;
 
 ResolveBindOverload::ResolveBindOverload(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::BindOverload, _pass, _id) {}
@@ -56,7 +54,7 @@ auto ResolveBindOverload::hasPermissionIfDifferent(const TypeVar& from, const Ty
     if (!this->pass->hasResolvedType(from)) {
         return true;
     }
-    const auto isDifferent = !google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(from), to);
+    const auto isDifferent = this->pass->getResolvedType(from).GetDescriptor() != to.GetDescriptor();
 
     // Either they're the same, or we have permission, and they're different
     return !isDifferent || (isDifferent && this->pass->HasPermission(constraint, from, manager));
@@ -127,7 +125,7 @@ auto ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] c
             const auto arg = constraint.overload().argvars(i);
             if (this->pass->hasResolvedType(arg)) {
                 // Make sure the arg types match up
-                if (!google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(arg), currentOverload.args(i))) {
+                if (this->pass->getResolvedType(arg).GetDescriptor() != currentOverload.args(i).GetDescriptor()) {
                     return std::numeric_limits<std::size_t>::max();
                 }
             }
@@ -135,7 +133,7 @@ auto ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] c
 
         if (this->pass->hasResolvedType(constraint.overload().returnvar())) {
             // Make sure the return types match up
-            if (!google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(constraint.overload().returnvar()), currentOverload.returntype())) {
+            if (this->pass->getResolvedType(constraint.overload().returnvar()).GetDescriptor() != currentOverload.returntype().GetDescriptor()) {
                 return std::numeric_limits<std::size_t>::max();
             }
         }

@@ -35,35 +35,36 @@ tm.setConvertible("float", "double");
 * Note: this section is most-likely to change, see `Protocols`.
 
 ## Type Variables
-Type variables to used as a symbol representing a final type.  Some examples of type variables are: `T0`, `T2`, `T4`, etc.
+Type variables are used as a symbol representing a final type.  Some examples of type variables are: `T0`, `T2`, `T4`, etc.
 You can create a new type symbol using:
 ```cpp
-tm.CreateTypeVar();
+const typecheck::TypeVar T0 = tm.CreateTypeVar();
 ```
-This will return the created variable (type: `TypeSymbol`, defined in `protos/type.proto`).  Although not enforced, type variables should not be changed after being returned.  The return type is not `const` to allow late-binding.
+This will return the created variable (type: `Type`, defined in `protos/type.proto`).  Although not enforced, type variables should not be changed after being returned.  The return type is not `const` to allow late-binding.
 
 ## Constraints
 Constraints are where most of the logic takes place.  Constraints are constructed between 1 or more type variables, and define a set of rules a final output of *resolved types* must meet to be considered valid.  The types of conversions supported currently include:
 - Equal
-- Conversion
+- Convertable
 - ConformsTo
+- BindTo
 - ApplicableFunction
-- BindOverload
+- BindFunction
 
 The Constraint type is defined in `protos/constraint.proto`.
 
 The Type Manager provides helper-methods to create constraints of various types and has a number of checks to make sure constraints are created properly.
 ```cpp
-ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
-ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
-ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
-ConstraintPass::IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const std::vector<Type>& args, const Type& return_type);
-ConstraintPass::IDType CreateApplicableFunctionConstraint(const TypeVar& T0, const Type& type);
-ConstraintPass::IDType CreateBindFunctionConstraint(const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType);
-ConstraintPass::IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
+typecheck::ConstraintPass::IDType CreateLiteralConformsToConstraint(const typecheck::TypeVar& t0, const typecheck::KnownProtocolKind_LiteralProtocol& protocol);
+typecheck::ConstraintPass::IDType CreateEqualsConstraint(const typecheck::TypeVar& t0, const typecheck::TypeVar& t1);
+typecheck::ConstraintPass::IDType CreateConvertibleConstraint(const typecheck::TypeVar& T0, const typecheck::TypeVar& T1);
+typecheck::ConstraintPass::IDType CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::Type>& args, const typecheck::Type& return_type);
+typecheck::ConstraintPass::IDType CreateApplicableFunctionConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
+typecheck::ConstraintPass::IDType CreateBindFunctionConstraint(const typecheck::TypeVar& T0, const std::vector<typecheck::TypeVar>& args, const typecheck::TypeVar& returnType);
+typecheck::ConstraintPass::IDType CreateBindToConstraint(const typecheck::TypeVar& T0, const typecheck::Type& type);
 ```
 
-At the time of creation, all constraints are created independently and are allocated interally to the Type Manager.
+At the time of creation, all constraints are created independently and are allocated internally to the Type Manager.  The caller should not assume ownership.
 ### Example
 ```
 T0 = (T1, T2) -> T3
@@ -93,8 +94,8 @@ typecheck::TypeManager tm = CreateAndSetupTypeManager(/* Custom function for you
 const auto T1 = tm.CreateTypeVar();
 const auto T2 = tm.CreateTypeVar();
 
-tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
-tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
+tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByFloat);
 tm.CreateEqualsConstraint(T1, T2);
 ```
 
@@ -103,7 +104,7 @@ Constraints can be created in any order, however all of the type variables used 
 // ...
 const bool did_solve = tm.solve()
 ```
-This returns a boolean indicating if we could a solution.  More information about why a program failed to typecheck is on the roadmap but not implemented at this time.
+This returns a boolean indicating if we could find a solution.  More information about *why* a program failed to typecheck is on the roadmap, but not implemented at this time.
 
 Assuming we did find a solution, we can get the final resolved types for each variable.  See `Resolved Types`.
 
@@ -123,6 +124,7 @@ class ResolveCustomConstraint : public typecheck::Resolver {
 
         virtual std::unique_ptr<typecheck::Resolver> clone(typecheck::ConstraintPass* pass, const typecheck::ConstraintPass::IDType id) const override;
 
+        virtual bool readyToResolve(const typecheck::Constraint& constraint, const typecheck::TypeManager* manager) const override;
         virtual bool hasMoreSolutions(const typecheck::Constraint& constraint, const typecheck::TypeManager* manager) override;
         virtual bool resolveNext(const typecheck::Constraint& constraint, const typecheck::TypeManager* manager) override;
         virtual std::size_t score(const typecheck::Constraint& constraint, const typecheck::TypeManager* manager) const override;
@@ -131,7 +133,7 @@ class ResolveCustomConstraint : public typecheck::Resolver {
 
 The constructor should call the `typecheck::Resolver` Constructor.  Here is a sample constructor for one of the built-in resolvers.
 ```cpp
-ResolveApplicableFunction::ResolveApplicableFunction(typecheck::ConstraintPass* _pass, const typecheck::ConstraintPass::IDType _id) : typecheck::Resolver(typecheck::ConstraintKind::ApplicableFunction, _pass, _id) {}
+typecheck::ResolveApplicableFunction::ResolveApplicableFunction(typecheck::ConstraintPass* _pass, const typecheck::ConstraintPass::IDType _id) : typecheck::Resolver(typecheck::ConstraintKind::ApplicableFunction, _pass, _id) {}
 ```
 The first parameter for the resolver constructor defines what kind of constraint this resolver is responsible for.  Only one resolver of each kind should be registered.  If no custom resolvers are defined, the library has default resolvers it will use.  The user can replace the built-in resolvers using:
 ```cpp
@@ -140,28 +142,31 @@ tm.registerResolver(std::make_unique<ResolveCustomConstraint>(nullptr, 0));
 
 The clone method is pretty simple, but needed to do a polymorphic copy.  Here is a sample implementation:
 ```cpp
-std::unique_ptr<typecheck::Resolver> ResolveApplicableFunction::clone(typecheck::ConstraintPass* _pass, const typecheck::ConstraintPass::IDType _id) const {
-    return std::make_unique<ResolveApplicableFunction>(_pass, _id);
+std::unique_ptr<typecheck::Resolver> typecheck::ResolveApplicableFunction::clone(typecheck::ConstraintPass* _pass, const typecheck::ConstraintPass::IDType _id) const {
+    return std::make_unique<typecheck::ResolveApplicableFunction>(_pass, _id);
 }
 ```
 The clone method, along with the constructor should create a new resolver of the given type with **no state** passed from the original object to the new object.
 
 The `hasMoreSolutions` should setup any internal state from a given constraint in the resolver.  For example, this might include creating the list of options to iterate through.  This function should return true while there are more solutions to try, and return false otherwise.  For some of my resolvers, I only have 1 solution to try, so I have a flag I set to `false` in the constructor, and to `true` in `resolveNext`.  My `hasMoreSolutions` therefore returns if that flag is set to `false`.
 
+The `readyToResolve` should not try and update the current state, hence why it's marked as `const`.  Rather, it should look at the current state of the solution and determine if it has enough solution to try a solution.  For example, to resolve an `Equals` constraint, the `readyToResolve` returns `true` if at least one of the variables is resolved.  It knows it can infer the other one if at least one is already resolved.  For resolvers that only depend on 0 other variables, a base implementation is provided that always returns `true`.  This method can therefore be considered optional.
+
 The `resolveNext` function is where the majority of the logic should reside.  It will only be falled if `hasMoreSolutions` returned `true`.  The class is allowed to maintain internal state between these two functions as the same object will be used for each, however multiple objects of a given type will be created within an application.  Within the function, you can query the `TypeManager` for information or to see the current state of types, you can use `this->pass` (type: `typecheck::ConstraintPass`, defined in: `<typecheck/constraint_pass.hpp>`).
 
 Some useful methods on a `ConstraintPass`:
 ```cpp
-pass->HasPermission(const typecheck::Constraint&, const typecheck::TypeVar&, TypeManager*);
+pass->HasPermission(const typecheck::Constraint&, const typecheck::TypeVar&, TypeManager*) const;
+pass->RequestPermission(const Constraint& constraint, const TypeVar& var, const TypeManager* manager);
 
 pass->setResolvedType(const typecheck::TypeVar&, const typecheck::Type&);
 pass->hasResolvedType(const typecheck::TypeVar&);
 pass->getResolvedType(const typecheck::TypeVar&);
 ```
 
-A resolver should only change a resolved type with `setResolvedType` if it has permission.  This ensures that constraints don't overwrite each other during execution.
+A resolver can check if it has permission with `HasPermission` without updating the current Constraint Pass.  A resolver can explicitly request permission with `RequestPermission`.  This returns a boolean indicating if permission is granted.  `setPermission` calls `RequestPermission` internally and only updates the value if permission was granted.  The permission boolean is then returned.
 
-The final required method is `score`.  This is used to determine a ranking of the possible solutions.  With a given state, (checked with `pass->getResolvedType` and `pass->hasResolvedType`), if the resolver deems this state to be optimal, it should return 0.  If it is an invalid solution, it should return: `std::numeric_limits<std::size_t>::max()`.  If it is acceptable, but not optimal, it should return a small number greater than 0.  Some of the interal resolvers return 1 in this case as all non-optimal solutions are considered equal.
+The final required method is `score`.  This is used to determine a ranking of the possible solutions.  With a given state, (checked with `pass->getResolvedType` and `pass->hasResolvedType`), if the resolver deems this state to be optimal, it should return 0.  If it is an invalid solution, it should return: `std::numeric_limits<std::size_t>::max()`.  If it is acceptable, but not optimal, it should return a small number greater than 0.  Some of the internal resolvers return 1 in this case as all non-optimal solutions are considered equal.
 
 ## Protocols
 TODO: This is prone to change soon, so I will wait to write this section.  In the meantime, if you have questions, please submit an issue and I will try to explain it in the current implementation.
@@ -177,7 +182,7 @@ const typecheck::Type typeT1 = tm.getResolvedType(T1);
 // ...
 ```
 
-This returns (type: typecheck::Type, defined in `protos/type.proto`.  There are two types of `Type`: `raw` and `func`.  A raw type is a basic type: `float`, `int`, `bool`, etc.  A function type is just a function.  It has arguments, an optional name, and a return type.  The arguments and return types are all `Type`.  This allows for support for functions that take in or return functions as parameters.  I'd imagine the function type will be made up of raw-types for the arguments and return type for most applications.  It is up to the language implementer to decide what *kind* of types they wish to use.
+This returns (type: typecheck::Type, defined in `protos/type.proto`.  There are two types of `Type`: `raw` and `func`.  A raw type is a basic type: `float`, `int`, `bool`, etc.  A function type is just a function.  It has arguments, an optional name, and a return type.  The arguments and return types are all `Type`.  This allows for support for functions that take in or return functions as parameters.  It is up to the language implementer to decide what *kind* of types they wish to use.
 
 You can check if a given type is raw or func:
 ```cpp

@@ -8,8 +8,6 @@
 #include "typecheck/resolvers/ResolveApplicableFunction.hpp"
 #include "typecheck/debug.hpp"
 
-#include <google/protobuf/util/message_differencer.h>
-
 using namespace typecheck;
 
 ResolveApplicableFunction::ResolveApplicableFunction(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ApplicableFunction, _pass, _id) {}

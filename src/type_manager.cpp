@@ -18,8 +18,6 @@
 #include "typecheck/type_solver.hpp"                  // for TypeSolver
 #include <typecheck_protos/type.pb.h>                 // for Type, TypeVar
 
-#include <google/protobuf/util/message_differencer.h>
-
 using namespace typecheck;
 
 TypeManager::TypeManager() = default;
@@ -58,8 +56,9 @@ auto TypeManager::getRegisteredType(const std::string& name) const noexcept -> T
 }
 
 auto TypeManager::getRegisteredType(const Type& name) const noexcept -> Type {
+    const auto nameDescriptor = name.GetDescriptor();
 	for (auto& type : this->registeredTypes) {
-        if (google::protobuf::util::MessageDifferencer::Equals(type, name)) {
+        if (type.GetDescriptor() == nameDescriptor) {
 			return type;
 		}
 	}
@@ -141,7 +140,7 @@ auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNa
 }
 
 auto TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
-    if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
+    if (T0.GetDescriptor() == T1.GetDescriptor()) {
 		return true;
 	}
 
@@ -184,7 +183,7 @@ auto TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept -
         return false;
     }
 
-    if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
+    if (T0.GetDescriptor() == T1.GetDescriptor()) {
 		return true;
 	}
 

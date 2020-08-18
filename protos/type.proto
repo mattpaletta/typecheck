@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package typecheck;
-// option cc_enable_arenas = true;
+option cc_enable_arenas = false;
 
 message FunctionDefinition {
 	repeated Type args = 1;

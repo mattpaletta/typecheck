@@ -8,8 +8,6 @@
 #include "typecheck/resolvers/ResolveBindTo.hpp"
 #include "typecheck/debug.hpp"
 
-#include <google/protobuf/util/message_differencer.h>
-
 using namespace typecheck;
 
 ResolveBindTo::ResolveBindTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Bind, _pass, _id) {}
@@ -36,7 +34,7 @@ auto ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager*
     const auto type = constraint.explicit_().type();
     if (this->pass->hasResolvedType(var)) {
         // It's already been resolved, but it's the same, so we're happy
-        if (google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(var), type)) {
+        if (this->pass->getResolvedType(var).GetDescriptor() == type.GetDescriptor()) {
             return true;
         }
     }
@@ -51,7 +49,7 @@ auto ResolveBindTo::score(const Constraint& constraint, [[maybe_unused]] const T
     }
 
     // If var is resolved, and it's type equals what it's supposed to be.
-    if (google::protobuf::util::MessageDifferencer::Equals(this->pass->getResolvedType(constraint.explicit_().var()), constraint.explicit_().type())) {
+    if (this->pass->getResolvedType(constraint.explicit_().var()).GetDescriptor() == constraint.explicit_().type().GetDescriptor()) {
         // All args found, and matched up, and return types found and match up.
         return 0;
     }
