@@ -7,7 +7,9 @@
 #include <numeric>
 #include <set>
 
-void typecheck::TypeSolver::RemoveDuplicates(typecheck::TypeManager* manager) {
+using namespace typecheck;
+
+void TypeSolver::RemoveDuplicates(TypeManager* manager) {
 	std::set<std::size_t> duplicates;
 	// Only check items to the left, meaning we'll leave the original, but move consequent items.
 	for (std::size_t i = 0; i < manager->constraints.size(); ++i) {

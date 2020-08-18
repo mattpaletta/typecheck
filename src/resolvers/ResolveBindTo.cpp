@@ -10,21 +10,23 @@
 
 #include <google/protobuf/util/message_differencer.h>
 
-typecheck::ResolveBindTo::ResolveBindTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Bind, _pass, _id) {}
+using namespace typecheck;
 
-auto typecheck::ResolveBindTo::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+ResolveBindTo::ResolveBindTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Bind, _pass, _id) {}
+
+auto ResolveBindTo::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
     return std::make_unique<ResolveBindTo>(_pass, _id);
 }
 
-auto typecheck::ResolveBindTo::is_valid_constraint(const Constraint& constraint) const -> bool {
+auto ResolveBindTo::is_valid_constraint(const Constraint& constraint) const -> bool {
     return constraint.has_explicit_() && constraint.explicit_().has_type() && constraint.explicit_().has_var();
 }
 
-auto typecheck::ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
+auto ResolveBindTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     return !this->has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
     if (!this->is_valid_constraint(constraint)) {
         return false;
@@ -43,7 +45,7 @@ auto typecheck::ResolveBindTo::resolveNext(const Constraint& constraint, const T
     return this->pass->setResolvedType(constraint, var, type, manager);
 }
 
-auto typecheck::ResolveBindTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
+auto ResolveBindTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint) || !this->pass->hasResolvedType(constraint.explicit_().var())) {
         return std::numeric_limits<std::size_t>::max();
     }

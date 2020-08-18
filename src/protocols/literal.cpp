@@ -8,7 +8,6 @@ auto typecheck::ExpressibleByDoubleLiteral::getOtherTypes() const noexcept -> st
 	return {};
 }
 
-
 #include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
 
 auto typecheck::ExpressibleByFloatLiteral::getPreferredTypes() const noexcept -> std::vector<typecheck::Type> {
