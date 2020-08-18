@@ -105,17 +105,16 @@ auto ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] con
 
     if (this->pass && this->currLiteralProtocol && this->pass->hasResolvedType(typeVar)) {
         const auto resolvedType = this->pass->getResolvedType(typeVar);
-        const auto resolvedDescriptor = resolvedType.GetDescriptor();
         // Is it a preferred type or other type?
         for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
-            if (pref.GetDescriptor() == resolvedDescriptor) {
+            if (pref == resolvedType) {
                 // It's preferred! Perfect score
                 return 0;
             }
         }
 
         for (auto& other : this->currLiteralProtocol->getOtherTypes()) {
-            if (other.GetDescriptor() == resolvedDescriptor) {
+            if (other == resolvedType) {
                 // It's other! Resolved, but not perfect score
                 return 1;
             }

@@ -7,6 +7,7 @@
 #include <sstream>                                    // for std::stringstream
 #include <string>                                     // for std::string
 
+#include "typecheck/debug.hpp"
 #include "typecheck/resolver.hpp"                     // for Resolver
 #include "typecheck/resolvers/ResolveConformsTo.hpp"  // for ResolveConformsTo
 #include "typecheck/resolvers/ResolveEquals.hpp"      // for ResolveEquals
@@ -56,9 +57,8 @@ auto TypeManager::getRegisteredType(const std::string& name) const noexcept -> T
 }
 
 auto TypeManager::getRegisteredType(const Type& name) const noexcept -> Type {
-    const auto nameDescriptor = name.GetDescriptor();
 	for (auto& type : this->registeredTypes) {
-        if (type.GetDescriptor() == nameDescriptor) {
+        if (type == name) {
 			return type;
 		}
 	}
@@ -140,7 +140,7 @@ auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNa
 }
 
 auto TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
-    if (T0.GetDescriptor() == T1.GetDescriptor()) {
+    if (T0 == T1) {
 		return true;
 	}
 
@@ -183,7 +183,7 @@ auto TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept -
         return false;
     }
 
-    if (T0.GetDescriptor() == T1.GetDescriptor()) {
+    if (T0 == T1) {
 		return true;
 	}
 
