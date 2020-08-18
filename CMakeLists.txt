@@ -108,7 +108,7 @@ if (${TYPECHECK_ENABLE_BLOATY})
 endif()
 
 if (NOT TARGET protobuf::libprotobuf)
-	find_package(Protobuf REQUIRED)
+	find_package(Protobuf QUIET)
 	set(TYPECHECK_SYSTEM_PROTOBUF ON)
 endif()
 # Only build protobuf if not found
@@ -246,9 +246,8 @@ if (${TYPECHECK_BUILD_TESTS})
 	endif()
     add_test(typecheck test_typecheck)
 
-
 	# Test just resolvers
-	add_executable(test_resolvers test/test_typecheck.cpp ${TEST_INC_FILES})
+	add_executable(test_resolvers test/test_resolvers.cpp ${TEST_INC_FILES})
     target_link_libraries(test_resolvers typecheck Catch2::Catch2)
     target_include_directories(test_resolvers SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_resolvers PUBLIC "-DTEST_RESOLVERS")
@@ -262,7 +261,7 @@ if (${TYPECHECK_BUILD_TESTS})
 	endif()
 
 	# Test just constraints
-	add_executable(test_constraints test/test_typecheck.cpp ${TEST_INC_FILES})
+	add_executable(test_constraints test/test_constraints.cpp ${TEST_INC_FILES})
     target_link_libraries(test_constraints typecheck Catch2::Catch2)
     target_include_directories(test_constraints SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_constraints PUBLIC "-DTEST_TYPE_CONSTRAINTS")
@@ -276,7 +275,7 @@ if (${TYPECHECK_BUILD_TESTS})
 	endif()
 
 	# Test just type manager
-	add_executable(test_type_manager test/test_typecheck.cpp ${TEST_INC_FILES})
+	add_executable(test_type_manager test/test_type_manager.cpp ${TEST_INC_FILES})
     target_link_libraries(test_type_manager typecheck Catch2::Catch2)
     target_include_directories(test_type_manager SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_type_manager PUBLIC "-DTEST_TYPE_MANAGER")

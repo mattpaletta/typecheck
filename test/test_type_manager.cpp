@@ -4,8 +4,7 @@
 //
 //  Created by Matthew Paletta on 2020-07-24.
 //
-#pragma once
-#include "utils.hpp"
+#include "test_include_catch.hpp"
 
 TEST_CASE("create function hash no args", "[type_manager]") {
     typecheck::TypeManager tm;
