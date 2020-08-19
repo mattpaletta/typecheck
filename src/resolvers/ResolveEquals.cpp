@@ -29,8 +29,8 @@ auto ResolveEquals::readyToResolve([[maybe_unused]] const Constraint& constraint
         return false;
     }
 
-    const auto T0 = constraint.types().first();
-    const auto T1 = constraint.types().second();
+    const auto& T0 = constraint.types().first();
+    const auto& T1 = constraint.types().second();
 
     const bool hasT0 = this->pass->hasResolvedType(T0);
     const bool hasT1 = this->pass->hasResolvedType(T1);
@@ -40,8 +40,8 @@ auto ResolveEquals::readyToResolve([[maybe_unused]] const Constraint& constraint
 
 auto ResolveEquals::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
-    const auto T0 = constraint.types().first();
-    const auto T1 = constraint.types().second();
+    const auto& T0 = constraint.types().first();
+    const auto& T1 = constraint.types().second();
 
     if (this->pass) {
         const bool hasT0 = this->pass->hasResolvedType(T0);
@@ -79,16 +79,16 @@ auto ResolveEquals::score(const Constraint& constraint, [[maybe_unused]] const T
         return std::numeric_limits<std::size_t>::max();
     }
 
-    const auto T0Var = constraint.types().first();
-    const auto T1Var = constraint.types().second();
+    const auto& T0Var = constraint.types().first();
+    const auto& T1Var = constraint.types().second();
 
     if (this->pass && this->pass->hasResolvedType(T0Var) && this->pass->hasResolvedType(T1Var)) {
-        const auto T0 = this->pass->getResolvedType(T0Var);
-        const auto T1 = this->pass->getResolvedType(T1Var);
+        const auto& T0 = this->pass->getResolvedType(T0Var);
+        const auto& T1 = this->pass->getResolvedType(T1Var);
 
         //                std::cout << "Score Equals: " << constraint.id() << " " << T0.raw().name() << " == " << T1.raw().name() << std::endl;
 
-        if (T0 == T1) {
+        if (proto_equal(T0, T1)) {
             // Perfect score or not.
             return 0;
         }

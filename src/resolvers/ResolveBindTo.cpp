@@ -30,11 +30,11 @@ auto ResolveBindTo::resolveNext(const Constraint& constraint, const TypeManager*
         return false;
     }
 
-    const auto var = constraint.explicit_().var();
-    const auto type = constraint.explicit_().type();
+    const auto& var = constraint.explicit_().var();
+    const auto& type = constraint.explicit_().type();
     if (this->pass->hasResolvedType(var)) {
         // It's already been resolved, but it's the same, so we're happy
-        if (this->pass->getResolvedType(var) == type) {
+        if (proto_equal(this->pass->getResolvedType(var), type)) {
             return true;
         }
     }
@@ -49,7 +49,7 @@ auto ResolveBindTo::score(const Constraint& constraint, [[maybe_unused]] const T
     }
 
     // If var is resolved, and it's type equals what it's supposed to be.
-    if (this->pass->getResolvedType(constraint.explicit_().var()) == constraint.explicit_().type()) {
+    if (proto_equal(this->pass->getResolvedType(constraint.explicit_().var()), constraint.explicit_().type())) {
         // All args found, and matched up, and return types found and match up.
         return 0;
     }

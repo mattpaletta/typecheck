@@ -58,7 +58,7 @@ auto TypeManager::getRegisteredType(const std::string& name) const noexcept -> T
 
 auto TypeManager::getRegisteredType(const Type& name) const noexcept -> Type {
 	for (auto& type : this->registeredTypes) {
-        if (type == name) {
+        if (proto_equal(type, name)) {
 			return type;
 		}
 	}
@@ -140,12 +140,12 @@ auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNa
 }
 
 auto TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
-    if (T0 == T1) {
+    if (proto_equal(T0, T1)) {
 		return true;
 	}
 
-	const auto t0_ptr = this->getRegisteredType(T0);
-	const auto t1_ptr = this->getRegisteredType(T1);
+	const auto& t0_ptr = this->getRegisteredType(T0);
+	const auto& t1_ptr = this->getRegisteredType(T1);
 
     // Function types not convertible
     if (t0_ptr.has_func() || t1_ptr.has_func()) {
@@ -183,7 +183,7 @@ auto TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept -
         return false;
     }
 
-    if (T0 == T1) {
+    if (proto_equal(T0, T1)) {
 		return true;
 	}
 

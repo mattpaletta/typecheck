@@ -99,22 +99,22 @@ auto ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeMana
 }
 
 auto ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
-    const auto typeVar = constraint.conforms().type();
+    const auto& typeVar = constraint.conforms().type();
     TYPECHECK_ASSERT(this->currLiteralProtocol.operator bool(), "Must set protocol before calling score, call this->hasMoreSolutions(...) first");
     TYPECHECK_ASSERT(this->pass, "Must set pass object before calling score.");
 
     if (this->pass && this->currLiteralProtocol && this->pass->hasResolvedType(typeVar)) {
-        const auto resolvedType = this->pass->getResolvedType(typeVar);
+        const auto& resolvedType = this->pass->getResolvedType(typeVar);
         // Is it a preferred type or other type?
         for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
-            if (pref == resolvedType) {
+            if (proto_equal(pref, resolvedType)) {
                 // It's preferred! Perfect score
                 return 0;
             }
         }
 
         for (auto& other : this->currLiteralProtocol->getOtherTypes()) {
-            if (other == resolvedType) {
+            if (proto_equal(other, resolvedType)) {
                 // It's other! Resolved, but not perfect score
                 return 1;
             }

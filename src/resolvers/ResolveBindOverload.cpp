@@ -54,7 +54,7 @@ auto ResolveBindOverload::hasPermissionIfDifferent(const TypeVar& from, const Ty
     if (!this->pass->hasResolvedType(from)) {
         return true;
     }
-    const auto isDifferent = this->pass->getResolvedType(from) != to;
+    const bool isDifferent = proto_not_equal(this->pass->getResolvedType(from), to);
 
     // Either they're the same, or we have permission, and they're different
     return !isDifferent || (isDifferent && this->pass->HasPermission(constraint, from, manager));
@@ -119,13 +119,13 @@ auto ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] c
     }
 
     if (this->pass && this->pass->hasResolvedType(constraint.overload().type()) && this->current_overload_i < this->overloads.size()) {
-        const auto currentOverload = this->overloads.at(this->current_overload_i);
+        const auto& currentOverload = this->overloads.at(this->current_overload_i);
 
         for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
-            const auto arg = constraint.overload().argvars(i);
+            const auto& arg = constraint.overload().argvars(i);
             if (this->pass->hasResolvedType(arg)) {
                 // Make sure the arg types match up
-                if (this->pass->getResolvedType(arg) != currentOverload.args(i)) {
+                if (proto_not_equal(this->pass->getResolvedType(arg), currentOverload.args(i))) {
                     return std::numeric_limits<std::size_t>::max();
                 }
             }
@@ -133,7 +133,7 @@ auto ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] c
 
         if (this->pass->hasResolvedType(constraint.overload().returnvar())) {
             // Make sure the return types match up
-            if (this->pass->getResolvedType(constraint.overload().returnvar()) != currentOverload.returntype()) {
+            if (proto_not_equal(this->pass->getResolvedType(constraint.overload().returnvar()), currentOverload.returntype())) {
                 return std::numeric_limits<std::size_t>::max();
             }
         }
