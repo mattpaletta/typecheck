@@ -86,7 +86,7 @@ matrix:
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - name: "clang Debug (linux)"
+    - name: "Clang Debug (linux)"
       os: linux
       if: branch = master
       compiler: clang
@@ -98,6 +98,7 @@ matrix:
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
     - name: "Clang Debug (osx)"
+      os: xcode12
       if: branch = master
       env:
       - BUILD=Debug
@@ -166,7 +167,7 @@ script:
       touch `echo $changed_files`
     fi;
   - cmake -GNinja -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
-  - cmake --build . --target test_typecheck;
+  - cmake --build . -j 4 --target test_typecheck;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       ./${BUILD}/test_typecheck.exe;
     else
