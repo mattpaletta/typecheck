@@ -2,7 +2,11 @@ languages: cpp
 
 os: linux
 dist: bionic
-cache: ccache
+cache: 
+  ccache: true
+  timeout: 1000
+  directories:
+    - build
 
 matrix:
   include:
@@ -117,6 +121,7 @@ addons:
     packages:
       - clang-tidy
       - cppcheck
+      - ninja-build
 
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
@@ -128,21 +133,49 @@ before_install:
       choco upgrade cmake -y --version=3.17.2;
     fi;
 
-script:
+install:
   - mkdir build
+
+script:
   - cd build
-  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
-    # Only build in parallel if not using checks, makes printing easier to follow.
-  - if [[ $USE_CPP_CHECK == "ON" || $USE_CLANG_TIDY == "ON" ]]; then
-      cmake --build . --target test_typecheck;
-    else
-      cmake --build . -j 4 --target test_typecheck;
+  - |
+    if [[ -f touch_mtimes.txt ]]; then
+      while read mtime fn; do
+        touch -c -m -d "@$mtime" $fn
+      done < touch_mtimes.txt
+      
+      # touch all git repo files to set mtimes to older than oldest build dir file
+      # to ensure ninja will not rebuild them
+      cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
+      export OLDEST_MTIME=$((OLDEST_MTIME-1))
+      find "${TRAVIS_BUILD_DIR}" -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
+      
+      # touch changed git files to trigger their rebuild
+      if [[ -f previous_git_commit.txt ]]; then
+        read PREVIOUS_GIT_COMMIT < previous_git_commit.txt
+        export PREVIOUS_GIT_COMMIT
+      else
+        # MANUAL SETTING FOR BOOTSTRAPPING
+        export PREVIOUS_GIT_COMMIT="HEAD~1"
+      fi
+      cd "${TRAVIS_BUILD_DIR}"
+      changed_files=`git diff --name-only $PREVIOUS_GIT_COMMIT HEAD`
+      echo "Previously cached Travis build based on git commit ${PREVIOUS_GIT_COMMIT}."
+      echo "... changed files since then:"
+      echo $changed_files
+      touch `echo $changed_files`
     fi;
+  - cmake -GNinja -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
+  - cmake --build . --target test_typecheck;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       ./${BUILD}/test_typecheck.exe;
     else
       ./test_typecheck;
     fi;
+
+before_cache:
+  - find . -type f -printf "%.10T@ %p\n" > touch_mtimes.txt
+  - cd "${TRAVIS_BUILD_DIR}" && git rev-parse HEAD > build/previous_git_commit.txt
 
 notifications:
   email:
