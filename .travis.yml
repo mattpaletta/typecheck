@@ -134,7 +134,7 @@ before_install:
     fi;
 
 install:
-  - mkdir build
+  - mkdir -p build
 
 script:
   - cd build
