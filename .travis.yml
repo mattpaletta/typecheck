@@ -142,7 +142,7 @@ install:
 script:
   - cd build
   - |
-    if [[ -f touch_mtimes.txt ]]; then
+    if [[ -f touch_mtimes.txt && $TRAVIS_OS_NAME != "windows" ]]; then
       while read mtime fn; do
         touch -c -m -d "@$mtime" $fn
       done < touch_mtimes.txt
