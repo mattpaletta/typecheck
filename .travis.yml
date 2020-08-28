@@ -165,6 +165,7 @@ script:
       echo "... changed files since then:"
       echo $changed_files
       touch `echo $changed_files`
+      cd "${TRAVIS_BUILD_DIR}/build"
     fi;
   - cmake -GNinja -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
   - cmake --build . -j 4 --target test_typecheck;
