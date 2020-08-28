@@ -129,6 +129,16 @@ before_install:
       export CMAKE_MAJOR_VERSION=3.17;
       export CMAKE_MINOR_VERSION=2;
       wget -q https://cmake.org/files/v${CMAKE_MAJOR_VERSION}/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && mkdir /opt/cmake && sh ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh --prefix=/opt/cmake --skip-license && sudo ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake && rm ./cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}-Linux-x86_64.sh && export PATH=/usr/local/bin:$PATH;
+      wget https://raw.githubusercontent.com/FLAMEGPU/FLAMEGPU2_dev/master/scripts/actions/install_cuda_ubuntu.sh;
+      export cuda=11.0
+      source ./install_cuda_ubuntu.sh;
+      if [[ $? -eq 0 ]]; then
+        # Set paths for subsequent steps, using ${CUDA_PATH}
+        echo "Adding CUDA to CUDA_PATH, PATH and LD_LIBRARY_PATH";
+        export CUDA_PATH=${CUDA_PATH};
+        export PATH=${CUDA_PATH}/bin:${PATH};
+        LD_LIBRARY_PATH=${CUDA_PATH}/lib:${LD_LIBRARY_PATH};
+      fi;
     fi;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       choco upgrade cmake -y --version=3.17.2;
