@@ -168,13 +168,14 @@ script:
       echo $changed_files
       touch `echo $changed_files`
       cd "${TRAVIS_BUILD_DIR}/build"
+      rm CMakeCache.txt
     fi;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
-      export buildTool="Unix Makefiles";
+      export buildTool="";
     else
-      export buildTool=Ninja;
+      export buildTool="-G Ninja";
     fi;
-  - cmake -G ${buildTool} -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
+  - cmake ${buildTool} -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
   - cmake --build . -j 4 --target test_typecheck;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       ./${BUILD}/test_typecheck.exe;
