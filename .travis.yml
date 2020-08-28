@@ -169,6 +169,8 @@ script:
       touch `echo $changed_files`
       cd "${TRAVIS_BUILD_DIR}/build"
       rm CMakeCache.txt
+    else
+      rm -f CMakeCache.txt
     fi;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       export buildTool="";
