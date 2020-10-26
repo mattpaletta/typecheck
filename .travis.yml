@@ -2,61 +2,109 @@ languages: cpp
 
 os: linux
 dist: bionic
-cache: ccache
+cache: 
+  ccache: true
+  timeout: 1000
+  directories:
+    - build/_deps
 
 matrix:
   include:
-    - os: windows
+    - name: "Windows"
+      os: windows
       if: branch = master
       compiler: msvc
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=OFF
-    - os: linux
+    - name: "GCC Release clang-tidy & cppcheck (linux)" 
+      os: linux
       if: branch = master
       compiler: gcc
       env:
       - BUILD=Release
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - os: linux
+    - name: "GCC Release Undefined Behaviour (linux)"
+      os: linux
       if: branch = master
       compiler: gcc
       env:
       - BUILD=RelWithDebInfo
+      - USE_ASAN=OFF
+      - USE_UBSAN=ON
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=ON
-    - os: linux
+    - name: "GCC Release Address Sanitizer (linux)"
+      os: linux
+      if: branch = master
+      compiler: gcc
+      env:
+      - BUILD=RelWithDebInfo
+      - USE_ASAN=ON
+      - USE_UBSAN=OFF
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - name: "GCC Release (linux)"
+      os: linux
+      if: branch = master
+      compiler: gcc
+      env:
+      - BUILD=RelWithDebInfo
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
+      - USE_CLANG_TIDY=OFF
+      - USE_CPP_CHECK=OFF
+      - USE_WERROR=ON
+    - name: "GCC MinSizeRel (linux)"
+      os: linux
       if: branch = master
       compiler: gcc
       env:
       - BUILD=MinSizeRel
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=ON
-    - os: linux
+    - name: "GCC Debug (linux)"
+      os: linux
       compiler: gcc
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - os: linux
+    - name: "Clang Debug (linux)"
+      os: linux
       if: branch = master
       compiler: clang
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=ON
       - USE_CPP_CHECK=ON
       - USE_WERROR=ON
-    - os: osx
+    - name: "Clang Debug (osx)"
+      os: osx
+      osx_image: xcode12
       if: branch = master
       env:
       - BUILD=Debug
+      - USE_ASAN=OFF
+      - USE_UBSAN=OFF
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=ON
@@ -64,6 +112,7 @@ matrix:
         homebrew:
           packages:
             - cmake
+            - ninja
           update: true
 
 addons:
@@ -75,6 +124,7 @@ addons:
     packages:
       - clang-tidy
       - cppcheck
+      - ninja-build
 
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
@@ -86,21 +136,59 @@ before_install:
       choco upgrade cmake -y --version=3.17.2;
     fi;
 
+install:
+  - mkdir -p build
+
 script:
-  - mkdir build
   - cd build
-  - cmake -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
-    # Only build in parallel if not using checks, makes printing easier to follow.
-  - if [[ $USE_CPP_CHECK == "ON" || $USE_CLANG_TIDY == "ON" ]]; then
-      cmake --build . --target test_typecheck;
+  - |
+    if [[ -f touch_mtimes.txt && $TRAVIS_OS_NAME != "windows" ]]; then
+      while read mtime fn; do
+        touch -c -m -d "@$mtime" $fn
+      done < touch_mtimes.txt
+      
+      # touch all git repo files to set mtimes to older than oldest build dir file
+      # to ensure ninja will not rebuild them
+      cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
+      export OLDEST_MTIME=$((OLDEST_MTIME-1))
+      find "${TRAVIS_BUILD_DIR}" -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
+      
+      # touch changed git files to trigger their rebuild
+      if [[ -f previous_git_commit.txt ]]; then
+        read PREVIOUS_GIT_COMMIT < previous_git_commit.txt
+        export PREVIOUS_GIT_COMMIT
+      else
+        # MANUAL SETTING FOR BOOTSTRAPPING
+        export PREVIOUS_GIT_COMMIT="HEAD~1"
+      fi
+      cd "${TRAVIS_BUILD_DIR}"
+      changed_files=`git diff --name-only $PREVIOUS_GIT_COMMIT HEAD`
+      echo "Previously cached Travis build based on git commit ${PREVIOUS_GIT_COMMIT}."
+      echo "... changed files since then:"
+      echo $changed_files
+      touch `echo $changed_files`
+      cd "${TRAVIS_BUILD_DIR}/build"
+      rm CMakeCache.txt
     else
-      cmake --build . -j 4 --target test_typecheck;
+      rm -rf _deps
+      rm -f CMakeCache.txt
     fi;
+  - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
+      export buildTool="";
+    else
+      export buildTool="-G Ninja";
+    fi;
+  - cmake ${buildTool} -DENABLE_LWYU=OFF -DENABLE_CLANG_TIDY=${USE_CLANG_TIDY} -DENABLE_CPP_CHECK=${USE_CPP_CHECK} -DENABLE_IWYU=OFF -DENABLE_ASAN=${USE_ASAN} -DENABLE_UBSAN=${USE_UBSAN} -DTYPECHECK_WERROR=${USE_WERROR} -DCMAKE_BUILD_TYPE=${BUILD} ..
+  - cmake --build . -j 4 --target test_typecheck;
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       ./${BUILD}/test_typecheck.exe;
     else
       ./test_typecheck;
     fi;
+
+before_cache:
+  - find . -type f -printf "%.10T@ %p\n" > touch_mtimes.txt
+  - cd "${TRAVIS_BUILD_DIR}" && git rev-parse HEAD > build/previous_git_commit.txt
 
 notifications:
   email:

@@ -12,19 +12,19 @@
 #include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
 #include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
 
-#include <google/protobuf/util/message_differencer.h>
-
 #include <iostream>
 #include <memory>
 #include <typecheck_protos/constraint.pb.h>
 
-typecheck::ResolveConformsTo::ResolveConformsTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, _pass, _id), is_preferred(true) {}
+using namespace typecheck;
 
-auto typecheck::ResolveConformsTo::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+ResolveConformsTo::ResolveConformsTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, _pass, _id), is_preferred(true) {}
+
+auto ResolveConformsTo::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
     return std::make_unique<ResolveConformsTo>(_pass, _id);
 }
 
-auto typecheck::ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) -> bool {
+auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) -> bool {
     if (!constraint.has_conforms() || !constraint.conforms().has_protocol() || !constraint.conforms().has_type()) {
         std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
         return false;
@@ -61,7 +61,7 @@ auto typecheck::ResolveConformsTo::doInitialIterationSetup(const Constraint& con
     return did_find_protocol;
 }
 
-auto typecheck::ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
+auto ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     // This will be called every time
 
     if (!this->currLiteralProtocol) {
@@ -85,7 +85,7 @@ auto typecheck::ResolveConformsTo::hasMoreSolutions(const Constraint& constraint
     }
 }
 
-auto typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     if (this->currLiteralProtocol) {
         auto typeVar = constraint.conforms().type();
 
@@ -98,23 +98,23 @@ auto typecheck::ResolveConformsTo::resolveNext(const Constraint& constraint, con
     return false;
 }
 
-auto typecheck::ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
-    const auto typeVar = constraint.conforms().type();
+auto ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
+    const auto& typeVar = constraint.conforms().type();
     TYPECHECK_ASSERT(this->currLiteralProtocol.operator bool(), "Must set protocol before calling score, call this->hasMoreSolutions(...) first");
     TYPECHECK_ASSERT(this->pass, "Must set pass object before calling score.");
 
     if (this->pass && this->currLiteralProtocol && this->pass->hasResolvedType(typeVar)) {
-        const auto resolvedType = this->pass->getResolvedType(typeVar);
+        const auto& resolvedType = this->pass->getResolvedType(typeVar);
         // Is it a preferred type or other type?
         for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
-            if (google::protobuf::util::MessageDifferencer::Equals(pref, resolvedType)) {
+            if (proto_equal(pref, resolvedType)) {
                 // It's preferred! Perfect score
                 return 0;
             }
         }
 
         for (auto& other : this->currLiteralProtocol->getOtherTypes()) {
-            if (google::protobuf::util::MessageDifferencer::Equals(other, resolvedType)) {
+            if (proto_equal(other, resolvedType)) {
                 // It's other! Resolved, but not perfect score
                 return 1;
             }

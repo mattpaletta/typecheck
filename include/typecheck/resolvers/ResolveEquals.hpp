@@ -1,7 +1,6 @@
 #pragma once
 
 #include "typecheck/resolver.hpp"
-#include <google/protobuf/util/message_differencer.h>
 
 namespace typecheck {
 	class ResolveEquals : public Resolver {

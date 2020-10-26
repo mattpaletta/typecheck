@@ -6,28 +6,31 @@
 //
 
 #include "typecheck/resolvers/ResolveEquals.hpp"
+#include "typecheck/debug.hpp"
 
-typecheck::ResolveEquals::ResolveEquals(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Equal, _pass, _id) {}
+using namespace typecheck;
 
-auto typecheck::ResolveEquals::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<typecheck::Resolver> {
+ResolveEquals::ResolveEquals(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Equal, _pass, _id) {}
+
+auto ResolveEquals::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
     return std::make_unique<ResolveEquals>(_pass, _id);
 }
 
-auto typecheck::ResolveEquals::is_valid_constraint(const Constraint& constraint) const -> bool {
+auto ResolveEquals::is_valid_constraint(const Constraint& constraint) const -> bool {
     return constraint.has_types() && constraint.types().has_first() && constraint.types().has_second();
 }
 
-auto typecheck::ResolveEquals::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
+auto ResolveEquals::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
     return this->pass && !this->has_gotten_resolve && this->is_valid_constraint(constraint);
 }
 
-auto typecheck::ResolveEquals::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
+auto ResolveEquals::readyToResolve([[maybe_unused]] const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> bool {
     if (!this->pass) {
         return false;
     }
 
-    const auto T0 = constraint.types().first();
-    const auto T1 = constraint.types().second();
+    const auto& T0 = constraint.types().first();
+    const auto& T1 = constraint.types().second();
 
     const bool hasT0 = this->pass->hasResolvedType(T0);
     const bool hasT1 = this->pass->hasResolvedType(T1);
@@ -35,10 +38,10 @@ auto typecheck::ResolveEquals::readyToResolve([[maybe_unused]] const Constraint&
     return hasT0 || hasT1;
 }
 
-auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveEquals::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
     this->has_gotten_resolve = true;
-    const auto T0 = constraint.types().first();
-    const auto T1 = constraint.types().second();
+    const auto& T0 = constraint.types().first();
+    const auto& T1 = constraint.types().second();
 
     if (this->pass) {
         const bool hasT0 = this->pass->hasResolvedType(T0);
@@ -71,21 +74,21 @@ auto typecheck::ResolveEquals::resolveNext(const Constraint& constraint, const T
     }
 }
 
-auto typecheck::ResolveEquals::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
+auto ResolveEquals::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     if (!this->is_valid_constraint(constraint)) {
         return std::numeric_limits<std::size_t>::max();
     }
 
-    const auto T0Var = constraint.types().first();
-    const auto T1Var = constraint.types().second();
+    const auto& T0Var = constraint.types().first();
+    const auto& T1Var = constraint.types().second();
 
     if (this->pass && this->pass->hasResolvedType(T0Var) && this->pass->hasResolvedType(T1Var)) {
-        const auto T0 = this->pass->getResolvedType(T0Var);
-        const auto T1 = this->pass->getResolvedType(T1Var);
+        const auto& T0 = this->pass->getResolvedType(T0Var);
+        const auto& T1 = this->pass->getResolvedType(T1Var);
 
         //                std::cout << "Score Equals: " << constraint.id() << " " << T0.raw().name() << " == " << T1.raw().name() << std::endl;
 
-        if (google::protobuf::util::MessageDifferencer::Equals(T0, T1)) {
+        if (proto_equal(T0, T1)) {
             // Perfect score or not.
             return 0;
         }

@@ -12,8 +12,9 @@
 #include <iostream>
 #include <deque>
 
+using namespace typecheck;
 
-void typecheck::TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const {
+void TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const {
 	std::deque<std::size_t> unresolvedConstraints;
 
 	// Build queue of constraints indexes
@@ -25,7 +26,7 @@ void typecheck::TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* mana
 	this->DoPass_internal(pass, unresolvedConstraints, manager, init_val, init_val);
 }
 
-void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const {
+void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const {
     auto best_pass = pass->CreateCopy();
     auto iterPass = pass->CreateCopy();
 
@@ -33,7 +34,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
         // Create an original copy, used for score.
         auto original_indices = indexes;
         std::size_t i = 0;
-        const typecheck::Constraint* current_constraint = nullptr;
+        const Constraint* current_constraint = nullptr;
 
         std::size_t skippedItems = 0;
 
@@ -49,8 +50,13 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
             ++skippedItems;
         }
 
-        // Add all the ones we skipped back to the front
-        indexes.erase(indexes.begin() + static_cast<long>(skippedItems));
+        // For Undefined Behavior
+        if (skippedItems >= indexes.size()) {
+            return;
+        } else {
+            // Add all the ones we skipped back to the front
+            indexes.erase(indexes.begin() + static_cast<long>(skippedItems));
+        }
 
         if (current_constraint == nullptr) {
             // Got an invalid result, exit early.
@@ -81,7 +87,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
                 break;
             }
 
-            if (typecheck::ConstraintPass::IsScoreBetter(computed.CalcScoreMap(original_indices, manager), best_pass.CalcScoreMap(original_indices, manager, false))) {
+            if (ConstraintPass::IsScoreBetter(computed.CalcScoreMap(original_indices, manager), best_pass.CalcScoreMap(original_indices, manager, false))) {
                 computed.MoveToExisting(&best_pass);
             }
         }
@@ -107,7 +113,7 @@ void typecheck::TypeSolver::DoPass_internal(typecheck::ConstraintPass* pass, std
                 // Said it was ready, and then nothing resolved, so treat as failure
                 this->DoPass_internal(&computed, new_list, manager, prev_failed, (!contains_last ||  prev_emplaced == std::numeric_limits<std::size_t>::max()) ? i : prev_emplaced);
 
-                if (typecheck::ConstraintPass::IsScoreBetter(computed.CalcScoreMap(new_list, manager), best_pass.CalcScoreMap(new_list, manager, false))) {
+                if (ConstraintPass::IsScoreBetter(computed.CalcScoreMap(new_list, manager), best_pass.CalcScoreMap(new_list, manager, false))) {
                     computed.MoveToExisting(&best_pass);
                 }
             }

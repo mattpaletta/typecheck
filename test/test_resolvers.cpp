@@ -1,5 +1,4 @@
-#pragma once
-#include "utils.hpp"
+#include "test_include_catch.hpp"
 
 #include <typecheck/resolvers/ResolveConformsTo.hpp>
 #include <typecheck/resolvers/ResolveEquals.hpp>

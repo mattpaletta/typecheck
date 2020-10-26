@@ -1,4 +1,5 @@
 #include "typecheck/debug.hpp"
+
 #include <iostream>
 #include <stdexcept>  // for runtime_error
 #include <string>     // for char_traits

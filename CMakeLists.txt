@@ -98,23 +98,28 @@ include(cmake/generate_protos.cmake)
 #set(USE_XPRESS ON)
 # fetch_extern(or-tools https://github.com/google/or-tools.git 45770b833997f827d322e929b1ed4781c4e60d44)
 
+set(CATCH_VERSION 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
+set(BLOATY_VERSION 3cf5c3feca15ab88730d6526b2f06302597926b5)
+set(PROTOBUF_VERSION 96a62f7cc7d5f82c1a70f10654fa1ed1815c4de8)
+
 # This includes protobuf
 if (${TYPECHECK_ENABLE_BLOATY})
-	fetch_extern(bloaty https://github.com/google/bloaty.git 3cf5c3feca15ab88730d6526b2f06302597926b5)
+	fetch_extern(bloaty https://github.com/google/bloaty.git ${BLOATY_VERSION})
 endif()
 
+if (NOT TARGET protobuf::libprotobuf)
+	find_package(Protobuf QUIET)
+	set(TYPECHECK_SYSTEM_PROTOBUF ON)
+endif()
+# Only build protobuf if not found
 if (NOT TARGET protobuf::libprotobuf AND NOT ${TYPECHECK_ENABLE_BLOATY})
+	set(TYPECHECK_SYSTEM_PROTOBUF OFF)
 	set(protobuf_BUILD_TESTS OFF)
 	set(protobuf_BUILD_CONFORMANCE OFF)
 	set(protobuf_BUILD_EXAMPLES OFF)
 	set(protobuf_BUILD_PROTOC_BINARIES ON)
-	fetch_extern(protobuf https://github.com/protocolbuffers/protobuf 96a62f7cc7d5f82c1a70f10654fa1ed1815c4de8)
+	fetch_extern(protobuf https://github.com/protocolbuffers/protobuf ${PROTOBUF_VERSION})
 endif()
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(CMAKE_AUTOGEN_VERBOSE OFF)
-
-# Waiting on PR: https://github.com/mraggi/discreture/pull/8
-# fetch_extern(discreture https://github.com/mraggi/discreture.git 1069df683a4126700668a1d23368dbbbe857da0f)
 
 file(GLOB_RECURSE PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/protos/*.proto)
 generateProtos(PROTO_FILES typecheck_protos)
@@ -183,12 +188,8 @@ if (ENABLE_CLANG_TIDY)
 	set(CMAKE_CXX_CLANG_TIDY "")
 endif()
 
-if (NOT TARGET Catch2::Catch2)
-	fetch_extern(catch2 https://github.com/catchorg/Catch2 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
-endif()
-
 target_compile_options(typecheck PRIVATE "${TYPECHECK_EXTRA_FLAGS}")
-if (NOT ${TYPECHECK_ENABLE_BLOATY})
+if (NOT ${TYPECHECK_ENABLE_BLOATY} AND NOT ${TYPECHECK_SYSTEM_PROTOBUF})
 	target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>)
 endif()
 target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:typecheck_protos,INTERFACE_INCLUDE_DIRECTORIES>)
@@ -215,6 +216,14 @@ if(${TYPECHECK_ENABLE_BLOATY})
 endif()
 
 if (${TYPECHECK_BUILD_TESTS})
+	if (NOT TARGET Catch2::Catch2)
+		find_package(Catch QUIET)
+	endif()
+
+	if (NOT TARGET Catch2::Catch2)
+		fetch_extern(catch2 https://github.com/catchorg/Catch2 ${CATCH_VERSION})
+	endif()
+
     enable_testing()
 
 	file(GLOB_RECURSE TEST_INC_FILES test/*.hpp)
@@ -237,9 +246,8 @@ if (${TYPECHECK_BUILD_TESTS})
 	endif()
     add_test(typecheck test_typecheck)
 
-
 	# Test just resolvers
-	add_executable(test_resolvers test/test_typecheck.cpp ${TEST_INC_FILES})
+	add_executable(test_resolvers test/test_resolvers.cpp ${TEST_INC_FILES})
     target_link_libraries(test_resolvers typecheck Catch2::Catch2)
     target_include_directories(test_resolvers SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_resolvers PUBLIC "-DTEST_RESOLVERS")
@@ -253,7 +261,7 @@ if (${TYPECHECK_BUILD_TESTS})
 	endif()
 
 	# Test just constraints
-	add_executable(test_constraints test/test_typecheck.cpp ${TEST_INC_FILES})
+	add_executable(test_constraints test/test_constraints.cpp ${TEST_INC_FILES})
     target_link_libraries(test_constraints typecheck Catch2::Catch2)
     target_include_directories(test_constraints SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_constraints PUBLIC "-DTEST_TYPE_CONSTRAINTS")
@@ -267,7 +275,7 @@ if (${TYPECHECK_BUILD_TESTS})
 	endif()
 
 	# Test just type manager
-	add_executable(test_type_manager test/test_typecheck.cpp ${TEST_INC_FILES})
+	add_executable(test_type_manager test/test_type_manager.cpp ${TEST_INC_FILES})
     target_link_libraries(test_type_manager typecheck Catch2::Catch2)
     target_include_directories(test_type_manager SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(test_type_manager PUBLIC "-DTEST_TYPE_MANAGER")

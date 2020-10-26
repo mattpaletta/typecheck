@@ -3,7 +3,7 @@ syntax = "proto3";
 package typecheck;
 
 import "type.proto";
-/// option cc_enable_arenas = true;
+option cc_enable_arenas = false;
 
 message KnownProtocolKind {
 	enum DefaultProtocol {
