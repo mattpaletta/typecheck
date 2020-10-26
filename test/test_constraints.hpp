@@ -547,3 +547,31 @@ TEST_CASE("regression test 1 constraints", "[constraint]") {
     REQUIRE(tm.getResolvedType(T.at(11)).has_raw());
     CHECK(tm.getResolvedType(T.at(11)).raw().name()  == "int");
 }
+
+#define CREATE_STRESS_TEST(numSymbols) TEST_CASE("stress test " + std::to_string(numSymbols) + " constraints", "[constraint]") { \
+        getDefaultTypeManager(tm); \
+        tm.registerType("bool"); \
+        tm.registerType("void"); \
+        \
+        const auto T = CreateMultipleSymbols(tm, numSymbols); \
+        const auto intType = tm.getRegisteredType("int"); \
+        const auto voidType = tm.getRegisteredType("void"); \
+        const auto boolType = tm.getRegisteredType("bool"); \
+        \
+        for (std::size_t i = 0; i < numSymbols; ++i) {  \
+            if (i % (numSymbols / 5) == 0) { \
+                tm.CreateBindToConstraint(T.at(i), intType); \
+            } else if (i % (numSymbols / 3) == 0) { \
+                tm.CreateLiteralConformsToConstraint(T.at(i), typecheck::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger); \
+            } \
+            \
+            tm.CreateEqualsConstraint(T.at(i), T.at((i + 1) % numSymbols)); \
+        } \
+        REQUIRE(tm.solve()); \
+    }
+
+CREATE_STRESS_TEST(100)
+CREATE_STRESS_TEST(200)
+CREATE_STRESS_TEST(300)
+CREATE_STRESS_TEST(400)
+CREATE_STRESS_TEST(800)
