@@ -1,0 +1,95 @@
+#include <typecheck/type.hpp>
+#include <typecheck/raw_type.hpp>
+#include <typecheck/function_definition.hpp>
+
+#include <variant>
+
+using namespace typecheck;
+
+Type::Type() : data(false) {}
+Type::Type(const RawType& r) : data(r) {}
+Type::Type(const FunctionDefinition& f) : data(f) {}
+
+Type::Type(const Type& other) : data(other.data) {}
+
+auto Type::operator=(const Type& other) -> Type& {
+	if (this == &other) {
+		return *this;
+	}
+
+	this->CopyFrom(other);
+	return *this;
+}
+
+Type::Type(Type&& other)  noexcept : data(std::move(other.data)) {}
+
+auto Type::operator=(Type&& other)  noexcept -> Type& {
+	if (this == &other) {
+		return *this;
+	}
+
+	this->data = std::move(other.data);
+
+	return *this;
+}
+
+auto Type::operator==(const Type& other) const noexcept -> bool {
+	return (this->has_raw() && other.has_raw() && this->raw() == other.raw()) ||
+		(this->has_func() && other.has_func() && this->func() == other.func());
+}
+
+#include <iostream>
+auto Type::CopyFrom(const Type& other) -> Type& {
+	if (this->has_raw()) {
+		std::cout << "I have raw" << std::endl;
+	} else if (this->has_func()) {
+		std::cout << "I have func" << std::endl;
+	}
+
+	if (other.has_raw()) {
+		std::cout << "Other has raw" << std::endl;
+		this->data = other.raw();
+	} else if (other.has_func()) {
+		std::cout << "Other has func" << std::endl;
+		this->data = other.func();
+	} else {
+		this->data.emplace<bool>(false);
+	}
+
+	return *this;
+}
+
+auto Type::has_raw() const -> bool {
+	try {
+		return std::holds_alternative<RawType>(this->data);
+	} catch (const std::bad_variant_access& ex) {
+		// In case the variant hasn't been accessed yet.
+		return false;
+	}
+}
+
+auto Type::has_func() const -> bool {
+	return std::holds_alternative<FunctionDefinition>(this->data);
+}
+
+auto Type::mutable_raw() -> RawType* {
+	if (!this->has_raw()) {
+		this->data = RawType{};
+	}
+	return &std::get<RawType>(this->data);
+}
+
+auto Type::raw() const -> const RawType& {
+	return std::get<RawType>(this->data);
+}
+
+auto Type::mutable_func() -> FunctionDefinition* {
+	if (!this->has_raw()) {
+		this->data = FunctionDefinition{};
+	}
+	return &std::get<FunctionDefinition>(this->data);
+}
+
+auto Type::func() const -> const FunctionDefinition& {
+	return std::get<FunctionDefinition>(this->data);
+}

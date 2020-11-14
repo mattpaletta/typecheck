@@ -1,13 +1,14 @@
 #pragma once
-#include <stddef.h>                          // for size_t
-#include <typecheck_protos/constraint.pb.h>  // for ConstraintKind
-#include <iosfwd>                            // for string
+
+#include "constraint.hpp"
+#include "type.hpp"
+
 #include <limits>                            // for numeric_limits
 #include <map>                               // for map
 #include <memory>                            // for unique_ptr
-#include <string>                            // for operator<
-#include "typecheck_protos/type.pb.h"        // for Type
+#include <string>
 #include <deque>                             // for deque
+
 namespace typecheck { class TypeManager; }  // lines 27-35
 namespace typecheck { class Resolver; }  // lines 11-11
 namespace typecheck { class TypeSolver; }  // lines 13-13

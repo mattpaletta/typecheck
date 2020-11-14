@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "constraint_pass.hpp"
-#include <typecheck_protos/constraint.pb.h>
+#include "constraint.hpp"
 
 namespace typecheck {
 //	class ConstraintPass;

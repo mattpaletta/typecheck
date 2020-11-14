@@ -1,6 +1,7 @@
 #pragma once
 
-#include <typecheck_protos/type.pb.h>
+#include "type.hpp"
+
 #include <vector>
 
 namespace typecheck {

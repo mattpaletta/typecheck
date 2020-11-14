@@ -5,16 +5,16 @@
 //  Created by Matthew Paletta on 2020-07-17.
 //
 
-#include "typecheck/resolvers/ResolveConformsTo.hpp"
-#include "typecheck/debug.hpp"
+#include <typecheck/resolvers/ResolveConformsTo.hpp>
+#include <typecheck/debug.hpp>
+#include <typecheck/constraint.hpp>
 
-#include "typecheck/protocols/ExpressibleByDoubleLiteral.hpp"
-#include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
-#include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
+#include <typecheck/protocols/ExpressibleByDoubleLiteral.hpp>
+#include <typecheck/protocols/ExpressibleByFloatLiteral.hpp>
+#include <typecheck/protocols/ExpressibleByIntegerLiteral.hpp>
 
 #include <iostream>
 #include <memory>
-#include <typecheck_protos/constraint.pb.h>
 
 using namespace typecheck;
 
@@ -36,21 +36,19 @@ auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) ->
     const auto T1 = constraint.conforms().type();
     bool did_find_protocol = false;
     switch (constraint.conforms().protocol().literal()) {
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByFloat:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByFloat:
             this->currLiteralProtocol = std::make_unique<ExpressibleByFloatLiteral>();
             did_find_protocol = true;
             break;
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByInteger:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByInteger:
             this->currLiteralProtocol = std::make_unique<ExpressibleByIntegerLiteral>();
             did_find_protocol = true;
             break;
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByArray:
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByBoolean:
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByDictionary:
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByString:
-        case KnownProtocolKind_LiteralProtocol_ExpressibleByNil:
-        case KnownProtocolKind_LiteralProtocol_KnownProtocolKind_LiteralProtocol_INT_MIN_SENTINEL_DO_NOT_USE_:
-        case KnownProtocolKind_LiteralProtocol_KnownProtocolKind_LiteralProtocol_INT_MAX_SENTINEL_DO_NOT_USE_:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByArray:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByBoolean:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByDictionary:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByString:
+		case KnownProtocolKind::LiteralProtocol::ExpressibleByNil:
             throw std::runtime_error("Failed to find protocol");
     }
 

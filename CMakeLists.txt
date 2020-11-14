@@ -41,6 +41,10 @@ if (MSVC)
     add_supported_cxx_flags("/Wall")
     add_supported_cxx_flags("/W3")
 else()
+	if (CMAKE_BUILD_TYPE STREQUAL DEBUG)
+		add_supported_cxx_flags("-fPIC")
+	endif()
+
     add_supported_cxx_flags("-Wall")
     add_supported_cxx_flags("-Wextra")
     add_supported_cxx_flags("-Wconversion")
@@ -79,7 +83,6 @@ if (TYPECHECK_WERROR)
 endif()
 
 include(cmake/fetch_extern.cmake)
-include(cmake/generate_protos.cmake)
 #set(BUILD_EXAMPLES OFF)
 #set(INSTALL_BUILD_DEPS OFF)
 #set(BUILD_DEPS ON)
@@ -100,29 +103,11 @@ include(cmake/generate_protos.cmake)
 
 set(CATCH_VERSION 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
 set(BLOATY_VERSION 3cf5c3feca15ab88730d6526b2f06302597926b5)
-set(PROTOBUF_VERSION 96a62f7cc7d5f82c1a70f10654fa1ed1815c4de8)
 
 # This includes protobuf
 if (${TYPECHECK_ENABLE_BLOATY})
 	fetch_extern(bloaty https://github.com/google/bloaty.git ${BLOATY_VERSION})
 endif()
-
-if (NOT TARGET protobuf::libprotobuf)
-	find_package(Protobuf QUIET)
-	set(TYPECHECK_SYSTEM_PROTOBUF ON)
-endif()
-# Only build protobuf if not found
-if (NOT TARGET protobuf::libprotobuf AND NOT ${TYPECHECK_ENABLE_BLOATY})
-	set(TYPECHECK_SYSTEM_PROTOBUF OFF)
-	set(protobuf_BUILD_TESTS OFF)
-	set(protobuf_BUILD_CONFORMANCE OFF)
-	set(protobuf_BUILD_EXAMPLES OFF)
-	set(protobuf_BUILD_PROTOC_BINARIES ON)
-	fetch_extern(protobuf https://github.com/protocolbuffers/protobuf ${PROTOBUF_VERSION})
-endif()
-
-file(GLOB_RECURSE PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/protos/*.proto)
-generateProtos(PROTO_FILES typecheck_protos)
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.hpp)
 file(GLOB_RECURSE INC_FILES include/*.hpp)
@@ -171,7 +156,6 @@ endif()
 
 add_library(typecheck ${SRC_FILES} ${INC_FILES})
 target_include_directories(typecheck PUBLIC include)
-target_link_libraries(typecheck PUBLIC typecheck_protos)
 # target_link_libraries(typecheck PUBLIC ortools::ortools)
 
 if (ENABLE_CPP_CHECK)
@@ -189,10 +173,6 @@ if (ENABLE_CLANG_TIDY)
 endif()
 
 target_compile_options(typecheck PRIVATE "${TYPECHECK_EXTRA_FLAGS}")
-if (NOT ${TYPECHECK_ENABLE_BLOATY} AND NOT ${TYPECHECK_SYSTEM_PROTOBUF})
-	target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:protobuf::libprotobuf,INTERFACE_INCLUDE_DIRECTORIES>)
-endif()
-target_include_directories(typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:typecheck_protos,INTERFACE_INCLUDE_DIRECTORIES>)
 
 if (TYPECHECK_PRINT_DEBUG_CONSTRAINTS)
     target_compile_definitions(typecheck PUBLIC "-DTYPECHECK_PRINT_DEBUG_CONSTRAINTS=0")

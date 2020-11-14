@@ -1,5 +1,5 @@
 #include "typecheck/type_manager.hpp"
-#include <typecheck_protos/constraint.pb.h>           // for ConstraintKind
+#include <typecheck/constraint.hpp>           // for ConstraintKind
 #include <limits>                                     // for numeric_limits
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
@@ -17,7 +17,7 @@
 #include "typecheck/resolvers/ResolveBindTo.hpp"       // for ResolveBindTo
 
 #include "typecheck/type_solver.hpp"                  // for TypeSolver
-#include <typecheck_protos/type.pb.h>                 // for Type, TypeVar
+#include <typecheck/type.hpp>                 // for Type, TypeVar
 
 using namespace typecheck;
 
@@ -85,12 +85,12 @@ auto TypeManager::canGetFunctionOverloads(const ConstraintPass::IDType& funcID, 
 
 auto TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID, const ConstraintPass* pass) const -> std::vector<FunctionDefinition> {
     std::vector<FunctionDefinition> overloads;
-    for (auto& overload : this->functions) {
+    for (const auto& overload : this->functions) {
         // Lookup by 'var', to deal with anonymous functions.
         if (overload.id() == funcID) {
             // Copy it over, and hand it over a 'function definition'.
             FunctionDefinition funcDef;
-            for (auto& arg : overload.args()) {
+            for (const auto& arg : overload.args()) {
                 funcDef.add_args()->CopyFrom(pass->getResolvedType(arg));
             }
             funcDef.mutable_returntype()->CopyFrom(pass->getResolvedType(overload.returnvar()));

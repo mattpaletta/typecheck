@@ -1,12 +1,11 @@
-#include "typecheck/type_manager.hpp"
-#include "typecheck/debug.hpp"
+#include <typecheck/type_manager.hpp>
+#include <typecheck/debug.hpp>
+#include <typecheck/constraint.hpp>
 
 #ifdef TYPECHECK_PRINT_DEBUG_CONSTRAINTS
 #include <iostream>
 #include <string>
 #endif
-
-#include <typecheck_protos/constraint.pb.h>
 
 using namespace typecheck;
 
@@ -24,10 +23,7 @@ auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) const -> in
         case Equal:
             return 4; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
         case BindOverload:
-            return 5; // NOLINT(cppcoreguidelines-avoid-magic-numbers)        
-        case ConstraintKind_INT_MIN_SENTINEL_DO_NOT_USE_:
-        case ConstraintKind_INT_MAX_SENTINEL_DO_NOT_USE_:
-            return 6; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+            return 5; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
     }
 
     return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
@@ -43,10 +39,6 @@ void TypeManager::SortConstraints() {
 auto getNewBlankConstraint(ConstraintKind kind, const long long& id) -> Constraint {
 	Constraint constraint;
 	constraint.set_kind(kind);
-	constraint.set_hasrestriction(false);
-	constraint.set_isactive(false);
-	constraint.set_isdisabled(false);
-	constraint.set_isfavoured(false);
 	constraint.set_id(id);
 	return constraint;
 }
@@ -63,7 +55,7 @@ auto debug_constraint_headers(const Constraint& constraint) -> std::string {
 
 auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -> ConstraintPass::IDType {
 	auto constraint = getNewBlankConstraint(ConstraintKind::Equal, this->constraint_generator.next_id());
-	 
+
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
 	TYPECHECK_ASSERT(!t1.symbol().empty(), "Cannot use empty type when creating constraint.");
 
@@ -82,7 +74,7 @@ auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -
 	return constraint.id();
 }
 
-auto TypeManager::CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol) -> ConstraintPass::IDType {
+auto TypeManager::CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind::LiteralProtocol& protocol) -> ConstraintPass::IDType {
 	auto constraint = getNewBlankConstraint(ConstraintKind::ConformsTo, this->constraint_generator.next_id());
 
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -102,7 +94,7 @@ auto TypeManager::CreateLiteralConformsToConstraint(const TypeVar& t0, const Kno
 
 auto TypeManager::CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1) -> ConstraintPass::IDType {
     auto constraint = getNewBlankConstraint(ConstraintKind::Conversion, this->constraint_generator.next_id());
-    
+
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
     TYPECHECK_ASSERT(this->registeredTypeVars.find(T0.symbol()) != this->registeredTypeVars.end(), "Must create type var before using.");
 

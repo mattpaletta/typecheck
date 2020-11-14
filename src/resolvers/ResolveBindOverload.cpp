@@ -70,7 +70,7 @@ auto ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeMa
             nextOverload = this->overloads.at(this->current_overload_i++);
             // Skip over any that don't have the same number of arguments.
         }
-        
+
         // Only proceed if we found an overload with the same number of arguments
         if (nextOverload.args_size() == constraint.overload().argvars_size()) {
             const auto typeVar = constraint.overload().type();

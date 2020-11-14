@@ -5,8 +5,8 @@
 #include <map>
 #include <set>
 
-#include <typecheck_protos/constraint.pb.h>
-#include <typecheck_protos/type.pb.h>
+#include "constraint.hpp"
+#include "function_var.hpp"
 #include "type_solver.hpp"
 #include "generic_type_generator.hpp"
 #include "resolver.hpp"
@@ -14,28 +14,8 @@
 namespace typecheck {
     class Resolver;
 	class ConstraintPass;
+
 	class TypeManager {
-		friend ConstraintPass;
-		friend TypeSolver;
-	private:
-		std::vector<Constraint> constraints;
-
-		std::vector<Type> registeredTypes;
-		std::set<std::string> registeredTypeVars;
-		std::map<std::string, std::set<std::string>> convertible;
-		std::vector<FunctionVar> functions;
-		std::map<ConstraintKind, std::unique_ptr<Resolver>> registeredResolvers;
-
-		TypeSolver solver;
-		GenericTypeGenerator type_generator;
-		GenericTypeGenerator constraint_generator;
-
-        void SortConstraints();
-        int getConstraintKindScore(const typecheck::ConstraintKind& kind) const;
-
-        // Internal helper
-        Constraint* getConstraintInternal(const ConstraintPass::IDType id);
-
 	public:
 		TypeManager();
 		~TypeManager() = default;
@@ -72,7 +52,7 @@ namespace typecheck {
 		const typecheck::TypeVar CreateTypeVar();
 		ConstraintPass::IDType CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const;
 		ConstraintPass::IDType CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const;
-        ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind_LiteralProtocol& protocol);
+        ConstraintPass::IDType CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind::LiteralProtocol& protocol);
         ConstraintPass::IDType CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1);
         ConstraintPass::IDType CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1);
         ConstraintPass::IDType CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type);
@@ -85,5 +65,27 @@ namespace typecheck {
 
 		bool solve();
 		const Type getResolvedType(const TypeVar& type) const;
+
+	private:
+		friend ConstraintPass;
+		friend TypeSolver;
+
+		std::vector<Constraint> constraints;
+
+		std::vector<Type> registeredTypes;
+		std::set<std::string> registeredTypeVars;
+		std::map<std::string, std::set<std::string>> convertible;
+		std::vector<FunctionVar> functions;
+		std::map<ConstraintKind, std::unique_ptr<Resolver>> registeredResolvers;
+
+		TypeSolver solver;
+		GenericTypeGenerator type_generator;
+		GenericTypeGenerator constraint_generator;
+
+        void SortConstraints();
+        int getConstraintKindScore(const typecheck::ConstraintKind& kind) const;
+
+        // Internal helper
+        Constraint* getConstraintInternal(const ConstraintPass::IDType id);
 	};
 }

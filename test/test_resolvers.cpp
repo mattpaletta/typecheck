@@ -7,7 +7,7 @@
 TEST_CASE("test resolve conforms to", "[resolver]") {
     getDefaultTypeManager(tm);
     auto T1 = tm.CreateTypeVar();
-    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
     auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
@@ -21,7 +21,7 @@ TEST_CASE("test resolve conforms to", "[resolver]") {
 TEST_CASE("test resolve conforms to has neither", "[resolver]") {
     getDefaultTypeManager(tm);
     auto T1 = tm.CreateTypeVar();
-    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
     auto resolver = typecheck::ResolveConformsTo(&pass, constraintID);
@@ -34,7 +34,7 @@ TEST_CASE("test resolve conforms to has neither", "[resolver]") {
 TEST_CASE("test resolve conforms to has one", "[resolver]") {
     getDefaultTypeManager(tm);
     auto T1 = tm.CreateTypeVar();
-    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
     typecheck::Constraint constraint;
@@ -52,7 +52,7 @@ TEST_CASE("test resolve conforms to has not conform", "[resolver]") {
     getDefaultTypeManager(tm);
     tm.registerType("string");
     auto T1 = tm.CreateTypeVar();
-    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
     typecheck::Constraint constraint;
@@ -70,7 +70,7 @@ TEST_CASE("test resolve conforms to has not preferred", "[resolver]") {
     getDefaultTypeManager(tm);
     tm.registerType("string");
     auto T1 = tm.CreateTypeVar();
-    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::KnownProtocolKind_LiteralProtocol_ExpressibleByInteger);
+    auto constraintID = tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     typecheck::ConstraintPass pass;
     typecheck::Constraint constraint;

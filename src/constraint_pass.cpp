@@ -1,12 +1,15 @@
 #include "typecheck/constraint_pass.hpp"
 
+#include "typecheck/resolver.hpp"            // for Resolver
+#include "typecheck/constraint.hpp"  // for Constraint, ConstraintKind
+#include "typecheck/type_var.hpp"  // for Constraint, ConstraintKind
+#include "typecheck/type_manager.hpp"        // for TypeManager
+
+#include <iostream>
 #include <stdexcept>                         // for runtime_error
 #include <type_traits>                       // for remove_reference<>::type
 #include <utility>                           // for make_pair
 #include <vector>                            // for vector
-#include "typecheck/resolver.hpp"            // for Resolver
-#include "typecheck_protos/constraint.pb.h"  // for Constraint, ConstraintKind
-#include "typecheck/type_manager.hpp"        // for TypeManager
 
 using namespace typecheck;
 
@@ -165,7 +168,7 @@ auto ConstraintPass::hasResolvedType(const TypeVar& var) const -> bool {
 }
 
 auto ConstraintPass::setResolvedType(const Constraint& constraint, const TypeVar& var, const Type& type, const TypeManager* manager) -> bool {
-    auto hasPermission = this->RequestPermission(constraint, var, manager);
+    const auto hasPermission = this->RequestPermission(constraint, var, manager);
     if (hasPermission && (type.has_raw() || type.has_func()) && !var.symbol().empty()) {
         this->resolvedTypes[var.symbol()] = type;
 	}

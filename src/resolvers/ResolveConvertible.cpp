@@ -5,13 +5,13 @@
 //  Created by Matthew Paletta on 2020-07-17.
 //
 
-#include "typecheck/resolvers/ResolveConvertible.hpp"
+#include <typecheck/resolvers/ResolveConvertible.hpp>
 
-#include "typecheck/type_manager.hpp"
+#include <typecheck/type_manager.hpp>
+#include <typecheck/constraint.hpp>
 
 #include <iostream>
 #include <memory>
-#include <typecheck_protos/constraint.pb.h>
 
 using namespace typecheck;
 

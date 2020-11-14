@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include <string>		// for string
 
 namespace typecheck {
@@ -8,7 +8,7 @@ namespace typecheck {
 // Begin custom compare Protobuf
 template<class T>
 inline auto proto_equal(const T& msg_a, const T& msg_b) -> bool {
-	return (msg_a.GetTypeName() == msg_b.GetTypeName()) && (msg_a.ShortDebugString() == msg_b.ShortDebugString());
+	return msg_a == msg_b;
 }
 
 template<class T>
