@@ -2,7 +2,7 @@ languages: cpp
 
 os: linux
 dist: bionic
-cache: 
+cache:
   ccache: true
   timeout: 1000
   directories:
@@ -21,7 +21,7 @@ matrix:
       - USE_CLANG_TIDY=OFF
       - USE_CPP_CHECK=OFF
       - USE_WERROR=OFF
-    - name: "GCC Release clang-tidy & cppcheck (linux)" 
+    - name: "GCC Release clang-tidy & cppcheck (linux)"
       os: linux
       if: branch = master
       compiler: gcc
@@ -113,7 +113,7 @@ matrix:
           packages:
             - cmake
             - ninja
-          update: true
+          update: false
 
 addons:
   apt:
@@ -146,13 +146,13 @@ script:
       while read mtime fn; do
         touch -c -m -d "@$mtime" $fn
       done < touch_mtimes.txt
-      
+
       # touch all git repo files to set mtimes to older than oldest build dir file
       # to ensure ninja will not rebuild them
       cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
       export OLDEST_MTIME=$((OLDEST_MTIME-1))
       find "${TRAVIS_BUILD_DIR}" -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
-      
+
       # touch changed git files to trigger their rebuild
       if [[ -f previous_git_commit.txt ]]; then
         read PREVIOUS_GIT_COMMIT < previous_git_commit.txt
@@ -183,7 +183,7 @@ script:
   - if [[ $TRAVIS_OS_NAME == "windows" ]]; then
       ./${BUILD}/test_typecheck.exe;
     else
-      ./test_typecheck;
+      time ./test_typecheck;
     fi;
 
 before_cache:
