@@ -125,7 +125,7 @@ auto ConstraintPass::CalcScore(const std::deque<std::size_t>& indices, const Typ
             if (!cached || this->scores.find(constraint.id()) == this->scores.end()) {
                 // Compute new score
                 // Here we call GetResolverRec, because we expect it to already exist.
-                auto* storedResolver = this->GetResolverRec(constraint, manager);
+                auto* storedResolver = this->GetResolverRec(constraint);
                 if (!storedResolver) {
                     // This will create one if it doesn't exist.
                     storedResolver = this->GetResolver(constraint, manager);
@@ -244,18 +244,29 @@ auto ConstraintPass::IsValid() const -> bool {
 	return this->score < std::numeric_limits<std::size_t>::max();
 }
 
-auto ConstraintPass::GetResolverRec(const Constraint& constraint, const TypeManager* manager) const -> Resolver* {
-	// Recursively traverses
-	const auto resol = this->resolvers.find(constraint.id());
-	if (resol != this->resolvers.end()) {
-		// We need the resolver for the parent
-        return resol->second.get();
-	} else if (this->prev) {
-		// This won't create a 'new' one, caller will have to do that.
-		return this->prev->GetResolverRec(constraint, manager);
-	} else {
-		return nullptr;
+auto ConstraintPass::GetResolverRec(const Constraint& constraint) const -> Resolver* {
+	// Written Tail-Recursively
+	auto getResolverHelper = [&constraint](const ConstraintPass* c) -> Resolver* {
+		const auto resol = c->resolvers.find(constraint.id());
+		if (resol != c->resolvers.end()) {
+			// We need the resolver for the parent
+			return resol->second.get();
+		} else {
+			return nullptr;
+		}
+	};
+
+	// 'Recursively' traverses
+	auto* currPrev = this;
+	while (currPrev) {
+		auto* result = getResolverHelper(currPrev);
+		if (result) {
+			return result;
+		}
+		currPrev = currPrev->prev;
 	}
+
+	return nullptr;
 }
 
 void ConstraintPass::ResetResolver(const Constraint& constraint) {

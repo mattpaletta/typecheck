@@ -35,7 +35,7 @@ namespace typecheck {
 
         mutable std::unordered_map<IDType, std::unique_ptr<Resolver>> resolvers;
 		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);
-		Resolver* GetResolverRec(const Constraint& constraint, const TypeManager* manager) const;
+		Resolver* GetResolverRec(const Constraint& constraint) const;
         void ResetResolver(const typecheck::Constraint& constraint);
 
     public:

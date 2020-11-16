@@ -4,7 +4,6 @@ os: linux
 dist: bionic
 cache:
   ccache: true
-  timeout: 1000
   directories:
     - build/_deps
 
