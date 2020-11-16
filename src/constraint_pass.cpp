@@ -246,18 +246,16 @@ auto ConstraintPass::IsValid() const -> bool {
 
 auto ConstraintPass::GetResolverRec(const Constraint& constraint, const TypeManager* manager) const -> Resolver* {
 	// Recursively traverses
-	if (this->resolvers.find(constraint.id()) != this->resolvers.end()) {
-		auto& stored_resolver = this->resolvers.at(constraint.id());
+	const auto resol = this->resolvers.find(constraint.id());
+	if (resol != this->resolvers.end()) {
 		// We need the resolver for the parent
-        return stored_resolver.get();
-	}
-
-	if (this->prev) {
+        return resol->second.get();
+	} else if (this->prev) {
 		// This won't create a 'new' one, caller will have to do that.
 		return this->prev->GetResolverRec(constraint, manager);
+	} else {
+		return nullptr;
 	}
-
-	return nullptr;
 }
 
 void ConstraintPass::ResetResolver(const Constraint& constraint) {

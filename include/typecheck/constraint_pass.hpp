@@ -4,7 +4,7 @@
 #include "type.hpp"
 
 #include <limits>                            // for numeric_limits
-#include <map>                               // for map
+#include <unordered_map>                     // for unordered_map
 #include <memory>                            // for unique_ptr
 #include <string>
 #include <deque>                             // for deque
@@ -24,16 +24,16 @@ namespace typecheck {
     public:
         using IDType = long long /* (determined by google protobuf type) */;
 
-        using scoreMapType = std::map<IDType, std::size_t>;
+        using scoreMapType = std::unordered_map<IDType, std::size_t>;
 	private:
 		scoreMapType scores;
         std::size_t score = std::numeric_limits<std::size_t>::max();
-        std::map<std::string, std::pair<IDType, int>> permissions;
+        std::unordered_map<std::string, std::pair<IDType, int>> permissions;
 
         // The key must be string, because 'typeVar' not comparable.
-        std::map<std::string, Type> resolvedTypes;
+        std::unordered_map<std::string, Type> resolvedTypes;
 
-        mutable std::map<IDType, std::unique_ptr<Resolver>> resolvers;
+        mutable std::unordered_map<IDType, std::unique_ptr<Resolver>> resolvers;
 		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);
 		Resolver* GetResolverRec(const Constraint& constraint, const TypeManager* manager) const;
         void ResetResolver(const typecheck::Constraint& constraint);

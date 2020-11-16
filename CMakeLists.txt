@@ -267,4 +267,18 @@ if (${TYPECHECK_BUILD_TESTS})
 			GENHTML_ARGS --legend --branch-coverage
 			DEPENDENCIES test_type_manager)
 	endif()
+
+	# Test just raw objects
+	add_executable(test_obj test/test_obj.cpp ${TEST_INC_FILES})
+    target_link_libraries(test_obj typecheck Catch2::Catch2)
+    target_include_directories(test_obj SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(test_obj PUBLIC "-DTEST_TYPE_MANAGER")
+	if (TYPECHECK_ENABLE_COVERAGE)
+		setup_target_for_coverage_lcov(
+			NAME coverage_obj
+			EXECUTABLE $<TARGET_FILE:test_obj>
+			LCOV_ARGS ${TYPECHECK_LCOV_ARGS}
+			GENHTML_ARGS --legend --branch-coverage
+			DEPENDENCIES test_obj)
+	endif()
 endif()

@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <optional>
 
 namespace typecheck {
 	class Type;
@@ -16,6 +17,7 @@ namespace typecheck {
 		FunctionDefinition& operator=(const FunctionDefinition& other);
 
 		bool operator==(const FunctionDefinition& other) const noexcept;
+		bool operator!=(const FunctionDefinition& other) const noexcept;
 
 		void CopyFrom(const FunctionDefinition& other);
 

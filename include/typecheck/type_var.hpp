@@ -8,6 +8,9 @@ namespace typecheck {
 		TypeVar(std::string s = "");
 		~TypeVar() = default;
 
+		bool operator==(const TypeVar& other) const noexcept;
+		bool operator!=(const TypeVar& other) const noexcept;
+
 		void CopyFrom(const TypeVar& other);
 
 		std::string symbol() const;

@@ -40,7 +40,7 @@ You can create a new type symbol using:
 ```cpp
 const typecheck::TypeVar T0 = tm.CreateTypeVar();
 ```
-This will return the created variable (type: `Type`, defined in `protos/type.proto`).  Although not enforced, type variables should not be changed after being returned.  The return type is not `const` to allow late-binding.
+This will return the created variable (type: `Type`, defined in `include/typecheck/type.hpp`).  Although not enforced, type variables should not be changed after being returned.  The return type is not `const` to allow late-binding.
 
 ## Constraints
 Constraints are where most of the logic takes place.  Constraints are constructed between 1 or more type variables, and define a set of rules a final output of *resolved types* must meet to be considered valid.  The types of conversions supported currently include:
@@ -51,7 +51,7 @@ Constraints are where most of the logic takes place.  Constraints are constructe
 - ApplicableFunction
 - BindFunction
 
-The Constraint type is defined in `protos/constraint.proto`.
+The Constraint type is defined in `include/typecheck/constraint.hpp`.
 
 The Type Manager provides helper-methods to create constraints of various types and has a number of checks to make sure constraints are created properly.
 ```cpp
@@ -182,7 +182,7 @@ const typecheck::Type typeT1 = tm.getResolvedType(T1);
 // ...
 ```
 
-This returns (type: typecheck::Type, defined in `protos/type.proto`.  There are two types of `Type`: `raw` and `func`.  A raw type is a basic type: `float`, `int`, `bool`, etc.  A function type is just a function.  It has arguments, an optional name, and a return type.  The arguments and return types are all `Type`.  This allows for support for functions that take in or return functions as parameters.  It is up to the language implementer to decide what *kind* of types they wish to use.
+This returns (type: typecheck::Type, defined in `include/typecheck/type.hpp`.  There are two types of `Type`: `raw` and `func`.  A raw type is a basic type: `float`, `int`, `bool`, etc.  A function type is just a function.  It has arguments, an optional name, and a return type.  The arguments and return types are all `Type`.  This allows for support for functions that take in or return functions as parameters.  It is up to the language implementer to decide what *kind* of types they wish to use.
 
 You can check if a given type is raw or func:
 ```cpp
@@ -194,7 +194,7 @@ If it's a raw type, you can get it's name:
 typeT1.raw().name();
 ```
 
-The function type is a `FunctionDefinition`, also defined in `type.proto`.
+The function type is a `FunctionDefinition`, defined in `include/typecheck/function_definition.hpp`.
 Some methods available:
 ```cpp
 typeT1.func().args_size(); // returns long long

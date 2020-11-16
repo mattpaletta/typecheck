@@ -32,7 +32,6 @@ Typecheck requires C++17.
 ## Dependencies
 This library is designed to generally use versions of libraries pre-installed on your system, but if they are not available, build them from source automatically.
 Libraries this project depends on:
-- [Protobuf](https://github.com/protocolbuffers/protobuf) (WIP to remove this dependency)
 - [Catch2](https://github.com/catchorg/Catch2) (only for testing)
 
 ## How to use?

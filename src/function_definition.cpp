@@ -20,22 +20,35 @@ auto FunctionDefinition::operator=(const FunctionDefinition& other) -> FunctionD
 
 void FunctionDefinition::CopyFrom(const FunctionDefinition& other) {
 	this->_args = other._args;
-	if (this->has_returntype()) {
-		this->_returnType = std::make_unique<Type>(other.returntype());
+
+	if (other.has_returntype()) {
+		this->_returnType = std::make_unique<Type>();
+		this->_returnType->CopyFrom(other.returntype());
 	}
+
 	this->_name = other._name;
 	this->_id = other._id;
 }
 
 auto FunctionDefinition::operator==(const FunctionDefinition& other) const noexcept -> bool {
-	return this->args_size() == other.args_size() &&
-		this->_returnType == other._returnType &&
+	const auto args_same = this->args_size() == other.args_size() &&
 		this->name() == other.name() &&
 		this->id() == other.id() &&
+		this->has_returntype() == other.has_returntype() &&
 		// This is the most expensive, do it last
 		this->_args == other._args;
+
+	if (args_same && this->has_returntype() && other.has_returntype()) {
+		// Break ties by checking return Type, not the unique_ptr
+		return this->returntype() == other.returntype();
+	} else {
+		return args_same;
+	}
 }
 
+auto FunctionDefinition::operator!=(const FunctionDefinition& other) const noexcept -> bool {
+	return !(*this == other);
+}
 auto FunctionDefinition::mutable_returntype() -> Type* {
 	if (!this->has_returntype()) {
 		this->_returnType = std::make_unique<Type>();

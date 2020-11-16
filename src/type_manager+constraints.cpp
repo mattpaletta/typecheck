@@ -7,6 +7,8 @@
 #include <string>
 #endif
 
+#include <algorithm> // for std::sort
+
 using namespace typecheck;
 
 auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) const -> int {

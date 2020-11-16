@@ -37,8 +37,13 @@ auto Type::operator=(Type&& other) noexcept -> Type& {
 }
 
 auto Type::operator==(const Type& other) const noexcept -> bool {
-	return (this->has_raw() && other.has_raw() && this->raw() == other.raw()) ||
-		(this->has_func() && other.has_func() && this->func() == other.func());
+	if (this->has_raw() && other.has_raw()) {
+		return this->raw() == other.raw();
+	} else if (this->has_func() && other.has_func()) {
+		return this->func() == other.func();
+	} else {
+		return !this->has_raw() && !other.has_raw() && !this->has_func() && !other.has_func();
+	}
 }
 
 auto Type::CopyFrom(const Type& other) -> Type& {
@@ -47,9 +52,9 @@ auto Type::CopyFrom(const Type& other) -> Type& {
 	}
 
 	if (other.has_raw()) {
-		this->data = other.raw();
+		this->mutable_raw()->CopyFrom(other.raw());
 	} else if (other.has_func()) {
-		this->data = other.func();
+		this->mutable_func()->CopyFrom(other.func());
 	} else {
 		this->data.emplace<bool>(false);
 	}
