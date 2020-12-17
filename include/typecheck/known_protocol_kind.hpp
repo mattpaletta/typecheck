@@ -40,14 +40,17 @@ namespace typecheck {
 			// ExpressibleByFile,
 		};
 
-		KnownProtocolKind() : data(false) {}
-		KnownProtocolKind(const DefaultProtocol& d) : data(d) {}
-		KnownProtocolKind(const LiteralProtocol& l) : data(l) {}
+		KnownProtocolKind() : _data(false) {}
+		KnownProtocolKind(const DefaultProtocol& d) : _data(d) {}
+		KnownProtocolKind(const LiteralProtocol& l) : _data(l) {}
 		~KnownProtocolKind() = default;
 
 		const LiteralProtocol& literal() const;
 		void set_literal(const LiteralProtocol& literal);
+		bool has_literal() const;
+
+		std::string ShortDebugString() const;
 	private:
-		std::variant<DefaultProtocol, LiteralProtocol, bool> data;
+		std::variant<DefaultProtocol, LiteralProtocol, bool> _data;
 	};
 }

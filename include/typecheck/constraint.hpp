@@ -62,6 +62,9 @@ namespace typecheck {
 			bool has_third() const;
 			const TypeVar& third() const;
 			TypeVar* mutable_third();
+
+			std::string ShortDebugString() const;
+		
 		private:
 			mutable std::optional<TypeVar> _first;
 			mutable std::optional<TypeVar> _second;
@@ -82,6 +85,9 @@ namespace typecheck {
 			bool has_var() const;
 			TypeVar* mutable_var();
 			const TypeVar& var() const;
+
+			std::string ShortDebugString() const;
+
 		private:
 			mutable std::optional<TypeVar> _var;
 			mutable std::optional<Type> _type;
@@ -91,6 +97,9 @@ namespace typecheck {
 		public:
 			const TypeVar& first() const;
 			const TypeVar& second() const;
+
+			std::string ShortDebugString() const;
+
 		private:
 			TypeVar _first;
 			TypeVar _second;
@@ -120,6 +129,9 @@ namespace typecheck {
 
 			const TypeVar& returnvar() const;
 			TypeVar* mutable_returnvar();
+
+			std::string ShortDebugString() const;
+
 		private:
 			mutable std::optional<TypeVar> _type;
 			long long _functionID{};
@@ -145,6 +157,7 @@ namespace typecheck {
 			bool has_type() const;
 			const TypeVar& type() const;
 			TypeVar* mutable_type();
+			std::string ShortDebugString() const;
 		private:
 			mutable std::optional<KnownProtocolKind> _protocol;
 			mutable std::optional<TypeVar> _type;
@@ -175,6 +188,7 @@ namespace typecheck {
 		Types* mutable_types();
 		const Types& types() const;
 
+		std::string ShortDebugString() const;
 	private:
 		ConstraintKind _kind;
 		/*

@@ -30,6 +30,8 @@ namespace typecheck {
 
 		FunctionDefinition* mutable_func();
 		const FunctionDefinition& func() const;
+
+		std::string ShortDebugString() const;
 	private:
 		// Variant defaults to the first type
 		mutable std::variant<bool, RawType, FunctionDefinition> data;

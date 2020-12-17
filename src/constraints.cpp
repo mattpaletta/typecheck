@@ -1,6 +1,8 @@
 #include <typecheck/constraint.hpp>
 
 #include <variant>
+#include <sstream>
+#include <string>
 
 using namespace typecheck;
 
@@ -55,6 +57,19 @@ auto Constraint::Conforms::mutable_protocol() -> KnownProtocolKind* {
 		this->_protocol = KnownProtocolKind{};
 	}
 	return &this->_protocol.value();
+}
+
+auto Constraint::Conforms::ShortDebugString() const -> std::string {
+	std::string out;
+	out += "{ ";
+	if (this->has_type()) {
+		out += "type: " + this->_type->ShortDebugString() + " ";
+	}
+	if (this->has_protocol()) {
+		out += "protocol: " + this->_protocol->ShortDebugString() + " ";
+	}
+	out += "}";
+	return out;
 }
 
 Constraint::Types::Types() = default;
@@ -124,6 +139,22 @@ auto Constraint::Types::mutable_third() -> TypeVar* {
 	return &this->_third.value();
 }
 
+auto Constraint::Types::ShortDebugString() const -> std::string {
+	std::string out;
+	out += "{ ";
+	if (this->has_first()) {
+		out += "first: " + this->_first->ShortDebugString() + " ";
+	}
+	if (this->has_second()) {
+		out += "second: " + this->_second->ShortDebugString() + " ";
+	}
+	if (this->has_third()) {
+		out += "third: " + this->_third->ShortDebugString() + " ";
+	}
+	out += "}";
+	return out;
+}
+
 Constraint::ExplicitType::ExplicitType() = default;
 
 Constraint::ExplicitType::ExplicitType(ExplicitType&& other) noexcept : _var(std::move(other._var)), _type(std::move(other._type)) {}
@@ -169,6 +200,19 @@ auto Constraint::ExplicitType::type() const -> const Type& {
 }
 auto Constraint::ExplicitType::has_type() const -> bool {
 	return this->_type.has_value();
+}
+
+auto Constraint::ExplicitType::ShortDebugString() const -> std::string {
+	std::string out;
+	out += "{ ";
+	if (this->has_type()) {
+		out += "type: " + this->_type->ShortDebugString() + " ";
+	}
+	if (this->has_var()) {
+		out += "var: " + this->_var->ShortDebugString() + " ";
+	}
+	out += "}";
+	return out;
 }
 
 Constraint::Overload::Overload() = default;
@@ -242,6 +286,15 @@ auto Constraint::Overload::mutable_returnvar() -> TypeVar* {
 
 auto Constraint::Overload::returnvar() const -> const TypeVar& {
 	return this->_returnVar;
+}
+
+auto Constraint::Overload::ShortDebugString() const -> std::string {
+	std::string out;
+	out += "{ ";
+	out += "returnVar: " + this->_returnVar.ShortDebugString() + " ";
+	out += "functionID: " + std::to_string(this->_functionID) + " ";
+	out += "}";
+	return out;
 }
 
 Constraint::Constraint() = default;
@@ -331,4 +384,23 @@ void Constraint::set_kind(const ConstraintKind& kind) {
 
 auto Constraint::kind() const -> const ConstraintKind& {
 	return this->_kind;
+}
+
+auto Constraint::ShortDebugString() const -> std::string {
+	std::string out;
+	out += "{ id: " + std::to_string(this->_id) + " ";
+	if (this->has_types()) {
+		out += ("{ types: \t" + this->types().ShortDebugString() + "}");
+	} else if (this->has_conforms()) {
+		out += ("{ conforms \t" + this->conforms().ShortDebugString() + "}");
+	} else if (this->has_overload()) {
+		out += ("{ overload: \t" + this->overload().ShortDebugString() + "}");
+	} else if (this->has_explicit_()) {
+		out += ("{ explicit: \t" + this->explicit_().ShortDebugString()+ "}");
+	} else {
+		return "Unknown Constraint Type";
+	}
+
+	out += " }";
+	return out;
 }

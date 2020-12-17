@@ -156,6 +156,7 @@ endif()
 
 add_library(typecheck ${SRC_FILES} ${INC_FILES})
 target_include_directories(typecheck PUBLIC include)
+target_precompile_headers(typecheck PUBLIC ${INC_FILES})
 # target_link_libraries(typecheck PUBLIC ortools::ortools)
 
 if (ENABLE_CPP_CHECK)

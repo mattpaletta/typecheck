@@ -31,6 +31,8 @@ namespace typecheck {
 
 		std::string name() const;
 		int id() const;
+
+		std::string ShortDebugString() const;
 	private:
 		std::vector<Type> _args;
 

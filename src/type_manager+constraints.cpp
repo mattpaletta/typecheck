@@ -11,6 +11,25 @@
 
 using namespace typecheck;
 
+namespace {
+	auto getNewBlankConstraint(ConstraintKind kind, const long long& id) -> Constraint {
+		Constraint constraint;
+		constraint.set_kind(kind);
+		constraint.set_id(id);
+		return constraint;
+	}
+
+#ifdef TYPECHECK_PRINT_DEBUG_CONSTRAINTS
+	auto debug_constraint_headers(const Constraint& constraint) -> std::string {
+#ifdef TYPECHECK_PRINT_SHORT_DEBUG
+		return "Typecheck: Creating constraint: " + constraint.ShortDebugString();
+#else
+		return "Typecheck: Creating constraint: " + constraint.DebugString();
+#endif
+	}
+#endif
+}
+
 auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) const -> int {
     switch (kind) {
         case BindParam:
@@ -37,23 +56,6 @@ void TypeManager::SortConstraints() {
         return this->getConstraintKindScore(c1.kind()) < this->getConstraintKindScore(c2.kind());
     });
 }
-
-auto getNewBlankConstraint(ConstraintKind kind, const long long& id) -> Constraint {
-	Constraint constraint;
-	constraint.set_kind(kind);
-	constraint.set_id(id);
-	return constraint;
-}
-
-#ifdef TYPECHECK_PRINT_DEBUG_CONSTRAINTS
-auto debug_constraint_headers(const Constraint& constraint) -> std::string {
-#ifdef TYPECHECK_PRINT_SHORT_DEBUG
-    return "Typecheck: Creating constraint: " + constraint.ShortDebugString();
-#else
-    return "Typecheck: Creating constraint: " + constraint.DebugString();
-#endif
-}
-#endif
 
 auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -> ConstraintPass::IDType {
 	auto constraint = getNewBlankConstraint(ConstraintKind::Equal, this->constraint_generator.next_id());

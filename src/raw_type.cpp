@@ -24,3 +24,7 @@ auto RawType::name() const -> std::string {
 void RawType::set_name(const std::string& name) {
 	this->_name = name;
 }
+
+auto RawType::ShortDebugString() const -> std::string {
+	return "{ name: " + this->_name + " }";
+}

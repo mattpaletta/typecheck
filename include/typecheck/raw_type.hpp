@@ -14,6 +14,8 @@ namespace typecheck {
 
 		std::string name() const;
 		void set_name(const std::string& name);
+
+		std::string ShortDebugString() const;
 	private:
 		std::string _name;
 	};
