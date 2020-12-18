@@ -38,7 +38,7 @@ auto KnownProtocolKind::ShortDebugString() const -> std::string {
 	std::string out;
 	out += "{ ";
 	if (this->has_literal()) {
-		out += "{ literal: " + literal_to_str(this->literal());
+		out += "\"literal\": " + literal_to_str(this->literal());
 	}
 	out += "}";
 	return out;

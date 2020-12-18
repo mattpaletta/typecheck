@@ -102,10 +102,10 @@ auto Type::ShortDebugString() const -> std::string {
 	std::string out;
 	out += "{ ";
 	if (this->has_raw()) {
-		out += "raw: " + this->raw().ShortDebugString() + " ";
+		out += "\"raw\": " + this->raw().ShortDebugString() + (this->has_func() ? ", " : " ");
 	}
 	if (this->has_func()) {
-		out += "func: " + this->func().ShortDebugString() + " ";
+		out += "\"func\": " + this->func().ShortDebugString() + " ";
 	}
 	out += "}";
 	return out;
