@@ -293,7 +293,13 @@ auto Constraint::Overload::ShortDebugString() const -> std::string {
 	out += "{ ";
 	out += "returnVar: " + this->_returnVar.ShortDebugString() + " ";
 	out += "functionID: " + std::to_string(this->_functionID) + " ";
-	out += "}";
+	out += "type: " + this->_type->ShortDebugString() + " ";
+	out += "argVars: [";
+	for (const auto& arg : this->_argVars) {
+		out += (arg.ShortDebugString() + " ");
+	}
+	out += "]";
+	out += "]}";
 	return out;
 }
 
