@@ -26,5 +26,5 @@ void TypeVar::set_symbol(const std::string& s) {
 }
 
 auto TypeVar::ShortDebugString() const -> std::string {
-	return "{ symbol: " + this->_symbol + " }";
+	return "{ \"symbol\": \"" + this->_symbol + "\" }";
 }

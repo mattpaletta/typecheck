@@ -91,16 +91,16 @@ auto FunctionDefinition::id() const -> int {
 std::string FunctionDefinition::ShortDebugString() const {
 	std::string out;
 	out += "{ ";
-	out += " name: " + this->_name + " ";
+	out += "\"name\": \"" + this->_name + "\", ";
 	if (this->has_returntype()) {
-		out += " returnType: " + this->returntype().ShortDebugString() + " ";
+		out += "\"returnType\": \"" + this->returntype().ShortDebugString() + "\", ";
 	}
-	out += "id: " + std::to_string(this->_id) + " ";
-	out += "args: [";
+	out += "\"id\": " + std::to_string(this->_id) + ", ";
+	out += "\"args\": [";
 	for (const auto& arg : this->_args) {
-		out += arg.ShortDebugString() + " ";
+		out += arg.ShortDebugString() + ", ";
 	}
-	out += "]";
+	out += "],";
 	out += " }";
 	return out;
 }

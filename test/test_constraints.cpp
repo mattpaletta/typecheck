@@ -546,6 +546,64 @@ TEST_CASE("regression test 1 constraints", "[constraint]") {
     CHECK(tm.getResolvedType(T.at(11)).raw().name()  == "int");
 }
 
+TEST_CASE("regression test 2 constraints (ackerman)", "[constraint]") {
+    getDefaultTypeManager(tm);
+    tm.registerType("bool");
+    tm.registerType("int");
+    tm.registerType("void");
+
+    const auto T = CreateMultipleSymbols(tm, 23);
+    const auto intType = tm.getRegisteredType("int");
+    const auto voidType = tm.getRegisteredType("void");
+    const auto boolType = tm.getRegisteredType("bool");
+
+	tm.CreateBindToConstraint(T.at(1), intType);
+	tm.CreateBindToConstraint(T.at(2), voidType);
+	tm.CreateBindToConstraint(T.at(3), intType);
+	tm.CreateBindToConstraint(T.at(4), voidType);
+	tm.CreateBindToConstraint(T.at(5), intType);
+	tm.CreateEqualsConstraint(T.at(9), T.at(3));
+	tm.CreateLiteralConformsToConstraint(T.at(10), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(9), T.at(10));
+	tm.CreateEqualsConstraint(T.at(11), T.at(9));
+	tm.CreateBindToConstraint(T.at(12), boolType);
+	tm.CreateEqualsConstraint(T.at(9), T.at(10));
+	tm.CreateEqualsConstraint(T.at(13), T.at(5));
+	tm.CreateLiteralConformsToConstraint(T.at(14), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(13), T.at(14));
+	tm.CreateEqualsConstraint(T.at(15), T.at(13));
+	tm.CreateEqualsConstraint(T.at(16), T.at(5));
+	tm.CreateLiteralConformsToConstraint(T.at(17), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(16), T.at(17));
+	tm.CreateEqualsConstraint(T.at(18), T.at(16));
+	tm.CreateBindToConstraint(T.at(19), boolType);
+	tm.CreateEqualsConstraint(T.at(16), T.at(17));
+	tm.CreateEqualsConstraint(T.at(22), T.at(3));
+	tm.CreateLiteralConformsToConstraint(T.at(23), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(22), T.at(23));
+	tm.CreateEqualsConstraint(T.at(24), T.at(22));
+	tm.CreateEqualsConstraint(T.at(25), T.at(24));
+	tm.CreateLiteralConformsToConstraint(T.at(26), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(27), T.at(26));
+	tm.CreateBindFunctionConstraint(6152725461566598243, T.at(21), { T.at(25), T.at(27) }, T.at(20));
+	tm.CreateEqualsConstraint(T.at(28), T.at(3));
+	tm.CreateLiteralConformsToConstraint(T.at(29), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(28), T.at(29));
+	tm.CreateEqualsConstraint(T.at(30), T.at(28));
+	tm.CreateEqualsConstraint(T.at(31), T.at(30));
+	tm.CreateLiteralConformsToConstraint(T.at(32), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(33), T.at(32));
+	tm.CreateEqualsConstraint(T.at(36), T.at(3));
+	tm.CreateLiteralConformsToConstraint(T.at(37), typecheck::KnownProtocolKind::ExpressibleByInteger);
+	tm.CreateEqualsConstraint(T.at(36), T.at(37));
+	tm.CreateEqualsConstraint(T.at(38), T.at(36));
+	tm.CreateEqualsConstraint(T.at(39), T.at(38));
+	tm.CreateEqualsConstraint(T.at(42), T.at(3));
+	tm.CreateEqualsConstraint(T.at(43), T.at(42));
+	tm.CreateEqualsConstraint(T.at(44), T.at(5));
+	tm.CreateLiteralConformsToConstraint(T.at(45), typecheck::KnownProtocolKind::ExpressibleByInteger);
+}
+
 #define CREATE_STRESS_TEST(numSymbols) TEST_CASE("stress test " + std::to_string(numSymbols) + " constraints", "[constraint]") { \
         getDefaultTypeManager(tm); \
         tm.registerType("bool"); \

@@ -22,9 +22,9 @@ namespace {
 #ifdef TYPECHECK_PRINT_DEBUG_CONSTRAINTS
 	auto debug_constraint_headers(const Constraint& constraint) -> std::string {
 #ifdef TYPECHECK_PRINT_SHORT_DEBUG
-		return "Typecheck: Creating constraint: " + constraint.ShortDebugString();
+		return constraint.ShortDebugString();
 #else
-		return "Typecheck: Creating constraint: " + constraint.DebugString();
+		return constraint.DebugString();
 #endif
 	}
 #endif

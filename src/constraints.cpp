@@ -63,10 +63,10 @@ auto Constraint::Conforms::ShortDebugString() const -> std::string {
 	std::string out;
 	out += "{ ";
 	if (this->has_type()) {
-		out += "type: " + this->_type->ShortDebugString() + " ";
+		out += "\"type\": " + this->_type->ShortDebugString() + (this->has_protocol() ? ", " : " ");
 	}
 	if (this->has_protocol()) {
-		out += "protocol: " + this->_protocol->ShortDebugString() + " ";
+		out += "\"protocol\": " + this->_protocol->ShortDebugString() + " ";
 	}
 	out += "}";
 	return out;
@@ -143,13 +143,13 @@ auto Constraint::Types::ShortDebugString() const -> std::string {
 	std::string out;
 	out += "{ ";
 	if (this->has_first()) {
-		out += "first: " + this->_first->ShortDebugString() + " ";
+		out += "\"first\": " + this->_first->ShortDebugString() + (this->has_second() ? ", " : " ");
 	}
 	if (this->has_second()) {
-		out += "second: " + this->_second->ShortDebugString() + " ";
+		out += "\"second\": " + this->_second->ShortDebugString() + (this->has_third() ? ", " : " ");
 	}
 	if (this->has_third()) {
-		out += "third: " + this->_third->ShortDebugString() + " ";
+		out += "\"third\": " + this->_third->ShortDebugString() + " ";
 	}
 	out += "}";
 	return out;
@@ -206,10 +206,10 @@ auto Constraint::ExplicitType::ShortDebugString() const -> std::string {
 	std::string out;
 	out += "{ ";
 	if (this->has_type()) {
-		out += "type: " + this->_type->ShortDebugString() + " ";
+		out += "\"type\": " + this->_type->ShortDebugString() + (this->has_var() ? ", " : " ");
 	}
 	if (this->has_var()) {
-		out += "var: " + this->_var->ShortDebugString() + " ";
+		out += "\"var\": " + this->_var->ShortDebugString() + " ";
 	}
 	out += "}";
 	return out;
@@ -291,15 +291,15 @@ auto Constraint::Overload::returnvar() const -> const TypeVar& {
 auto Constraint::Overload::ShortDebugString() const -> std::string {
 	std::string out;
 	out += "{ ";
-	out += "returnVar: " + this->_returnVar.ShortDebugString() + " ";
-	out += "functionID: " + std::to_string(this->_functionID) + " ";
-	out += "type: " + this->_type->ShortDebugString() + " ";
-	out += "argVars: [";
+	out += "\"returnVar\": " + this->_returnVar.ShortDebugString() + ", ";
+	out += "\"functionID\": " + std::to_string(this->_functionID) + ", ";
+	out += "\"type\": " + this->_type->ShortDebugString() + ", ";
+	out += "\"argVars\": [";
 	for (const auto& arg : this->_argVars) {
-		out += (arg.ShortDebugString() + " ");
+		out += (arg.ShortDebugString() + ", ");
 	}
 	out += "]";
-	out += "]}";
+	out += "}";
 	return out;
 }
 
@@ -394,15 +394,15 @@ auto Constraint::kind() const -> const ConstraintKind& {
 
 auto Constraint::ShortDebugString() const -> std::string {
 	std::string out;
-	out += "{ id: " + std::to_string(this->_id) + " ";
+	out += "{ \"id\": " + std::to_string(this->_id) + ", ";
 	if (this->has_types()) {
-		out += ("{ types: \t" + this->types().ShortDebugString() + "}");
+		out += ("\"types\": \t" + this->types().ShortDebugString() + (" "));
 	} else if (this->has_conforms()) {
-		out += ("{ conforms \t" + this->conforms().ShortDebugString() + "}");
+		out += ("\"conforms\" \t" + this->conforms().ShortDebugString() + " ");
 	} else if (this->has_overload()) {
-		out += ("{ overload: \t" + this->overload().ShortDebugString() + "}");
+		out += ("\"overload\": \t" + this->overload().ShortDebugString() + " ");
 	} else if (this->has_explicit_()) {
-		out += ("{ explicit: \t" + this->explicit_().ShortDebugString()+ "}");
+		out += ("\"explicit\": \t" + this->explicit_().ShortDebugString()+ " ");
 	} else {
 		return "Unknown Constraint Type";
 	}

@@ -26,5 +26,5 @@ void RawType::set_name(const std::string& name) {
 }
 
 auto RawType::ShortDebugString() const -> std::string {
-	return "{ name: " + this->_name + " }";
+	return "{ \"name\": \"" + this->_name + "\" }";
 }
