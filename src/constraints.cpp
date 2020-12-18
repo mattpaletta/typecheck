@@ -398,7 +398,7 @@ auto Constraint::ShortDebugString() const -> std::string {
 	if (this->has_types()) {
 		out += ("\"types\": \t" + this->types().ShortDebugString() + (" "));
 	} else if (this->has_conforms()) {
-		out += ("\"conforms\" \t" + this->conforms().ShortDebugString() + " ");
+		out += ("\"conforms\": \t" + this->conforms().ShortDebugString() + " ");
 	} else if (this->has_overload()) {
 		out += ("\"overload\": \t" + this->overload().ShortDebugString() + " ");
 	} else if (this->has_explicit_()) {

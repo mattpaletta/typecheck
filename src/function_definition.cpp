@@ -98,7 +98,7 @@ std::string FunctionDefinition::ShortDebugString() const {
 	out += "\"id\": " + std::to_string(this->_id) + ", ";
 	out += "\"args\": [";
 	for (const auto& arg : this->_args) {
-		out += arg.ShortDebugString() + ", ";
+		out += arg.ShortDebugString() + (!(arg == this->args(this->args_size() - 1)) ? ", " : " ");
 	}
 	out += "],";
 	out += " }";
