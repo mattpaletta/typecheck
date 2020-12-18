@@ -296,7 +296,7 @@ auto Constraint::Overload::ShortDebugString() const -> std::string {
 	out += "\"type\": " + this->_type->ShortDebugString() + ", ";
 	out += "\"argVars\": [";
 	for (const auto& arg : this->_argVars) {
-		out += (arg.ShortDebugString() + ", ");
+		out += (arg.ShortDebugString() + (!(arg == this->_argVars.at(this->_argVars.size() - 1)) ? ", " : " "));
 	}
 	out += "]";
 	out += "}";
