@@ -303,7 +303,7 @@ auto Constraint::Overload::ShortDebugString() const -> std::string {
 	return out;
 }
 
-Constraint::Constraint() = default;
+Constraint::Constraint() : _kind() {}
 
 auto Constraint::has_explicit_() const -> bool {
 	return std::holds_alternative<ExplicitType>(this->data);
