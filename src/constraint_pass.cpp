@@ -38,6 +38,31 @@ void ConstraintPass::MoveToExisting(ConstraintPass* dest) {
     dest->scores = std::move(this->scores);
 }
 
+void ConstraintPass::MergeToExisting(ConstraintPass* dest) const {
+	// dest->score = std::max(this->score, dest->score);
+
+	// Merge Scores
+	for (const auto& [key, val] : this->scores) {
+		const auto it = dest->scores.find(key);
+		if (it == dest->scores.end()) {
+			// Dest doesn't have a score, use ours
+			dest->scores[key] = val;
+		} else {
+			dest->scores[key] = std::max(it->second, val);
+		}
+	}
+
+	// Merge Resolved
+	for (const auto& [key, val] : this->resolvedTypes) {
+		const auto it = dest->resolvedTypes.find(key);
+		if (it == dest->resolvedTypes.end()) {
+			// Dest doesn't have a resolved type, use ours
+			// If they do have a value, ours is newer, so overwrite it.
+			dest->resolvedTypes[key] = val;
+		}
+	}
+}
+
 auto ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) -> ConstraintPass::scoreMapType& {
     if (!cached) {
         // Update map

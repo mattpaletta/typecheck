@@ -2,6 +2,7 @@
 
 #include "constraint.hpp"
 #include "constraint_pass.hpp"
+#include "constraint_group.hpp"
 
 #include <vector>
 #include <map>
@@ -14,20 +15,20 @@ namespace typecheck {
 	class TypeSolver {
 	public:
 		TypeSolver();
-		~TypeSolver() = default;
+		virtual ~TypeSolver() = default;
 
 		bool solve(const TypeManager* manager);
 		Type getResolvedType(const TypeVar& _typeVar) const;
 
+	protected:
+		// Implementations found in `type_solver+init_pass.cpp`
+		virtual std::vector<ConstraintGroup> SplitToGroups(const typecheck::TypeManager* manager) const;
+        virtual void RemoveDuplicates(typecheck::TypeManager* manager) const;
+
 	private:
-		std::map<std::size_t, std::vector<std::size_t>> typeRefGraph;
 		std::map<std::string, std::vector<FunctionDefinition>> funcOverloads;
 
 		ConstraintPass last_pass;
-
-		// Implementations found in `type_solver+init_pass.cpp`
-		void InitPasses(typecheck::TypeManager* manager);
-        void RemoveDuplicates(typecheck::TypeManager* manager);
 
 		// Implementations found in `type_solver+solver.cpp`
 		void DoPass(ConstraintPass* pass, const TypeManager* manager) const;

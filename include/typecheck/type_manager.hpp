@@ -1,15 +1,16 @@
 #pragma once
-#include <memory>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
 
 #include "constraint.hpp"
 #include "function_var.hpp"
 #include "type_solver.hpp"
 #include "generic_type_generator.hpp"
 #include "resolver.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
 
 namespace typecheck {
     class Resolver;
@@ -66,11 +67,13 @@ namespace typecheck {
 		bool solve();
 		const Type getResolvedType(const TypeVar& type) const;
 
+		static void SortConstraints(std::vector<Constraint>* constraints);
+
+		std::vector<Constraint> constraints;
+
 	private:
 		friend ConstraintPass;
 		friend TypeSolver;
-
-		std::vector<Constraint> constraints;
 
 		std::vector<Type> registeredTypes;
 		std::set<std::string> registeredTypeVars;
@@ -83,7 +86,7 @@ namespace typecheck {
 		GenericTypeGenerator constraint_generator;
 
         void SortConstraints();
-        int getConstraintKindScore(const typecheck::ConstraintKind& kind) const;
+        static int getConstraintKindScore(const typecheck::ConstraintKind& kind);
 
         // Internal helper
         Constraint* getConstraintInternal(const ConstraintPass::IDType id);

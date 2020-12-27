@@ -9,10 +9,6 @@ using namespace typecheck;
 
 TypeSolver::TypeSolver() = default;
 
-void TypeSolver::InitPasses([[maybe_unused]] TypeManager* manager) {
-
-}
-
 auto TypeSolver::solve(const TypeManager* manager) -> bool {
 	// Builds utility data structures
 	// this->InitPasses(manager);

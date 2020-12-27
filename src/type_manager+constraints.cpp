@@ -30,7 +30,7 @@ namespace {
 #endif
 }
 
-auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) const -> int {
+auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) -> int {
     switch (kind) {
         case BindParam:
         case Bind:
@@ -50,11 +50,17 @@ auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) const -> in
     return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 }
 
-void TypeManager::SortConstraints() {
+void TypeManager::SortConstraints(std::vector<Constraint>* constraints) {
     // Sort the constraints by the order in which they need to be resolved
-    std::sort(this->constraints.begin(), this->constraints.end(), [this](const Constraint& c1, const Constraint& c2) {
-        return this->getConstraintKindScore(c1.kind()) < this->getConstraintKindScore(c2.kind());
+    std::sort(constraints->begin(), constraints->end(), [](const Constraint& c1, const Constraint& c2) {
+		// Temporarily Inverted Sort so it resolves all of them
+        return TypeManager::getConstraintKindScore(c1.kind()) < TypeManager::getConstraintKindScore(c2.kind());
     });
+
+}
+
+void TypeManager::SortConstraints() {
+	this->SortConstraints(&this->constraints);
 }
 
 auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -> ConstraintPass::IDType {

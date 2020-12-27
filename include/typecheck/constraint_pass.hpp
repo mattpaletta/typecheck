@@ -16,29 +16,10 @@ namespace typecheck { class TypeSolver; }  // lines 13-13
 namespace typecheck {
 	class TypeSolver;
 	class ConstraintPass {
-		friend TypeSolver;
-
-		// Holds pointer to previous pass (if applicable)
-		ConstraintPass* prev = nullptr;
-        ConstraintPass* root = nullptr; // Some things are stored in the root, store a direct pointer.
     public:
         using IDType = long long /* (determined by google protobuf type) */;
-
         using scoreMapType = std::unordered_map<IDType, std::size_t>;
-	private:
-		scoreMapType scores;
-        std::size_t score = std::numeric_limits<std::size_t>::max();
-        std::unordered_map<std::string, std::pair<IDType, int>> permissions;
 
-        // The key must be string, because 'typeVar' not comparable.
-        std::unordered_map<std::string, Type> resolvedTypes;
-
-        mutable std::unordered_map<IDType, std::unique_ptr<Resolver>> resolvers;
-		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);
-		Resolver* GetResolverRec(const Constraint& constraint) const;
-        void ResetResolver(const typecheck::Constraint& constraint);
-
-    public:
 		ConstraintPass() = default;
 		~ConstraintPass() = default;
 
@@ -51,6 +32,7 @@ namespace typecheck {
 		ConstraintPass CreateCopy();
 		void CopyToExisting(ConstraintPass* dest) const;
         void MoveToExisting(ConstraintPass* dest);
+        void MergeToExisting(ConstraintPass* dest) const;
 
 		std::size_t CalcScore(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
         scoreMapType& CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached = false);
@@ -64,5 +46,24 @@ namespace typecheck {
 		Type getResolvedType(const TypeVar& var) const;
 		bool hasResolvedType(const TypeVar& var) const;
 		bool setResolvedType(const Constraint& constraint, const TypeVar& var, const Type& type, const TypeManager* manager);
+
+	private:
+		friend TypeSolver;
+
+		// Holds pointer to previous pass (if applicable)
+		ConstraintPass* prev = nullptr;
+        ConstraintPass* root = nullptr; // Some things are stored in the root, store a direct pointer.
+
+		scoreMapType scores;
+        std::size_t score = std::numeric_limits<std::size_t>::max();
+        std::unordered_map<std::string, std::pair<IDType, int>> permissions;
+
+        // The key must be string, because 'typeVar' not comparable.
+        std::unordered_map<std::string, Type> resolvedTypes;
+        mutable std::unordered_map<IDType, std::unique_ptr<Resolver>> resolvers;
+
+		Resolver* GetResolver(const Constraint& constraint, const TypeManager* manager);
+		Resolver* GetResolverRec(const Constraint& constraint) const;
+        void ResetResolver(const typecheck::Constraint& constraint);
 	};
 }

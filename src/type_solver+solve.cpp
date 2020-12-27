@@ -14,16 +14,43 @@
 
 using namespace typecheck;
 
-void TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const {
-	std::deque<std::size_t> unresolvedConstraints;
+namespace {
+	std::deque<std::size_t> GroupToUnresolved(const ConstraintGroup& group, const TypeManager* manager) {
+		std::deque<std::size_t> unresolvedConstraints;
+		auto groupList = group.toList();
+		for (const auto constraintid : groupList) {
+			// Lookup constraint index
+			for (std::size_t i = 0; i < manager->constraints.size(); ++i) {
+				if (manager->constraints.at(i).id() == constraintid) {
+					unresolvedConstraints.push_back(i);
+				}
+			}
+		}
 
-	// Build queue of constraints indexes
-	for (std::size_t i = 0; i < manager->constraints.size(); ++i) {
-		unresolvedConstraints.push_back(i);
+		return unresolvedConstraints;
 	}
+}
 
-    constexpr auto init_val = std::numeric_limits<std::size_t>::max();
-	this->DoPass_internal(pass, unresolvedConstraints, manager, init_val, init_val);
+void TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const {
+	const auto groups = this->SplitToGroups(manager);
+	constexpr auto init_val = std::numeric_limits<std::size_t>::max();
+
+	// Do each group individually
+	for (const auto& group : groups) {
+		const auto unresolvedConstraints = GroupToUnresolved(group, manager);
+		assert(group.size() == unresolvedConstraints.size());
+
+		ConstraintPass groupPass;
+		this->DoPass_internal(&groupPass, unresolvedConstraints, manager, init_val, init_val);
+
+		// Merge & Update Scores
+		groupPass.MergeToExisting(pass);
+		pass->CalcScore(unresolvedConstraints, manager, false);
+
+		for (const auto& item : pass->resolvedTypes) {
+			std::cout << "Resolved Key: " << item.first << std::endl;
+		}
+	}
 }
 
 void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const {
@@ -65,7 +92,7 @@ void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/*
 
         bool did_any_resolve = false;
         // Early stop if best_score reaches zero
-        while (best_pass.CalcScore(original_indices, manager) > 0 && iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
+        while (/*best_pass.CalcScore(original_indices, manager) > 0 && */ iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
             const auto did_resolve = iterPass.GetResolver(*current_constraint, manager)->resolveNext(*current_constraint, manager);
             auto computed = iterPass.CreateCopy();
             if (did_resolve) {
@@ -117,8 +144,8 @@ void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/*
                     computed.MoveToExisting(&best_pass);
                 }
             }
-        }
-    }
+		}
+	}
 
     // Merge best_pass in 'pass'
     best_pass.MoveToExisting(pass);

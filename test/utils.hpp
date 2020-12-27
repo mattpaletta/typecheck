@@ -12,6 +12,7 @@
 // Utility function to avoid boilerplate code in testing.
 void setupTypeManager(typecheck::TypeManager* tm) {
     CHECK(tm->registerType("int"));
+    CHECK(tm->registerType("void"));
     CHECK(tm->registerType("float"));
     CHECK(tm->registerType("double"));
     CHECK(tm->setConvertible("int", "int"));

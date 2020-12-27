@@ -10,6 +10,7 @@ namespace typecheck {
 
 		bool operator==(const TypeVar& other) const noexcept;
 		bool operator!=(const TypeVar& other) const noexcept;
+		bool operator<(const TypeVar& other) const noexcept;
 
 		void CopyFrom(const TypeVar& other);
 

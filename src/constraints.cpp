@@ -305,6 +305,10 @@ auto Constraint::Overload::ShortDebugString() const -> std::string {
 
 Constraint::Constraint() : _kind() {}
 
+bool Constraint::operator==(const Constraint& other) const {
+	return this->ShortDebugString() == other.ShortDebugString();
+}
+
 auto Constraint::has_explicit_() const -> bool {
 	return std::holds_alternative<ExplicitType>(this->data);
 }
