@@ -38,7 +38,7 @@ void TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const 
 	// Do each group individually
 	for (const auto& group : groups) {
 		const auto unresolvedConstraints = GroupToUnresolved(group, manager);
-		assert(group.size() == unresolvedConstraints.size());
+		TYPECHECK_ASSERT(group.size() == unresolvedConstraints.size(), "Failed to copy all indexes from constraint group");
 
 		ConstraintPass groupPass;
 		this->DoPass_internal(&groupPass, unresolvedConstraints, manager, init_val, init_val);

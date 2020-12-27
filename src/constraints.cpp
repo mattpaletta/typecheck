@@ -305,7 +305,7 @@ auto Constraint::Overload::ShortDebugString() const -> std::string {
 
 Constraint::Constraint() : _kind() {}
 
-bool Constraint::operator==(const Constraint& other) const {
+auto Constraint::operator==(const Constraint& other) const -> bool {
 	return this->ShortDebugString() == other.ShortDebugString();
 }
 
