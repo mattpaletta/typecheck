@@ -133,16 +133,36 @@ auto TypeSolver::SplitToGroups(const typecheck::TypeManager* manager) const -> s
 			auto firstGroup = groups.at(firstGroupId);
 
 			for (const auto group : constraintGroups) {
-				firstGroup = MergeGroups(firstGroup, groups.at(group));
+                if (firstGroupId != group) {
+                    firstGroup = MergeGroups(firstGroup, groups.at(group));
 
-				// Delete it so, we don't have duplicate id's
-				EmptyGroup(&groups.at(group));
+                    // Delete it so, we don't have duplicate id's
+                    EmptyGroup(&groups.at(group));
+                }
 			}
 			groups.at(firstGroupId) = firstGroup;
 			groups.at(firstGroupId).add(constraint.id());
 
-			// Update symbol to point to new group
-			for (const auto& sym : symbols) {
+			// Update symbols to point to new group
+            for (const auto& [sym, existingGroup] : symbolGroup) {
+
+                // Check if it points to an old group
+                bool pointsToOldGroup = false;
+                for (const auto group : constraintGroups) {
+                    if (group == existingGroup) {
+                        pointsToOldGroup = true;
+                        break;
+                    }
+                }
+
+                // Move it to the new ID;
+                if (pointsToOldGroup) {
+                    symbolGroup[sym] = firstGroupId;
+                }
+            }
+
+            // Also move the symbols from this constraint.
+            for (const auto& sym : symbols) {
 				symbolGroup[sym] = firstGroupId;
 			}
 		}

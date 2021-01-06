@@ -269,3 +269,65 @@ TEST_CASE("test merge groups", "[type_solver]") {
 	CHECK(groups.at(0).contains(c6));
 	CHECK(groups.at(0).contains(c7));
 }
+
+TEST_CASE("test merge groups unordered", "[type_solver]") {
+    getDefaultTypeManager(tm);
+    const auto intType = tm.getRegisteredType("int");
+    const auto voidType = tm.getRegisteredType("void");
+    const auto doubleType = tm.getRegisteredType("double");
+
+    const auto T = CreateMultipleSymbols(tm, 13);
+
+    /*{ "id": 0, "explicit":     { "type": { "raw": { "name": "void" } }, "var": { "symbol": "T3" } }  }
+     { "id": 1, "conforms":     { "type": { "symbol": "T5" }, "protocol": { "literal": "ExpressibleByInteger"} }  }
+     { "id": 2, "types":     { "first": { "symbol": "T5" }, "second": { "symbol": "T4" } }  }
+     { "id": 3, "types":     { "first": { "symbol": "T6" }, "second": { "symbol": "T4" } }  }
+     { "id": 4, "conforms":     { "type": { "symbol": "T7" }, "protocol": { "literal": "ExpressibleByInteger"} }  }
+     { "id": 5, "types":     { "first": { "symbol": "T6" }, "second": { "symbol": "T7" } }  }
+     { "id": 6, "types":     { "first": { "symbol": "T8" }, "second": { "symbol": "T6" } }  }
+     { "id": 7, "types":     { "first": { "symbol": "T9" }, "second": { "symbol": "T4" } }  }
+     { "id": 8, "types":     { "first": { "symbol": "T10" }, "second": { "symbol": "T9" } }  }
+     { "id": 9, "types":     { "first": { "symbol": "T1" }, "second": { "symbol": "T10" } }  }
+     { "id": 10, "overload":     { "returnVar": { "symbol": "T11" }, "functionID": -1993622415222145992, "type": { "symbol": "T12" }, "argVars": []}  }
+     { "id": 11, "types":     { "first": { "symbol": "T1" }, "second": { "symbol": "T11" } }  }*/
+
+    // Group 1
+    const auto c0 = tm.CreateBindToConstraint(T.at(3), voidType);
+    const auto c1 = tm.CreateLiteralConformsToConstraint(T.at(5), typecheck::KnownProtocolKind::LiteralProtocol::ExpressibleByInteger);
+    const auto c2 = tm.CreateEqualsConstraint(T.at(5), T.at(4));
+    const auto c3 = tm.CreateEqualsConstraint(T.at(6), T.at(4));
+    const auto c4 = tm.CreateLiteralConformsToConstraint(T.at(7), typecheck::KnownProtocolKind::LiteralProtocol::ExpressibleByInteger);
+    const auto c5 = tm.CreateEqualsConstraint(T.at(6), T.at(7));
+    const auto c6 = tm.CreateEqualsConstraint(T.at(8), T.at(6));
+    const auto c7 = tm.CreateEqualsConstraint(T.at(9), T.at(4));
+    const auto c8 = tm.CreateEqualsConstraint(T.at(10), T.at(9));
+    const auto c9 = tm.CreateEqualsConstraint(T.at(1), T.at(10));
+    const auto c10 = tm.CreateBindFunctionConstraint(1234, T.at(11), {}, T.at(12));
+    const auto c11 = tm.CreateEqualsConstraint(T.at(1), T.at(11));
+
+    struct A : public typecheck::TypeSolver {
+        virtual std::vector<typecheck::ConstraintGroup> SplitToGroups(const typecheck::TypeManager* manager) const override {
+            return typecheck::TypeSolver::SplitToGroups(manager);
+        }
+    };
+
+    A ts;
+    const auto groups = ts.SplitToGroups(&tm);
+    REQUIRE(groups.size() == 2);
+    REQUIRE(groups.at(0).size() == 1);
+    CHECK(groups.at(0).contains(c0));
+
+    REQUIRE(groups.at(1).size() == 11);
+    CHECK(!groups.at(1).contains(c0));
+    CHECK(groups.at(1).contains(c1));
+    CHECK(groups.at(1).contains(c2));
+    CHECK(groups.at(1).contains(c3));
+    CHECK(groups.at(1).contains(c4));
+    CHECK(groups.at(1).contains(c5));
+    CHECK(groups.at(1).contains(c6));
+    CHECK(groups.at(1).contains(c7));
+    CHECK(groups.at(1).contains(c8));
+    CHECK(groups.at(1).contains(c9));
+    CHECK(groups.at(1).contains(c10));
+    CHECK(groups.at(1).contains(c11));
+}
