@@ -270,6 +270,28 @@ TEST_CASE("test merge groups", "[type_solver]") {
 	CHECK(groups.at(0).contains(c7));
 }
 
+TEST_CASE("test function stays together", "[type_solver]") {
+    getDefaultTypeManager(tm);
+    const auto intType = tm.getRegisteredType("int");
+    const auto voidType = tm.getRegisteredType("void");
+    const auto doubleType = tm.getRegisteredType("double");
+
+    const auto T = CreateMultipleSymbols(tm, 5);
+
+    const auto c0 = tm.CreateBindToConstraint(T.at(0), intType);
+    const auto c1 = tm.CreateApplicableFunctionConstraint(1234, { intType, doubleType }, doubleType);
+
+    struct A : public typecheck::TypeSolver {
+        virtual std::vector<typecheck::ConstraintGroup> SplitToGroups(const typecheck::TypeManager* manager) const override {
+            return typecheck::TypeSolver::SplitToGroups(manager);
+        }
+    };
+
+    A ts;
+    const auto groups = ts.SplitToGroups(&tm);
+    REQUIRE(groups.size() == 4);
+}
+
 TEST_CASE("test merge groups unordered", "[type_solver]") {
     getDefaultTypeManager(tm);
     const auto intType = tm.getRegisteredType("int");

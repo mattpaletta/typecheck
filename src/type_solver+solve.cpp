@@ -38,7 +38,6 @@ void TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const 
 	// Do each group individually
 	for (const auto& group : groups) {
 		const auto unresolvedConstraints = GroupToUnresolved(group, manager);
-		TYPECHECK_ASSERT(group.size() == unresolvedConstraints.size(), "Failed to copy all indexes from constraint group");
 
 		ConstraintPass groupPass;
 		this->DoPass_internal(&groupPass, unresolvedConstraints, manager, init_val, init_val);
@@ -46,11 +45,11 @@ void TypeSolver::DoPass(ConstraintPass* pass, const TypeManager* manager) const 
 		// Merge & Update Scores
 		groupPass.MergeToExisting(pass);
 		pass->CalcScore(unresolvedConstraints, manager, false);
-
-		for (const auto& item : pass->resolvedTypes) {
-			std::cout << "Resolved Key: " << item.first << std::endl;
-		}
 	}
+
+    for (const auto& item : pass->resolvedTypes) {
+        std::cout << "Resolved Key: " << item.first << std::endl;
+    }
 }
 
 void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/* this is a copy */ indexes, const TypeManager* manager, const std::size_t& prev_failed, const std::size_t& prev_emplaced) const {

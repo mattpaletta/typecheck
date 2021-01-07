@@ -61,6 +61,8 @@ void ConstraintPass::MergeToExisting(ConstraintPass* dest) const {
 			dest->resolvedTypes[key] = val;
 		}
 	}
+
+    TYPECHECK_ASSERT(dest->resolvedTypes.size() >= this->resolvedTypes.size(), "Dropped Resolved Types");
 }
 
 auto ConstraintPass::CalcScoreMap(const std::deque<std::size_t>& indices, const TypeManager* manager, const bool cached) -> ConstraintPass::scoreMapType& {

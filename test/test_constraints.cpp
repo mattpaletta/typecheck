@@ -167,7 +167,7 @@ TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
 TEST_CASE("solve function application constraint", "[constraint]") {
     getDefaultTypeManager(tm);
 
-    const auto T = CreateMultipleSymbols(tm, 4);
+    const auto T = CreateMultipleSymbols(tm, 8);
 
     const auto T0FuncHash = std::hash<std::string>()(T.at(0).symbol());
     tm.CreateApplicableFunctionConstraint(T0FuncHash, {tm.getRegisteredType("int"), tm.getRegisteredType("float")}, tm.getRegisteredType("double"));
@@ -275,9 +275,9 @@ TEST_CASE("solve function same num args different types application constraint",
     tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), { tm.getRegisteredType("int") }, tm.getRegisteredType("double"));
 
     // func foo(a: Float) -> Double
-    tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", { "a" }), { tm.getRegisteredType("float") }, tm.getRegisteredType("double"));
+    tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), { tm.getRegisteredType("float") }, tm.getRegisteredType("double"));
 
-    tm.CreateBindFunctionConstraint(tm.CreateFunctionHash("foo", { "a" }), T.at(0), { T.at(1) }, T.at(2));
+    tm.CreateBindFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), T.at(0), { T.at(1) }, T.at(2));
     tm.CreateLiteralConformsToConstraint(T.at(1), typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     // T0 = (T1, T2) -> T3
@@ -347,23 +347,25 @@ TEST_CASE("solve for-loop constraints regression", "[constraint]") {
 
     tm.CreateEqualsConstraint(T0, T3);
     tm.CreateEqualsConstraint(T3, T4);
-    tm.CreateEqualsConstraint(T5, T3);
 	tm.CreateLiteralConformsToConstraint(T4, typecheck::KnownProtocolKind::ExpressibleByInteger);
+    tm.CreateEqualsConstraint(T5, T3);
     tm.CreateEqualsConstraint(T7, T0);
     tm.CreateEqualsConstraint(T9, T7);
 
     REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T0).has_raw());
     REQUIRE(tm.getResolvedType(T3).has_raw());
     REQUIRE(tm.getResolvedType(T4).has_raw());
     REQUIRE(tm.getResolvedType(T5).has_raw());
     REQUIRE(tm.getResolvedType(T7).has_raw());
     REQUIRE(tm.getResolvedType(T9).has_raw());
 
-    CHECK(tm.getResolvedType(T3).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T4).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T5).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T7).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T9).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T0).raw().name() == "int");
+    CHECK(tm.getResolvedType(T3).raw().name() == "int");
+    CHECK(tm.getResolvedType(T4).raw().name() == "int");
+    CHECK(tm.getResolvedType(T5).raw().name() == "int");
+    CHECK(tm.getResolvedType(T7).raw().name() == "int");
+    CHECK(tm.getResolvedType(T9).raw().name() == "int");
 }
 
 TEST_CASE("solve for-loop constraints", "[constraint]") {
@@ -400,6 +402,7 @@ TEST_CASE("solve for-loop constraints", "[constraint]") {
     tm.CreateBindToConstraint(T12, tm.getRegisteredType("void"));
 
     REQUIRE(tm.solve());
+    REQUIRE(tm.getResolvedType(T0).has_raw());
     REQUIRE(tm.getResolvedType(T1).has_raw());
     REQUIRE(tm.getResolvedType(T2).has_raw());
     REQUIRE(tm.getResolvedType(T3).has_raw());
@@ -413,15 +416,16 @@ TEST_CASE("solve for-loop constraints", "[constraint]") {
     REQUIRE(tm.getResolvedType(T11).has_raw());
     REQUIRE(tm.getResolvedType(T12).has_raw());
 
-    CHECK(tm.getResolvedType(T1).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T2).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T3).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T4).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T5).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T6).raw().name()  == "bool");
-    CHECK(tm.getResolvedType(T7).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T8).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T9).raw().name()  == "int");
+    CHECK(tm.getResolvedType(T0).raw().name() == "int");
+    CHECK(tm.getResolvedType(T1).raw().name() == "int");
+    CHECK(tm.getResolvedType(T2).raw().name() == "int");
+    CHECK(tm.getResolvedType(T3).raw().name() == "int");
+    CHECK(tm.getResolvedType(T4).raw().name() == "int");
+    CHECK(tm.getResolvedType(T5).raw().name() == "int");
+    CHECK(tm.getResolvedType(T6).raw().name() == "bool");
+    CHECK(tm.getResolvedType(T7).raw().name() == "int");
+    CHECK(tm.getResolvedType(T8).raw().name() == "int");
+    CHECK(tm.getResolvedType(T9).raw().name() == "int");
     CHECK(tm.getResolvedType(T10).raw().name() == "int");
     CHECK(tm.getResolvedType(T11).raw().name() == "int");
     CHECK(tm.getResolvedType(T12).raw().name() == "void");
@@ -652,7 +656,7 @@ TEST_CASE("regression test 2 constraints (ackerman)", "[constraint]") {
 	tm.CreateEqualsConstraint(T.at(79), T.at(91));
 	tm.CreateBindFunctionConstraint(-1993622415222145992, T.at(93), {}, T.at(92));
 
-	// REQUIRE(tm.solve());
+//	REQUIRE(tm.solve());
 }
 
 void RunStressTest(const std::size_t numSymbols) {
@@ -679,10 +683,9 @@ void RunStressTest(const std::size_t numSymbols) {
 
 #define CREATE_STRESS_TEST(numSymbols) TEST_CASE("stress test " + std::to_string(numSymbols) + " constraints", "[constraint]") { RunStressTest(numSymbols); }
 
-/*
-CREATE_STRESS_TEST(100)
-CREATE_STRESS_TEST(200)
-CREATE_STRESS_TEST(300)
-CREATE_STRESS_TEST(400)
-CREATE_STRESS_TEST(800)
-*/
+
+//CREATE_STRESS_TEST(100)
+//CREATE_STRESS_TEST(200)
+//CREATE_STRESS_TEST(300)
+//CREATE_STRESS_TEST(400)
+//CREATE_STRESS_TEST(800)
