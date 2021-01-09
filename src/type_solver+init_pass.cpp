@@ -89,7 +89,7 @@ namespace {
         }
     }
 
-    void ResolveGroup(const typecheck::TypeManager* manager, const std::vector<TypeVar>& symbols, std::map<TypeVar, std::size_t>* symbolGroup, std::vector<ConstraintGroup>* groups, const ConstraintPass::IDType& newId) {
+    void ResolveGroup(const std::vector<TypeVar>& symbols, std::map<TypeVar, std::size_t>* symbolGroup, std::vector<ConstraintGroup>* groups, const ConstraintPass::IDType& newId) {
         std::unordered_set<std::size_t> constraintGroups;
         for (const auto& sym : symbols) {
             // Lookup existing group
@@ -166,7 +166,7 @@ auto TypeSolver::SplitToGroups(const typecheck::TypeManager* manager) const -> s
     std::map<TypeVar, std::size_t> symbolGroup;
     for (const auto& constraint : manager->constraints) {
         const auto symbols = GetConstraintSymbols(constraint);
-        ResolveGroup(manager, symbols, &symbolGroup, &groups, constraint.id());
+        ResolveGroup(symbols, &symbolGroup, &groups, constraint.id());
 
         if (constraint.has_overload()) {
             // If it's a a function overload, merge all of the function symbols
@@ -176,7 +176,7 @@ auto TypeSolver::SplitToGroups(const typecheck::TypeManager* manager) const -> s
                     auto func_symbols = symbols;
                     for (const auto& f : func.args()) { func_symbols.push_back(f); }
                     func_symbols.push_back(func.returnvar());
-                    ResolveGroup(manager, func_symbols, &symbolGroup, &groups, constraint.id());
+                    ResolveGroup(func_symbols, &symbolGroup, &groups, constraint.id());
                 }
             }
         }

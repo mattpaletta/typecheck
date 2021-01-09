@@ -11,20 +11,20 @@
 
 using namespace typecheck;
 
-ResolveBindOverload::ResolveBindOverload(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::BindOverload, _pass, _id) {}
+ResolveBindOverload::ResolveBindOverload(const ConstraintPass::IDType _id) : Resolver(ConstraintKind::BindOverload, _id) {}
 
-auto ResolveBindOverload::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
-    return std::make_unique<ResolveBindOverload>(_pass, _id);
+auto ResolveBindOverload::clone(const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
+    return std::make_unique<ResolveBindOverload>(_id);
 }
 
-auto ResolveBindOverload::is_valid_constraint(const Constraint& constraint) const -> bool {
+auto ResolveBindOverload::is_valid_constraint(const Constraint& constraint, ConstraintPass* pass) const -> bool {
     return constraint.has_overload() && constraint.overload().has_type();
 }
 
-auto ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> bool {
-    if (this->pass && this->is_valid_constraint(constraint) && manager->canGetFunctionOverloads(constraint.overload().functionid(), this->pass)) {
+auto ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
+    if (pass && this->is_valid_constraint(constraint, pass) && manager->canGetFunctionOverloads(constraint.overload().functionid(), pass)) {
         // Try and get registered overloads
-        this->overloads = manager->getFunctionOverloads(constraint.overload().functionid(), this->pass);
+        this->overloads = manager->getFunctionOverloads(constraint.overload().functionid(), pass);
         // Reset index to 0.
         this->current_overload_i = 0;
         this->did_find_overloads = true;
@@ -34,33 +34,33 @@ auto ResolveBindOverload::doInitialIterationSetup(const Constraint& constraint, 
     return false;
 }
 
-auto ResolveBindOverload::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveBindOverload::hasMoreSolutions(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     if (!this->did_find_overloads) {
         // The first time do setup
         this->waitingForResolve = true;
-        return this->doInitialIterationSetup(constraint, manager);
+        return this->doInitialIterationSetup(constraint, pass, manager);
     } else if (!this->waitingForResolve) {
         this->current_overload_i++;
         this->waitingForResolve = true;
     }
-    return this->is_valid_constraint(constraint) && this->overloads.size() > 0 && this->current_overload_i < this->overloads.size();
+    return this->is_valid_constraint(constraint, pass) && this->overloads.size() > 0 && this->current_overload_i < this->overloads.size();
 }
 
-auto ResolveBindOverload::readyToResolve(const Constraint& constraint, const TypeManager* manager) const -> bool {
-    return this->did_find_overloads && manager->canGetFunctionOverloads(constraint.overload().functionid(), this->pass);
+auto ResolveBindOverload::readyToResolve(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) const -> bool {
+    return this->did_find_overloads && manager->canGetFunctionOverloads(constraint.overload().functionid(), pass);
 }
 
-auto ResolveBindOverload::hasPermissionIfDifferent(const TypeVar& from, const Type& to, const Constraint& constraint, const TypeManager* manager) const -> bool {
-    if (!this->pass->hasResolvedType(from)) {
+auto ResolveBindOverload::hasPermissionIfDifferent(const TypeVar& from, const Type& to, const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) const -> bool {
+    if (!pass->hasResolvedType(from)) {
         return true;
     }
-    const bool isDifferent = proto_not_equal(this->pass->getResolvedType(from), to);
+    const bool isDifferent = proto_not_equal(pass->getResolvedType(from), to);
 
     // Either they're the same, or we have permission, and they're different
-    return !isDifferent || (isDifferent && this->pass->HasPermission(constraint, from, manager));
+    return !isDifferent || (isDifferent && pass->HasPermission(constraint, from, manager));
 }
 
-auto ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveBindOverload::resolveNext(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     this->waitingForResolve = false;
 
     if (this->did_find_overloads) {
@@ -76,7 +76,7 @@ auto ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeMa
             const auto typeVar = constraint.overload().type();
             Type typeVarTy;
             typeVarTy.mutable_func()->CopyFrom(nextOverload);
-            if (!this->hasPermissionIfDifferent(typeVar, typeVarTy, constraint, manager)) {
+            if (!this->hasPermissionIfDifferent(typeVar, typeVarTy, constraint, pass, manager)) {
                 return false;
             }
 
@@ -85,26 +85,26 @@ auto ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeMa
                 const auto arg = constraint.overload().argvars(i);
 
                 // We need to change it, but can't.
-                if (!this->hasPermissionIfDifferent(arg, nextOverload.args(i), constraint, manager)) {
+                if (!this->hasPermissionIfDifferent(arg, nextOverload.args(i), constraint, pass, manager)) {
                     return false;
                 }
             }
 
-            if (!this->hasPermissionIfDifferent(constraint.overload().returnvar(), nextOverload.returntype(), constraint, manager)) {
+            if (!this->hasPermissionIfDifferent(constraint.overload().returnvar(), nextOverload.returntype(), constraint, pass, manager)) {
                 return false;
             }
 
             // Repeat steps, actually applying work, this is because we don't want partial application
 
             // These will fail if we don't have permission, but that's already accounted for above
-            this->pass->setResolvedType(constraint, typeVar, typeVarTy, manager);
+            pass->setResolvedType(constraint, typeVar, typeVarTy, manager);
 
             for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
                 const auto arg = constraint.overload().argvars(i);
-                this->pass->setResolvedType(constraint, arg, nextOverload.args(i), manager);
+                pass->setResolvedType(constraint, arg, nextOverload.args(i), manager);
             }
 
-            this->pass->setResolvedType(constraint, constraint.overload().returnvar(), nextOverload.returntype(), manager);
+            pass->setResolvedType(constraint, constraint.overload().returnvar(), nextOverload.returntype(), manager);
 
             return true;
         }
@@ -113,27 +113,27 @@ auto ResolveBindOverload::resolveNext(const Constraint& constraint, const TypeMa
     return false;
 }
 
-auto ResolveBindOverload::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
-    if (!this->is_valid_constraint(constraint)) {
+auto ResolveBindOverload::score(const Constraint& constraint, ConstraintPass* pass, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
+    if (!this->is_valid_constraint(constraint, pass)) {
         return std::numeric_limits<std::size_t>::max();
     }
 
-    if (this->pass && this->pass->hasResolvedType(constraint.overload().type()) && this->current_overload_i < this->overloads.size()) {
+    if (pass && pass->hasResolvedType(constraint.overload().type()) && this->current_overload_i < this->overloads.size()) {
         const auto& currentOverload = this->overloads.at(this->current_overload_i);
 
         for (int i = 0; i < constraint.overload().argvars_size(); ++i) {
             const auto& arg = constraint.overload().argvars(i);
-            if (this->pass->hasResolvedType(arg)) {
+            if (pass->hasResolvedType(arg)) {
                 // Make sure the arg types match up
-                if (proto_not_equal(this->pass->getResolvedType(arg), currentOverload.args(i))) {
+                if (proto_not_equal(pass->getResolvedType(arg), currentOverload.args(i))) {
                     return std::numeric_limits<std::size_t>::max();
                 }
             }
         }
 
-        if (this->pass->hasResolvedType(constraint.overload().returnvar())) {
+        if (pass->hasResolvedType(constraint.overload().returnvar())) {
             // Make sure the return types match up
-            if (proto_not_equal(this->pass->getResolvedType(constraint.overload().returnvar()), currentOverload.returntype())) {
+            if (proto_not_equal(pass->getResolvedType(constraint.overload().returnvar()), currentOverload.returntype())) {
                 return std::numeric_limits<std::size_t>::max();
             }
         }

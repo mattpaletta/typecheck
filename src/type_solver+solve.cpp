@@ -68,7 +68,7 @@ void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/*
             // Skip ahead until we find one that's ready.
             current_constraint = &manager->constraints.at(j);
 
-            if (iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager) && iterPass.GetResolver(*current_constraint, manager)->readyToResolve(*current_constraint, manager)) {
+            if (iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, &iterPass, manager) && iterPass.GetResolver(*current_constraint, manager)->readyToResolve(*current_constraint, &iterPass, manager)) {
                 i = j;
                 break;
             }
@@ -91,8 +91,8 @@ void TypeSolver::DoPass_internal(ConstraintPass* pass, std::deque<std::size_t>/*
 
         bool did_any_resolve = false;
         // Early stop if best_score reaches zero
-        while (/*best_pass.CalcScore(original_indices, manager) > 0 && */ iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, manager)) {
-            const auto did_resolve = iterPass.GetResolver(*current_constraint, manager)->resolveNext(*current_constraint, manager);
+        while (/*best_pass.CalcScore(original_indices, manager) > 0 && */ iterPass.GetResolver(*current_constraint, manager)->hasMoreSolutions(*current_constraint, &iterPass, manager)) {
+            const auto did_resolve = iterPass.GetResolver(*current_constraint, manager)->resolveNext(*current_constraint, &iterPass, manager);
             auto computed = iterPass.CreateCopy();
             if (did_resolve) {
                 did_any_resolve = true;

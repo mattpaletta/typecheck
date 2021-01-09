@@ -158,10 +158,10 @@ auto ConstraintPass::CalcScore(const std::deque<std::size_t>& indices, const Typ
                     storedResolver = this->GetResolver(constraint, manager);
 
                     // Call optional initalization code.
-                    storedResolver->hasMoreSolutions(constraint, manager);
+                    storedResolver->hasMoreSolutions(constraint, this, manager);
                 }
 
-                constraint_score = storedResolver->score(constraint, manager);
+                constraint_score = storedResolver->score(constraint, this, manager);
 
                 // Cache it
                 this->scores[constraint.id()] = constraint_score;
@@ -315,7 +315,7 @@ auto ConstraintPass::GetResolver(const Constraint& constraint, const TypeManager
         }
         // Make a `copy` of the resolver
         // taken from: https://www.fluentcpp.com/2017/09/08/make-polymorphic-copy-modern-cpp/
-        this->resolvers.emplace(std::make_pair(constraint.id(), manager->registeredResolvers.at(constraint.kind())->clone(this, constraint.id())));
+        this->resolvers.emplace(std::make_pair(constraint.id(), manager->registeredResolvers.at(constraint.kind())->clone(constraint.id())));
         return this->resolvers.at(constraint.id()).get();
     }
 }

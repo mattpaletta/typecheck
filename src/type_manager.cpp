@@ -264,12 +264,12 @@ auto TypeManager::solve() -> bool {
 	// Add default `resolvers`, ignore response
 	// it will not double-register, so this is safe
 	constexpr auto default_id = std::numeric_limits<std::size_t>::max();
-	this->registerResolver(std::make_unique<ResolveConformsTo>(nullptr, default_id));
-	this->registerResolver(std::make_unique<ResolveEquals>(nullptr, default_id));
-    this->registerResolver(std::make_unique<ResolveConvertible>(nullptr, default_id));
-    this->registerResolver(std::make_unique<ResolveApplicableFunction>(nullptr, default_id));
-    this->registerResolver(std::make_unique<ResolveBindOverload>(nullptr, default_id));
-    this->registerResolver(std::make_unique<ResolveBindTo>(nullptr, default_id));
+	this->registerResolver(std::make_unique<ResolveConformsTo>(default_id));
+	this->registerResolver(std::make_unique<ResolveEquals>(default_id));
+    this->registerResolver(std::make_unique<ResolveConvertible>(default_id));
+    this->registerResolver(std::make_unique<ResolveApplicableFunction>(default_id));
+    this->registerResolver(std::make_unique<ResolveBindOverload>(default_id));
+    this->registerResolver(std::make_unique<ResolveBindTo>(default_id));
 
     this->SortConstraints();
 

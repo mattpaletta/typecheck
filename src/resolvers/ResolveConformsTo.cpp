@@ -18,13 +18,13 @@
 
 using namespace typecheck;
 
-ResolveConformsTo::ResolveConformsTo(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, _pass, _id), is_preferred(true) {}
+ResolveConformsTo::ResolveConformsTo(const ConstraintPass::IDType _id) : Resolver(ConstraintKind::ConformsTo, _id), is_preferred(true) {}
 
-auto ResolveConformsTo::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
-    return std::make_unique<ResolveConformsTo>(_pass, _id);
+auto ResolveConformsTo::clone(const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
+    return std::make_unique<ResolveConformsTo>(_id);
 }
 
-auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) -> bool {
+auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint, ConstraintPass* pass) -> bool {
     if (!constraint.has_conforms() || !constraint.conforms().has_protocol() || !constraint.conforms().has_type()) {
         std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
         return false;
@@ -59,12 +59,12 @@ auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint) ->
     return did_find_protocol;
 }
 
-auto ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) -> bool {
+auto ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, ConstraintPass* pass, [[maybe_unused]] const TypeManager* manager) -> bool {
     // This will be called every time
 
     if (!this->currLiteralProtocol) {
         // The first time do setup
-        return this->doInitialIterationSetup(constraint);
+        return this->doInitialIterationSetup(constraint, pass);
     } else {
         if (this->is_preferred) {
             // Go through preferred first
@@ -83,7 +83,7 @@ auto ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, [[maybe_u
     }
 }
 
-auto ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveConformsTo::resolveNext(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     if (this->currLiteralProtocol) {
         auto typeVar = constraint.conforms().type();
 
@@ -91,18 +91,18 @@ auto ResolveConformsTo::resolveNext(const Constraint& constraint, const TypeMana
         auto nextType = this->state.back();
         this->state.pop_back();
 
-        return this->pass->setResolvedType(constraint, typeVar, nextType, manager);
+        return pass->setResolvedType(constraint, typeVar, nextType, manager);
     }
     return false;
 }
 
-auto ResolveConformsTo::score(const Constraint& constraint, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
+auto ResolveConformsTo::score(const Constraint& constraint, ConstraintPass* pass, [[maybe_unused]] const TypeManager* manager) const -> std::size_t {
     const auto& typeVar = constraint.conforms().type();
     TYPECHECK_ASSERT(this->currLiteralProtocol.operator bool(), "Must set protocol before calling score, call this->hasMoreSolutions(...) first");
-    TYPECHECK_ASSERT(this->pass, "Must set pass object before calling score.");
+    TYPECHECK_ASSERT(pass, "Must set pass object before calling score.");
 
-    if (this->pass && this->currLiteralProtocol && this->pass->hasResolvedType(typeVar)) {
-        const auto& resolvedType = this->pass->getResolvedType(typeVar);
+    if (pass && this->currLiteralProtocol && pass->hasResolvedType(typeVar)) {
+        const auto& resolvedType = pass->getResolvedType(typeVar);
         // Is it a preferred type or other type?
         for (auto& pref : this->currLiteralProtocol->getPreferredTypes()) {
             if (proto_equal(pref, resolvedType)) {

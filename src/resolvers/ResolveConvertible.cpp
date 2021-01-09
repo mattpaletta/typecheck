@@ -15,43 +15,43 @@
 
 using namespace typecheck;
 
-ResolveConvertible::ResolveConvertible(ConstraintPass* _pass, const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Conversion, _pass, _id) {}
+ResolveConvertible::ResolveConvertible(const ConstraintPass::IDType _id) : Resolver(ConstraintKind::Conversion, _id) {}
 
-auto ResolveConvertible::clone(ConstraintPass* _pass, const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
-    return std::make_unique<ResolveConvertible>(_pass, _id);
+auto ResolveConvertible::clone(const ConstraintPass::IDType _id) const -> std::unique_ptr<Resolver> {
+    return std::make_unique<ResolveConvertible>(_id);
 }
 
-auto ResolveConvertible::doInitialIterationSetup(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveConvertible::doInitialIterationSetup(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     if (!constraint.has_types() || !constraint.types().has_first() || !constraint.types().has_second()) {
         std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
         return false;
     }
 
-    if (this->pass && this->pass->hasResolvedType(constraint.types().first())) {
-        this->options = manager->getConvertible( this->pass->getResolvedType(constraint.types().first()) );
+    if (pass && pass->hasResolvedType(constraint.types().first())) {
+        this->options = manager->getConvertible( pass->getResolvedType(constraint.types().first()) );
     }
 
     this->did_find_convertible = this->options.size() > 0;
     return this->did_find_convertible;
 }
 
-auto ResolveConvertible::hasMoreSolutions(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveConvertible::hasMoreSolutions(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     // This will be called every time
 
     if (!this->did_find_convertible) {
         // The first time do setup
-        return this->doInitialIterationSetup(constraint, manager);
+        return this->doInitialIterationSetup(constraint, pass, manager);
     } else {
         return this->options.size() > 0;
     }
 }
 
-auto ResolveConvertible::resolveNext(const Constraint& constraint, const TypeManager* manager) -> bool {
+auto ResolveConvertible::resolveNext(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     if (this->options.size() > 0) {
         auto nextType = this->options.back();
 
         auto typeVar = constraint.types().second();
-        const auto hasPermission = this->pass->setResolvedType(constraint, typeVar, nextType, manager);
+        const auto hasPermission = pass->setResolvedType(constraint, typeVar, nextType, manager);
         if (hasPermission) {
             // Only pop if replacing
             this->options.pop_back();
@@ -62,12 +62,12 @@ auto ResolveConvertible::resolveNext(const Constraint& constraint, const TypeMan
     return false;
 }
 
-auto ResolveConvertible::score(const Constraint& constraint, const TypeManager* manager) const -> std::size_t {
+auto ResolveConvertible::score(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) const -> std::size_t {
     const auto T0 = constraint.types().first();
     const auto T1 = constraint.types().second();
 
-    if (this->pass && this->pass->hasResolvedType(T0) && this->pass->hasResolvedType(T1)) {
-        if (manager->isConvertible(this->pass->getResolvedType(T0), this->pass->getResolvedType(T1))) {
+    if (pass && pass->hasResolvedType(T0) && pass->hasResolvedType(T1)) {
+        if (manager->isConvertible(pass->getResolvedType(T0), pass->getResolvedType(T1))) {
             // Make sure they are resolved and convertible, otherwise, invalid.
             return 0;
         }
