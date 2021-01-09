@@ -138,7 +138,7 @@ endif()
 
 add_library(typecheck ${SRC_FILES} ${INC_FILES})
 target_include_directories(typecheck PUBLIC include)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${INC_FILES} ${SRC_FILES    })
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${INC_FILES} ${SRC_FILES})
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	target_precompile_headers(typecheck PUBLIC ${INC_FILES})
