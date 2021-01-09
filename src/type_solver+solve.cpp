@@ -1,11 +1,11 @@
-#include "typecheck/type_solver.hpp"
-#include "typecheck/type_manager.hpp"
-#include "typecheck/resolver.hpp"
-#include "typecheck/debug.hpp"
+#include <typecheck/type_solver.hpp>
+#include <typecheck/type_manager.hpp>
+#include <typecheck/resolver.hpp>
+#include <typecheck/debug.hpp>
 
-#include "typecheck/protocols/ExpressibleByIntegerLiteral.hpp"
-#include "typecheck/protocols/ExpressibleByFloatLiteral.hpp"
-#include "typecheck/protocols/ExpressibleByDoubleLiteral.hpp"
+#include <typecheck/protocols/ExpressibleByIntegerLiteral.hpp>
+#include <typecheck/protocols/ExpressibleByFloatLiteral.hpp>
+#include <typecheck/protocols/ExpressibleByDoubleLiteral.hpp>
 
 #include <set>
 #include <vector>

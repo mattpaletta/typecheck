@@ -17,7 +17,6 @@ bool TypeVar::operator<(const TypeVar& other) const noexcept {
 	return this->_symbol < other._symbol;
 }
 
-
 void TypeVar::CopyFrom(const TypeVar& other) {
 	this->_symbol = other.symbol();
 }

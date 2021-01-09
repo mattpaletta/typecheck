@@ -1,4 +1,5 @@
 #include "typecheck/generic_type_generator.hpp"
+
 #include <algorithm>  // for reverse
 #include <string>     // for basic_string
 #include <vector>     // for vector<>::iterator, vector

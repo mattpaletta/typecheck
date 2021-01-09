@@ -1,7 +1,9 @@
 #pragma once
-#include <memory>
+
 #include "constraint_pass.hpp"
 #include "constraint.hpp"
+
+#include <memory>
 
 namespace typecheck {
 	class TypeManager;

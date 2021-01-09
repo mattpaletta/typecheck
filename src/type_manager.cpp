@@ -1,23 +1,24 @@
-#include "typecheck/type_manager.hpp"
+#include <typecheck/type_manager.hpp>
 #include <typecheck/constraint.hpp>           // for ConstraintKind
+#include <typecheck/generic_type_generator.hpp>       // for GenericTypeGene...
+
+#include <typecheck/debug.hpp>
+#include <typecheck/resolver.hpp>                     // for Resolver
+#include <typecheck/resolvers/ResolveConformsTo.hpp>  // for ResolveConformsTo
+#include <typecheck/resolvers/ResolveEquals.hpp>      // for ResolveEquals
+#include <typecheck/resolvers/ResolveConvertible.hpp> // for ResolveConvertible
+#include <typecheck/resolvers/ResolveApplicableFunction.hpp> // for ResolveApplicableFunction
+#include <typecheck/resolvers/ResolveBindOverload.hpp> // for ResolveBindOverload
+#include <typecheck/resolvers/ResolveBindTo.hpp>       // for ResolveBindTo
+
+#include <typecheck/type_solver.hpp>                  // for TypeSolver
+#include <typecheck/type.hpp>                 // for Type, TypeVar
+
 #include <limits>                                     // for numeric_limits
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
-#include "typecheck/generic_type_generator.hpp"       // for GenericTypeGene...
 #include <sstream>                                    // for std::stringstream
 #include <string>                                     // for std::string
-
-#include "typecheck/debug.hpp"
-#include "typecheck/resolver.hpp"                     // for Resolver
-#include "typecheck/resolvers/ResolveConformsTo.hpp"  // for ResolveConformsTo
-#include "typecheck/resolvers/ResolveEquals.hpp"      // for ResolveEquals
-#include "typecheck/resolvers/ResolveConvertible.hpp" // for ResolveConvertible
-#include "typecheck/resolvers/ResolveApplicableFunction.hpp" // for ResolveApplicableFunction
-#include "typecheck/resolvers/ResolveBindOverload.hpp" // for ResolveBindOverload
-#include "typecheck/resolvers/ResolveBindTo.hpp"       // for ResolveBindTo
-
-#include "typecheck/type_solver.hpp"                  // for TypeSolver
-#include <typecheck/type.hpp>                 // for Type, TypeVar
 
 using namespace typecheck;
 

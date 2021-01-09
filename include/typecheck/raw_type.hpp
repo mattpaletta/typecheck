@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 namespace typecheck {
 	class RawType {
 	public:

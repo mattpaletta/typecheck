@@ -4,6 +4,7 @@
 #include "typecheck/constraint.hpp"  // for Constraint, ConstraintKind
 #include "typecheck/type_var.hpp"  // for Constraint, ConstraintKind
 #include "typecheck/type_manager.hpp"        // for TypeManager
+#include "typecheck/debug.hpp"
 
 #include <iostream>
 #include <stdexcept>                         // for runtime_error
