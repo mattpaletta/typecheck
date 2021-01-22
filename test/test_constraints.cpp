@@ -656,7 +656,7 @@ TEST_CASE("regression test 2 constraints (ackerman)", "[constraint]") {
 	tm.CreateEqualsConstraint(T.at(79), T.at(91));
 	tm.CreateBindFunctionConstraint(-1993622415222145992, T.at(93), {}, T.at(92));
 
-//	REQUIRE(tm.solve());
+	REQUIRE(tm.solve());
 }
 
 void RunStressTest(const std::size_t numSymbols) {
@@ -684,8 +684,8 @@ void RunStressTest(const std::size_t numSymbols) {
 #define CREATE_STRESS_TEST(numSymbols) TEST_CASE("stress test " + std::to_string(numSymbols) + " constraints", "[constraint]") { RunStressTest(numSymbols); }
 
 
-//CREATE_STRESS_TEST(100)
-//CREATE_STRESS_TEST(200)
-//CREATE_STRESS_TEST(300)
-//CREATE_STRESS_TEST(400)
-//CREATE_STRESS_TEST(800)
+CREATE_STRESS_TEST(100)
+CREATE_STRESS_TEST(200)
+CREATE_STRESS_TEST(300)
+CREATE_STRESS_TEST(400)
+CREATE_STRESS_TEST(800)

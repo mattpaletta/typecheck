@@ -85,10 +85,10 @@ auto ResolveConformsTo::hasMoreSolutions(const Constraint& constraint, Constrain
 
 auto ResolveConformsTo::resolveNext(const Constraint& constraint, ConstraintPass* pass, const TypeManager* manager) -> bool {
     if (this->currLiteralProtocol) {
-        auto typeVar = constraint.conforms().type();
+        const auto typeVar = constraint.conforms().type();
 
         // TODO: Switch to list, so we can pop_front
-        auto nextType = this->state.back();
+        const auto nextType = this->state.back();
         this->state.pop_back();
 
         return pass->setResolvedType(constraint, typeVar, nextType, manager);
