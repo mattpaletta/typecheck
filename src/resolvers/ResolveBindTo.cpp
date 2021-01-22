@@ -16,7 +16,7 @@ auto ResolveBindTo::clone(const ConstraintPass::IDType _id) const -> std::unique
     return std::make_unique<ResolveBindTo>(_id);
 }
 
-auto ResolveBindTo::is_valid_constraint(const Constraint& constraint, ConstraintPass* pass) const -> bool {
+auto ResolveBindTo::is_valid_constraint(const Constraint& constraint, [[maybe_unused]] ConstraintPass* pass) const -> bool {
     return constraint.has_explicit_() && constraint.explicit_().has_type() && constraint.explicit_().has_var();
 }
 

@@ -24,7 +24,7 @@ auto ResolveConformsTo::clone(const ConstraintPass::IDType _id) const -> std::un
     return std::make_unique<ResolveConformsTo>(_id);
 }
 
-auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint, ConstraintPass* pass) -> bool {
+auto ResolveConformsTo::doInitialIterationSetup(const Constraint& constraint, [[maybe_unused]] ConstraintPass* pass) -> bool {
     if (!constraint.has_conforms() || !constraint.conforms().has_protocol() || !constraint.conforms().has_type()) {
         std::cout << "Malformed ResolveConformsTo Constraint, missing conforms, protocol or type." << std::endl;
         return false;

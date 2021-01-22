@@ -16,7 +16,7 @@ auto ResolveApplicableFunction::clone(const ConstraintPass::IDType _id) const ->
     return std::make_unique<ResolveApplicableFunction>(_id);
 }
 
-auto ResolveApplicableFunction::is_valid_constraint(const Constraint& constraint, ConstraintPass* pass) const -> bool {
+auto ResolveApplicableFunction::is_valid_constraint(const Constraint& constraint, [[maybe_unused]] ConstraintPass* pass) const -> bool {
     return constraint.has_explicit_() && constraint.explicit_().has_var() && constraint.explicit_().has_type() && constraint.explicit_().type().has_func();
 }
 

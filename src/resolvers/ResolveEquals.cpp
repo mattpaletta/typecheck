@@ -16,7 +16,7 @@ auto ResolveEquals::clone(const ConstraintPass::IDType _id) const -> std::unique
     return std::make_unique<ResolveEquals>(_id);
 }
 
-auto ResolveEquals::is_valid_constraint(const Constraint& constraint, ConstraintPass* pass) const -> bool {
+auto ResolveEquals::is_valid_constraint(const Constraint& constraint, [[maybe_unused]] ConstraintPass* pass) const -> bool {
     return constraint.has_types() && constraint.types().has_first() && constraint.types().has_second();
 }
 

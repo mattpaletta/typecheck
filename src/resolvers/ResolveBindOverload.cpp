@@ -17,7 +17,7 @@ auto ResolveBindOverload::clone(const ConstraintPass::IDType _id) const -> std::
     return std::make_unique<ResolveBindOverload>(_id);
 }
 
-auto ResolveBindOverload::is_valid_constraint(const Constraint& constraint, ConstraintPass* pass) const -> bool {
+auto ResolveBindOverload::is_valid_constraint(const Constraint& constraint, [[maybe_unused]] ConstraintPass* pass) const -> bool {
     return constraint.has_overload() && constraint.overload().has_type();
 }
 
