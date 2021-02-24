@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <string>
 
 namespace typecheck {
 	class KnownProtocolKind {
