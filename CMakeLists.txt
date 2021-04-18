@@ -84,11 +84,10 @@ endif()
 
 include(cmake/fetch_extern.cmake)
 set(CATCH_VERSION 0f12995501ee01d3d2bdd9f4978bb28b5f670bab)
-set(BLOATY_VERSION 3cf5c3feca15ab88730d6526b2f06302597926b5)
 
 # This includes protobuf
-if (${TYPECHECK_ENABLE_BLOATY})
-	fetch_extern(bloaty https://github.com/google/bloaty.git ${BLOATY_VERSION})
+if (NOT TARGET constraint)
+	fetch_extern(constraint https://github.com/mattpaletta/constraint.git master)
 endif()
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.hpp)
@@ -138,6 +137,7 @@ endif()
 
 add_library(typecheck ${SRC_FILES} ${INC_FILES})
 target_include_directories(typecheck PUBLIC include)
+target_link_libraries(typecheck PRIVATE constraint)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${INC_FILES} ${SRC_FILES})
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)

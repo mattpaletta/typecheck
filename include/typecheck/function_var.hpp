@@ -19,6 +19,7 @@ namespace typecheck {
 
 		const std::vector<TypeVar>& args() const;
 		TypeVar* add_args();
+        
 	private:
 		std::vector<TypeVar> _args;
 		TypeVar _returnVar;

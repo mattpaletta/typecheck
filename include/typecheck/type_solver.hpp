@@ -14,6 +14,8 @@ namespace typecheck {
 
 	class TypeSolver {
 	public:
+        friend TypeManager;
+        
 		TypeSolver();
 		virtual ~TypeSolver() = default;
 

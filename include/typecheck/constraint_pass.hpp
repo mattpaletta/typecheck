@@ -49,6 +49,7 @@ namespace typecheck {
 
 	private:
 		friend TypeSolver;
+        friend TypeManager;
 
 		// Holds pointer to previous pass (if applicable)
 		ConstraintPass* prev = nullptr;

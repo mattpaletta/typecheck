@@ -31,6 +31,7 @@ namespace typecheck {
 			ExpressibleByDictionary,
 			ExpressibleByFloat,
 			ExpressibleByInteger,
+            ExpressibleByDouble,
 			// ExpressibleByStringInterpolation,
 			ExpressibleByString,
 			ExpressibleByNil,

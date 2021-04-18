@@ -4,12 +4,15 @@
 
 namespace typecheck {
 	class GenericTypeGenerator {
-	private:
-		long long curr_num = 0;
 	public:
-		std::string next();
-        long long next_id();
+        using value_type = long long;
 		GenericTypeGenerator() = default;
 		~GenericTypeGenerator() = default;
+
+        std::string next();
+        value_type next_id();
+
+    private:
+        value_type curr_num = 0;
 	};
 }

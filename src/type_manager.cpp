@@ -14,6 +14,9 @@
 #include <typecheck/type_solver.hpp>                  // for TypeSolver
 #include <typecheck/type.hpp>                 // for Type, TypeVar
 
+#include <constraint/solver.hpp>
+#include <constraint/env.hpp>
+
 #include <limits>                                     // for numeric_limits
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
@@ -261,19 +264,173 @@ auto TypeManager::getConstraint(const ConstraintPass::IDType id) const -> const 
 	return nullptr;
 }
 
+namespace {
+    void AddTypeToDomain(constraint::Domain::data_type& domain, const typecheck::Type& type) {
+        if (type.has_raw()) {
+            domain.emplace_back(type.raw().name());
+        } else if (type.has_func()) {
+            domain.emplace_back(type.func().name());
+        }
+    }
+
+    void AddLiteralProtocolTypes(constraint::Domain::data_type& domain, const typecheck::LiteralProtocol& protocol) {
+        for (const auto& ty : protocol.getPreferredTypes()) {
+            AddTypeToDomain(domain, ty);
+        }
+
+        for (const auto& ty : protocol.getOtherTypes()) {
+            AddTypeToDomain(domain, ty);
+        }
+    }
+}
+
 auto TypeManager::solve() -> bool {
 	// Add default `resolvers`, ignore response
 	// it will not double-register, so this is safe
-	constexpr auto default_id = std::numeric_limits<std::size_t>::max();
-	this->registerResolver(std::make_unique<ResolveConformsTo>(default_id));
-	this->registerResolver(std::make_unique<ResolveEquals>(default_id));
-    this->registerResolver(std::make_unique<ResolveConvertible>(default_id));
-    this->registerResolver(std::make_unique<ResolveApplicableFunction>(default_id));
-    this->registerResolver(std::make_unique<ResolveBindOverload>(default_id));
-    this->registerResolver(std::make_unique<ResolveBindTo>(default_id));
+//	constexpr auto default_id = std::numeric_limits<std::size_t>::max();
+//	this->registerResolver(std::make_unique<ResolveConformsTo>(default_id));
+//	this->registerResolver(std::make_unique<ResolveEquals>(default_id));
+//    this->registerResolver(std::make_unique<ResolveConvertible>(default_id));
+//    this->registerResolver(std::make_unique<ResolveApplicableFunction>(default_id));
+//    this->registerResolver(std::make_unique<ResolveBindOverload>(default_id));
+//    this->registerResolver(std::make_unique<ResolveBindTo>(default_id));
+//
+//    this->SortConstraints();
+//
+//	// Finally, solve
+//	return this->solver.solve(this);
 
-    this->SortConstraints();
 
-	// Finally, solve
-	return this->solver.solve(this);
+    constraint::Solver constraint_solver;
+
+    std::set<std::string> all_variables;
+
+    auto insert_if_not_exists = [&constraint_solver, &all_variables](const std::string& var, const constraint::Domain& domain) {
+        if (all_variables.find(var) == all_variables.end()) {
+            constraint_solver.addVariable(var, domain);
+            all_variables.insert(var);
+        }
+    };
+
+
+    // Var Domain
+    const auto varDomain = [this] {
+        constraint::Domain::data_type domain;
+        for (const auto& ty : this->registeredTypes) {
+            AddTypeToDomain(domain, ty);
+        }
+
+        return constraint::Domain(domain);
+    }();
+
+    for (const auto& constraint : this->constraints) {
+        if (constraint.has_conforms()) {
+            const auto conforms = constraint.conforms();
+            if (conforms.has_type() && conforms.has_protocol()) {
+                const auto var = conforms.type().symbol();
+                const auto protocol = conforms.protocol();
+                constraint::Domain::data_type domain;
+                switch (protocol.literal()) {
+                case KnownProtocolKind::ExpressibleByFloat:
+                    AddLiteralProtocolTypes(domain, ExpressibleByFloatLiteral());
+                    break;
+                case KnownProtocolKind::ExpressibleByDouble:
+                    AddLiteralProtocolTypes(domain, ExpressibleByDoubleLiteral());
+                    break;
+                case KnownProtocolKind::ExpressibleByInteger:
+                    AddLiteralProtocolTypes(domain, ExpressibleByIntegerLiteral());
+                    break;
+                default:
+                    std::cout << "Unsupported Literal" << std::endl;
+                    return false;
+                    break;
+                }
+                insert_if_not_exists(var, domain);
+
+                // conforms literal is implied by its domain.
+                constraint_solver.addConstraint({var}, [var, domain](const constraint::Env& env) {
+                    for (const auto& ty : domain) {
+                        if (env.at(var) == ty) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                });
+            } else {
+                std::cout << "Malformed Conforms Constraint" << std::endl;
+                return false;
+            }
+        } else if (constraint.has_types()) {
+            const auto types = constraint.types();
+            std::vector<std::string> type_names;
+            if (types.has_first()) {
+                type_names.push_back(types.first().symbol());
+            }
+            if (types.has_second()) {
+                type_names.push_back(types.second().symbol());
+            }
+            if (types.has_third()) {
+                type_names.push_back(types.third().symbol());
+            }
+
+
+            if (type_names.empty()) {
+                std::cout << "Malformed Types Constraint" << std::endl;
+            } else {
+                for (const auto& ty : type_names) {
+                    insert_if_not_exists(ty, varDomain);
+                }
+                constraint_solver.addConstraint({type_names}, [type_names](const constraint::Env& env) {
+                    const auto firstVar = env.at(type_names.at(0));
+                    for (const auto& ty : type_names) {
+                        if (firstVar != env.at(ty)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+            }
+        } else if (constraint.has_overload()) {
+            const auto overload = constraint.overload();
+            std::cout << "TODO: " << std::endl;
+            return false;
+
+        } else if (constraint.has_explicit_()) {
+            const auto explicit_ = constraint.explicit_();
+            if (explicit_.has_var() && explicit_.has_type()) {
+                const auto var = explicit_.var();
+                const auto type = explicit_.type();
+
+                constraint::Domain::data_type explicitDomain;
+                AddTypeToDomain(explicitDomain, type);
+
+                insert_if_not_exists(var.symbol(), explicitDomain);
+                constraint_solver.addConstraint({var.symbol()}, [var, explicitDomain](const constraint::Env& env) {
+                    return env.at(var.symbol()) == explicitDomain.at(0);
+                });
+            } else {
+                std::cout << "Malformed Explicit Constraint" << std::endl;
+                return false;
+            }
+        } else {
+            std::cout << "Unknown Constraint Type" << std::endl;
+            return false;
+        }
+    }
+
+    const auto solutions = constraint_solver.getSolutions();
+    const auto hasSolution = !solutions.empty();
+    for (const auto& sol : solutions) {
+        ConstraintPass pass;
+        for (const auto& var : all_variables) {
+            const auto val = sol.at(var);
+            pass.resolvedTypes[var] = Type(RawType(val.to_string()));
+        }
+        this->solver.last_pass = std::move(pass);
+        break;
+    }
+
+    return hasSolution;
 }

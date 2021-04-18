@@ -8,12 +8,14 @@ namespace typecheck {
 
 // Begin custom compare Protobuf
 template<class T>
-inline auto proto_equal(const T& msg_a, const T& msg_b) -> bool {
+auto proto_equal(const T& msg_a, const T& msg_b) -> bool {
 	return msg_a == msg_b;
 }
 
 template<class T>
-inline auto proto_not_equal(const T& msg_a, const T& msg_b) -> bool { return !proto_equal(msg_a, msg_b); }
+auto proto_not_equal(const T& msg_a, const T& msg_b) -> bool {
+    return !proto_equal(msg_a, msg_b);
+}
 // End custom compare Protobuf
 
 #define TYPECHECK_ASSERT(b, msg) typecheck::_check(b, msg, __FILE__, __LINE__)
