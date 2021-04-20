@@ -30,8 +30,11 @@ namespace typecheck {
 		bool has_returntype() const;
 
 		std::string name() const;
-		int id() const;
+        void set_name(const std::string& name);
 
+        int id() const;
+        void set_id(int id);
+        
 		std::string ShortDebugString() const;
 
 	private:

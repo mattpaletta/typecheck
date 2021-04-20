@@ -84,8 +84,16 @@ auto FunctionDefinition::name() const -> std::string {
 	return this->_name;
 }
 
+void FunctionDefinition::set_name(const std::string& name) {
+    this->_name = name;
+}
+
 auto FunctionDefinition::id() const -> int {
 	return this->_id;
+}
+
+void FunctionDefinition::set_id(int id) {
+    this->_id = id;
 }
 
 std::string FunctionDefinition::ShortDebugString() const {

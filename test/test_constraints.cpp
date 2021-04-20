@@ -64,7 +64,7 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
     tm.CreateEqualsConstraint(T2, T1);
     tm.CreateEqualsConstraint(T1, T2);
 
-    REQUIRE(!tm.solve());
+    REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
@@ -76,7 +76,7 @@ TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
     tm.CreateEqualsConstraint(T.at(0), T.at(1));
     tm.CreateEqualsConstraint(T.at(1), T.at(2));
 
-    REQUIRE(!tm.solve());
+    REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve basic type conforms to triangle solvable constraint", "[constraint]") {
@@ -132,7 +132,7 @@ TEST_CASE("solve convertible reverse constraint", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByFloat);
     tm.CreateConvertibleConstraint(T2, T1);
 
-    REQUIRE(!tm.solve());
+    REQUIRE(tm.solve());
 }
 
 TEST_CASE("solve convertible bind reverse constraint", "[constraint]") {
@@ -272,9 +272,11 @@ TEST_CASE("solve function same num args different types application constraint",
     const auto T = CreateMultipleSymbols(tm, 3);
 
     // func foo(a: Int) -> Double
+    // (T3) -> T4
     tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), { tm.getRegisteredType("int") }, tm.getRegisteredType("double"));
 
     // func foo(a: Float) -> Double
+    // (T5) -> T6
     tm.CreateApplicableFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), { tm.getRegisteredType("float") }, tm.getRegisteredType("double"));
 
     tm.CreateBindFunctionConstraint(tm.CreateFunctionHash("foo", {"a"}), T.at(0), { T.at(1) }, T.at(2));
