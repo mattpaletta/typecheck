@@ -556,6 +556,9 @@ TEST_CASE("regression test 2 constraints (ackerman)", "[constraint]") {
     const auto voidType = tm.getRegisteredType("void");
     const auto boolType = tm.getRegisteredType("bool");
 
+    tm.CreateApplicableFunctionConstraint(6152725461566598243, { intType, intType }, intType);
+    tm.CreateApplicableFunctionConstraint(-1993622415222145992, {}, intType);
+
 	tm.CreateBindToConstraint(T.at(1), intType);
 	tm.CreateBindToConstraint(T.at(2), voidType);
 	tm.CreateBindToConstraint(T.at(3), intType);

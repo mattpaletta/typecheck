@@ -359,6 +359,10 @@ auto TypeManager::solve() -> bool {
 
 #pragma mark - Gather All Data
     auto insert_if_not_exists = [&constraint_solver, &all_variable_names](const std::string& var, const constraint::Domain& domain) {
+        if (domain.size() == 0) {
+            std::cout << "Warning: Domain Empty for variable: " << var << std::endl;
+        }
+        
         if (all_variable_names.find(var) == all_variable_names.end()) {
             constraint_solver.addVariable(var, domain);
             all_variable_names.insert(var);
