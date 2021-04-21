@@ -14,6 +14,10 @@
 #include <typecheck/type_solver.hpp>                  // for TypeSolver
 #include <typecheck/type.hpp>                 // for Type, TypeVar
 
+#include <typecheck/protocols/ExpressibleByFloatLiteral.hpp>
+#include <typecheck/protocols/ExpressibleByIntegerLiteral.hpp>
+#include <typecheck/protocols/ExpressibleByDoubleLiteral.hpp>
+
 #include <constraint/solver.hpp>
 #include <constraint/env.hpp>
 #include <constraint/state.hpp>
