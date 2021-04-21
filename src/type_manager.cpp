@@ -16,7 +16,16 @@
 
 #include <constraint/solver.hpp>
 #include <constraint/env.hpp>
+#include <constraint/state.hpp>
+#include <constraint/node.hpp>
+#include <constraint/internal/utils.hpp>
 
+#include <cppnotstdlib/strings.hpp>
+
+
+#include <optional>
+#include <list>
+#include <queue>
 #include <limits>                                     // for numeric_limits
 #include <type_traits>                                // for move
 #include <utility>                                    // for make_pair
@@ -87,19 +96,14 @@ auto TypeManager::canGetFunctionOverloads(const ConstraintPass::IDType& funcID, 
     return true;
 }
 
-auto TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID, const ConstraintPass* pass) const -> std::vector<FunctionDefinition> {
-    std::vector<FunctionDefinition> overloads;
+auto TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID) const -> std::vector<FunctionVar> {
+    std::vector<FunctionVar> overloads;
     for (const auto& overload : this->functions) {
         // Lookup by 'var', to deal with anonymous functions.
         if (overload.id() == funcID) {
             // Copy it over, and hand it over a 'function definition'.
-            FunctionDefinition funcDef;
-            for (const auto& arg : overload.args()) {
-                funcDef.add_args()->CopyFrom(pass->getResolvedType(arg));
-            }
-            funcDef.mutable_returntype()->CopyFrom(pass->getResolvedType(overload.returnvar()));
 
-            overloads.push_back(funcDef);
+            overloads.push_back(overload);
         }
     }
 
@@ -265,6 +269,22 @@ auto TypeManager::getConstraint(const ConstraintPass::IDType id) const -> const 
 }
 
 namespace {
+    typecheck::Type TypeFromString(const std::string& val, const constraint::Solution& sol) {
+        if (cppnotstdlib::explode(val, '|').size() == 1) {
+            return Type(RawType(val));
+        } else {
+            auto fvar = typecheck::FunctionVar::unserialize(val);
+            typecheck::FunctionDefinition funcDef;
+            funcDef.set_name(fvar.name());
+            funcDef.set_id(fvar.id());
+            funcDef.mutable_returntype()->CopyFrom(TypeFromString(sol.at(fvar.returnvar().symbol()).to_string(), sol));
+            for (const auto& a : fvar.args()) {
+                funcDef.add_args()->CopyFrom(TypeFromString(sol.at(a.symbol()).to_string(), sol));
+            }
+            return Type(funcDef);
+        }
+    }
+
     void AddTypeToDomain(constraint::Domain::data_type& domain, const typecheck::Type& type) {
         if (type.has_raw()) {
             domain.emplace_back(type.raw().name());
@@ -273,7 +293,15 @@ namespace {
         }
     }
 
-    void AddLiteralProtocolTypes(constraint::Domain::data_type& domain, const typecheck::LiteralProtocol& protocol) {
+    void AddTypeToDomain(constraint::Domain::data_type& domain, const typecheck::FunctionVar& type) {
+        domain.emplace_back(type.serialize());
+    }
+
+    using distance_type = std::function<std::size_t(const constraint::State&)>;
+
+    template<typename T>
+    void AddLiteralProtocolTypes(constraint::Domain::data_type& domain) {
+        T protocol;
         for (const auto& ty : protocol.getPreferredTypes()) {
             AddTypeToDomain(domain, ty);
         }
@@ -282,42 +310,74 @@ namespace {
             AddTypeToDomain(domain, ty);
         }
     }
+
+    template<typename T>
+    void AddHeuristicProtocolFuncs(std::vector<distance_type>& heuristics, std::vector<distance_type>& actuals, const std::string& var) {
+        heuristics.emplace_back([var](const constraint::State& state) {
+            T protocol;
+            if (state.isAssigned(var)) {
+                // Check if in preferred list or not.
+                for (const auto& ty : protocol.getPreferredTypes()) {
+                    if (ty.raw().name() == state.variable_map.at(var).to_string()) {
+                        return 0;
+                    }
+                }
+
+                return 1;
+            }
+
+            // Unknown.
+            return 0;
+        });
+
+        // Use the same one for the actual solution, except punish more for not assigned.
+        actuals.emplace_back([var](const constraint::State& state) {
+            T protocol;
+            if (state.isAssigned(var)) {
+                // Check if in preferred list or not.
+                for (const auto& ty : protocol.getPreferredTypes()) {
+                    if (ty.raw().name() == state.variable_map.at(var).to_string()) {
+                        return 0;
+                    }
+                }
+
+                return 1;
+            }
+
+            // Unknown.
+            return 1000;
+        });
+    }
 }
 
 auto TypeManager::solve() -> bool {
-	// Add default `resolvers`, ignore response
-	// it will not double-register, so this is safe
-//	constexpr auto default_id = std::numeric_limits<std::size_t>::max();
-//	this->registerResolver(std::make_unique<ResolveConformsTo>(default_id));
-//	this->registerResolver(std::make_unique<ResolveEquals>(default_id));
-//    this->registerResolver(std::make_unique<ResolveConvertible>(default_id));
-//    this->registerResolver(std::make_unique<ResolveApplicableFunction>(default_id));
-//    this->registerResolver(std::make_unique<ResolveBindOverload>(default_id));
-//    this->registerResolver(std::make_unique<ResolveBindTo>(default_id));
-//
-//    this->SortConstraints();
-//
-//	// Finally, solve
-//	return this->solver.solve(this);
-
-
     constraint::Solver constraint_solver;
+    std::set<std::string> all_variable_names;
 
-    std::set<std::string> all_variables;
+    std::vector<distance_type> heuristcFuncs;
+    std::vector<distance_type> distanceFuncs;
 
-    auto insert_if_not_exists = [&constraint_solver, &all_variables](const std::string& var, const constraint::Domain& domain) {
-        if (all_variables.find(var) == all_variables.end()) {
+#pragma mark - Gather All Data
+    auto insert_if_not_exists = [&constraint_solver, &all_variable_names](const std::string& var, const constraint::Domain& domain) {
+        if (domain.size() == 0) {
+            std::cout << "Warning: Domain Empty for variable: " << var << std::endl;
+        }
+        
+        if (all_variable_names.find(var) == all_variable_names.end()) {
             constraint_solver.addVariable(var, domain);
-            all_variables.insert(var);
+            all_variable_names.insert(var);
         }
     };
-
 
     // Var Domain
     const auto varDomain = [this] {
         constraint::Domain::data_type domain;
         for (const auto& ty : this->registeredTypes) {
             AddTypeToDomain(domain, ty);
+        }
+
+        for (const auto& func : this->functions) {
+            AddTypeToDomain(domain, func);
         }
 
         return constraint::Domain(domain);
@@ -332,23 +392,26 @@ auto TypeManager::solve() -> bool {
                 constraint::Domain::data_type domain;
                 switch (protocol.literal()) {
                 case KnownProtocolKind::ExpressibleByFloat:
-                    AddLiteralProtocolTypes(domain, ExpressibleByFloatLiteral());
+                    AddLiteralProtocolTypes<ExpressibleByFloatLiteral>(domain);
+                    AddHeuristicProtocolFuncs<ExpressibleByFloatLiteral>(heuristcFuncs, distanceFuncs, var);
                     break;
                 case KnownProtocolKind::ExpressibleByDouble:
-                    AddLiteralProtocolTypes(domain, ExpressibleByDoubleLiteral());
+                    AddLiteralProtocolTypes<ExpressibleByDoubleLiteral>(domain);
+                    AddHeuristicProtocolFuncs<ExpressibleByDoubleLiteral>(heuristcFuncs, distanceFuncs, var);
                     break;
                 case KnownProtocolKind::ExpressibleByInteger:
-                    AddLiteralProtocolTypes(domain, ExpressibleByIntegerLiteral());
+                    AddLiteralProtocolTypes<ExpressibleByIntegerLiteral>(domain);
+                    AddHeuristicProtocolFuncs<ExpressibleByIntegerLiteral>(heuristcFuncs, distanceFuncs, var);
                     break;
                 default:
                     std::cout << "Unsupported Literal" << std::endl;
                     return false;
                     break;
                 }
-                insert_if_not_exists(var, domain);
+                insert_if_not_exists(var, varDomain);
 
                 // conforms literal is implied by its domain.
-                constraint_solver.addConstraint({var}, [var, domain](const constraint::Env& env) {
+                constraint_solver.addConstraint(std::vector{var}, [var, domain](const constraint::Env& env) {
                     for (const auto& ty : domain) {
                         if (env.at(var) == ty) {
                             return true;
@@ -374,17 +437,132 @@ auto TypeManager::solve() -> bool {
                 type_names.push_back(types.third().symbol());
             }
 
-
             if (type_names.empty()) {
                 std::cout << "Malformed Types Constraint" << std::endl;
             } else {
                 for (const auto& ty : type_names) {
                     insert_if_not_exists(ty, varDomain);
                 }
-                constraint_solver.addConstraint({type_names}, [type_names](const constraint::Env& env) {
-                    const auto firstVar = env.at(type_names.at(0));
-                    for (const auto& ty : type_names) {
-                        if (firstVar != env.at(ty)) {
+
+                switch (constraint.kind()) {
+                case Conversion:
+                    constraint_solver.addConstraint(std::vector{type_names}, [type_names, C = &convertible](const constraint::Env& env) {
+                        const auto firstVarValue = env.at(type_names.at(0));
+                        const auto secondVarValue = env.at(type_names.at(1));
+
+                        if (firstVarValue == secondVarValue) {
+                            return true;
+                        }
+
+                        const auto it = C->find(firstVarValue.to_string());
+                        if (it == C->end()) {
+                            return false;
+                        }
+
+                        return it->second.find(secondVarValue.to_string()) != it->second.end();
+                    });
+                    break;
+                case Equal:
+                    constraint_solver.addConstraint(std::vector{type_names}, [type_names](const constraint::Env& env) {
+                        const auto firstVar = env.at(type_names.at(0));
+                        for (const auto& ty : type_names) {
+                            if (firstVar != env.at(ty)) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    });
+                    break;
+                default:
+                    std::cout << "Unimplemented Constraint Kind: " << constraint.kind() << std::endl;
+                    assert(false);
+                    break;
+                }
+            }
+        } else if (constraint.has_overload()) {
+            const auto overload = constraint.overload();
+
+            std::vector<std::string> overloadVariables;
+            overloadVariables.emplace_back(overload.type().symbol());
+            overloadVariables.emplace_back(overload.returnvar().symbol());
+            for (auto i = 0; i < overload.argvars_size(); ++i) {
+                overloadVariables.emplace_back(overload.argvars(i).symbol());
+            }
+
+            // Gather all overloads.
+            const auto funcFamily = this->getFunctionOverloads(overload.functionid());
+            std::vector<std::vector<std::string>> all_func_dependant_variables;
+            constraint::Domain::data_type typeDomain;
+            for (const auto& func : funcFamily) {
+                std::vector<std::string> funcDependantVariables;
+                funcDependantVariables.emplace_back(func.returnvar().symbol());
+                for (const auto& arg : func.args()) {
+                    funcDependantVariables.emplace_back(arg.symbol());
+                }
+
+                all_func_dependant_variables.emplace_back(funcDependantVariables);
+                typeDomain.emplace_back(func.serialize());
+            }
+
+            insert_if_not_exists(overload.type().symbol(), typeDomain);
+            for (const auto& a : overloadVariables) {
+                insert_if_not_exists(a, varDomain);
+            }
+            for (const auto& a : all_func_dependant_variables) {
+                for (const auto& b : a) {
+                    insert_if_not_exists(b, varDomain);
+                }
+            }
+
+
+            for (auto i = 0; i < funcFamily.size(); ++i) {
+                const auto& vars = all_func_dependant_variables.at(i);
+                const auto& func = funcFamily.at(i);
+
+                std::vector<std::string> overloadConstraintVars = {overload.type().symbol()};
+
+                // Copy the variables from the overload constraint
+                std::copy(overloadVariables.begin(), overloadVariables.end(), std::back_inserter(overloadConstraintVars));
+
+                // Copy the variables from the function definition
+                std::copy(vars.begin(), vars.end(), std::back_inserter(overloadConstraintVars));
+
+                auto allFuncDefinitionVariablesAssigned = [vars](const constraint::Env& env) {
+                    for (const auto& a : vars) {
+                        if (!env.isAssigned(a)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+
+                constraint_solver.addConstraint(overloadConstraintVars, [overload, funcDefinition = func, check = std::move(allFuncDefinitionVariablesAssigned)](const constraint::Env& env) {
+                    if (!check(env)) {
+                        // If not all the variables of the function are assigned, say it's fine, and the other one will pick it up.
+                        return true;
+                    }
+
+                    if (env.at(overload.type().symbol()).to_string() != funcDefinition.serialize()) {
+                        // This is not the overload we are looking for.
+                        return true;
+                    }
+
+                    auto compare_vars = [&env](const typecheck::TypeVar& vA, const typecheck::TypeVar& vB) {
+                        return env.at(vA.symbol()).to_string() == env.at(vB.symbol()).to_string();
+                    };
+
+                    // This is the the overload, check everything matches up.
+                    if (overload.argvars_size() != funcDefinition.args().size()) {
+                        return false;
+                    }
+
+                    if (!compare_vars(overload.returnvar(), funcDefinition.returnvar())) {
+                        return false;
+                    }
+
+                    for (auto i = 0; i < funcDefinition.args().size(); ++i) {
+                        if (!compare_vars(overload.argvars(i), funcDefinition.args().at(i))) {
                             return false;
                         }
                     }
@@ -392,10 +570,6 @@ auto TypeManager::solve() -> bool {
                     return true;
                 });
             }
-        } else if (constraint.has_overload()) {
-            const auto overload = constraint.overload();
-            std::cout << "TODO: " << std::endl;
-            return false;
 
         } else if (constraint.has_explicit_()) {
             const auto explicit_ = constraint.explicit_();
@@ -403,12 +577,13 @@ auto TypeManager::solve() -> bool {
                 const auto var = explicit_.var();
                 const auto type = explicit_.type();
 
-                constraint::Domain::data_type explicitDomain;
-                AddTypeToDomain(explicitDomain, type);
-
-                insert_if_not_exists(var.symbol(), explicitDomain);
-                constraint_solver.addConstraint({var.symbol()}, [var, explicitDomain](const constraint::Env& env) {
-                    return env.at(var.symbol()) == explicitDomain.at(0);
+                insert_if_not_exists(var.symbol(), varDomain);
+                constraint_solver.addConstraint(std::vector{var.symbol()}, [var, type](const constraint::Env& env) {
+                    if (type.has_raw()) {
+                        return env.at(var.symbol()).to_string() == type.raw().name();
+                    } else {
+                        return false;
+                    }
                 });
             } else {
                 std::cout << "Malformed Explicit Constraint" << std::endl;
@@ -420,17 +595,35 @@ auto TypeManager::solve() -> bool {
         }
     }
 
-    const auto solutions = constraint_solver.getSolutions();
-    const auto hasSolution = !solutions.empty();
-    for (const auto& sol : solutions) {
-        ConstraintPass pass;
-        for (const auto& var : all_variables) {
-            const auto val = sol.at(var);
-            pass.resolvedTypes[var] = Type(RawType(val.to_string()));
+
+    auto heuristic = [heuristics = std::move(heuristcFuncs)](const constraint::State& state) {
+        std::size_t sum = 0;
+        for (const auto& H : heuristics) {
+            sum += H(state);
         }
-        this->solver.last_pass = std::move(pass);
-        break;
+        return sum;
+    };
+
+    auto actualDistance = [actual = std::move(distanceFuncs)](const constraint::State& state) {
+        std::size_t sum = 0;
+        for (const auto& G : actual) {
+            sum += G(state);
+        }
+        return sum;
+    };
+
+    const auto solution = constraint_solver.getOptimizedSolution(std::move(heuristic), std::move(actualDistance));
+    const auto hasSolution = solution.has_value();
+    if (!hasSolution) {
+        return false;
     }
+
+    ConstraintPass pass;
+    for (const auto& var : all_variable_names) {
+        const auto val = solution->at(var);
+        pass.resolvedTypes[var] = TypeFromString(val.to_string(), *solution);
+    }
+    this->solver.last_pass = std::move(pass);
 
     return hasSolution;
 }

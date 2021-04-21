@@ -88,6 +88,8 @@ namespace typecheck {
         void SortConstraints();
         static int getConstraintKindScore(const typecheck::ConstraintKind& kind);
 
+        std::vector<FunctionVar> getFunctionOverloads(const ConstraintPass::IDType& funcID) const;
+
         // Internal helper
         Constraint* getConstraintInternal(const ConstraintPass::IDType id);
 	};
