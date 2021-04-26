@@ -22,6 +22,7 @@
 #include <constraint/env.hpp>
 #include <constraint/state.hpp>
 #include <constraint/node.hpp>
+#include <constraint/state_query.hpp>
 #include <constraint/internal/utils.hpp>
 
 #include <cppnotstdlib/strings.hpp>
@@ -316,8 +317,8 @@ namespace {
     }
 
     template<typename T>
-    void AddHeuristicProtocolFuncs(std::vector<distance_type>& heuristics, std::vector<distance_type>& actuals, const std::string& var) {
-        heuristics.emplace_back([var](const constraint::State& state) {
+    void AddHeuristicProtocolFuncs(std::vector<constraint::Solver::DistanceFunc>& heuristics, std::vector<constraint::Solver::DistanceFunc>& actuals, const std::string& var) {
+        heuristics.emplace_back([var](const constraint::StateQuery& state) {
             T protocol;
             if (state.isAssigned(var)) {
                 // Check if in preferred list or not.
@@ -335,7 +336,7 @@ namespace {
         });
 
         // Use the same one for the actual solution, except punish more for not assigned.
-        actuals.emplace_back([var](const constraint::State& state) {
+        actuals.emplace_back([var](const constraint::StateQuery& state) {
             T protocol;
             if (state.isAssigned(var)) {
                 // Check if in preferred list or not.
@@ -349,7 +350,7 @@ namespace {
             }
 
             // Unknown.
-            return 1000;
+            return 0;
         });
     }
 }
@@ -358,8 +359,8 @@ auto TypeManager::solve() -> bool {
     constraint::Solver constraint_solver;
     std::set<std::string> all_variable_names;
 
-    std::vector<distance_type> heuristcFuncs;
-    std::vector<distance_type> distanceFuncs;
+    std::vector<constraint::Solver::DistanceFunc> heuristcFuncs;
+    std::vector<constraint::Solver::DistanceFunc> distanceFuncs;
 
 #pragma mark - Gather All Data
     auto insert_if_not_exists = [&constraint_solver, &all_variable_names](const std::string& var, const constraint::Domain& domain) {
@@ -524,7 +525,7 @@ auto TypeManager::solve() -> bool {
                 const auto& vars = all_func_dependant_variables.at(i);
                 const auto& func = funcFamily.at(i);
 
-                std::vector<std::string> overloadConstraintVars = {overload.type().symbol()};
+                std::vector<std::string> overloadConstraintVars;
 
                 // Copy the variables from the overload constraint
                 std::copy(overloadVariables.begin(), overloadVariables.end(), std::back_inserter(overloadConstraintVars));
@@ -600,16 +601,19 @@ auto TypeManager::solve() -> bool {
     }
 
 
-    auto heuristic = [heuristics = std::move(heuristcFuncs)](const constraint::State& state) {
-        std::size_t sum = 0;
+    const auto numVariables = all_variable_names.size();
+    auto heuristic = [heuristics = std::move(heuristcFuncs), numVariables](const constraint::StateQuery& state) {
+        // Calculate the difference, allows us to measure meaningful progress
+        std::size_t sum = numVariables + state.numConstraints() - state.numSatisfied();
         for (const auto& H : heuristics) {
             sum += H(state);
         }
         return sum;
     };
 
-    auto actualDistance = [actual = std::move(distanceFuncs)](const constraint::State& state) {
-        std::size_t sum = 0;
+    auto actualDistance = [actual = std::move(distanceFuncs), numVariables](const constraint::StateQuery& state) {
+        // Calculate the difference, allows us to measure meaningful progress
+        std::size_t sum = numVariables + state.numConstraints();
         for (const auto& G : actual) {
             sum += G(state);
         }
