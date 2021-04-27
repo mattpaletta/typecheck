@@ -17,6 +17,7 @@
 
 #include <cppnotstdlib/strings.hpp>
 
+#include <cassert>
 #include <optional>
 #include <list>
 #include <queue>
