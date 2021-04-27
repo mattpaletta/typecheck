@@ -27,13 +27,14 @@ TEST_CASE("solve basic type int equals constraint", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::LiteralProtocol::ExpressibleByInteger);
     tm.CreateEqualsConstraint(T1, T2);
 
-    CHECK(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 
-    REQUIRE(tm.getResolvedType(T1).has_raw());
-    REQUIRE(tm.getResolvedType(T2).has_raw());
+    REQUIRE(solution->getResolvedType(T1).has_raw());
+    REQUIRE(solution->getResolvedType(T2).has_raw());
 
-    CHECK(tm.getResolvedType(T1).raw().name() == "int");
-    CHECK(tm.getResolvedType(T2).raw().name() == "int");
+    CHECK(solution->getResolvedType(T1).raw().name() == "int");
+    CHECK(solution->getResolvedType(T2).raw().name() == "int");
 }
 
 TEST_CASE("solve basic type float equals constraint", "[constraint]") {
@@ -46,13 +47,14 @@ TEST_CASE("solve basic type float equals constraint", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::ExpressibleByFloat);
     tm.CreateEqualsConstraint(T1, T2);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 
-    REQUIRE(tm.getResolvedType(T1).has_raw());
-    REQUIRE(tm.getResolvedType(T2).has_raw());
+    REQUIRE(solution->getResolvedType(T1).has_raw());
+    REQUIRE(solution->getResolvedType(T2).has_raw());
 
-    CHECK(tm.getResolvedType(T1).raw().name() == "float");
-    CHECK(tm.getResolvedType(T2).raw().name() == "float");
+    CHECK(solution->getResolvedType(T1).raw().name() == "float");
+    CHECK(solution->getResolvedType(T2).raw().name() == "float");
 }
 
 TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]") {
@@ -64,7 +66,8 @@ TEST_CASE("solve basic type equals mutally recursive constraint", "[constraint]"
     tm.CreateEqualsConstraint(T2, T1);
     tm.CreateEqualsConstraint(T1, T2);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
@@ -76,7 +79,8 @@ TEST_CASE("solve basic type equals triangle constraint", "[constraint]") {
     tm.CreateEqualsConstraint(T.at(0), T.at(1));
     tm.CreateEqualsConstraint(T.at(1), T.at(2));
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve basic type conforms to triangle solvable constraint", "[constraint]") {
@@ -92,7 +96,8 @@ TEST_CASE("solve basic type conforms to triangle solvable constraint", "[constra
     tm.CreateEqualsConstraint(T2, T3);
     tm.CreateEqualsConstraint(T3, T1);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve basic type conforms to triangle conversion solvable constraint", "[constraint]") {
@@ -108,7 +113,8 @@ TEST_CASE("solve basic type conforms to triangle conversion solvable constraint"
     tm.CreateEqualsConstraint(T2, T3);
     tm.CreateEqualsConstraint(T3, T1);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve convertible constraint", "[constraint]") {
@@ -120,7 +126,8 @@ TEST_CASE("solve convertible constraint", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::LiteralProtocol::ExpressibleByInteger);
     tm.CreateConvertibleConstraint(T1, T2);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve convertible reverse constraint", "[constraint]") {
@@ -132,7 +139,8 @@ TEST_CASE("solve convertible reverse constraint", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T1, typecheck::KnownProtocolKind::ExpressibleByFloat);
     tm.CreateConvertibleConstraint(T2, T1);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve convertible bind reverse constraint", "[constraint]") {
@@ -145,7 +153,8 @@ TEST_CASE("solve convertible bind reverse constraint", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T2, typecheck::KnownProtocolKind::ExpressibleByFloat);
     tm.CreateConvertibleConstraint(T1, T2);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
@@ -158,10 +167,11 @@ TEST_CASE("solve convertible conversion explicit constraint", "[constraint]") {
     tm.CreateBindToConstraint(T2, tm.getRegisteredType("float"));
     tm.CreateEqualsConstraint(T2, T1);
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 
-    CHECK(tm.getResolvedType(T1).raw().name() == "float");
-    CHECK(tm.getResolvedType(T2).raw().name() == "float");
+    CHECK(solution->getResolvedType(T1).raw().name() == "float");
+    CHECK(solution->getResolvedType(T2).raw().name() == "float");
 }
 
 TEST_CASE("solve function application constraint", "[constraint]") {
@@ -174,15 +184,17 @@ TEST_CASE("solve function application constraint", "[constraint]") {
     tm.CreateBindFunctionConstraint(T0FuncHash, T.at(0), {T.at(1), T.at(2)}, T.at(3));
 
     // T0 = (T1, T2) -> T3
-    REQUIRE(tm.solve());
-    CHECK(tm.getResolvedType(T.at(0)).has_func());
-    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(3)).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 
-    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
-    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "float");
-    CHECK(tm.getResolvedType(T.at(3)).raw().name() == "double");
+    REQUIRE(solution->getResolvedType(T.at(0)).has_func());
+    REQUIRE(solution->getResolvedType(T.at(1)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(2)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(3)).has_raw());
+
+    CHECK(solution->getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(solution->getResolvedType(T.at(2)).raw().name() == "float");
+    CHECK(solution->getResolvedType(T.at(3)).raw().name() == "double");
 }
 
 TEST_CASE("solve inferred function application constraint", "[constraint]") {
@@ -200,15 +212,17 @@ TEST_CASE("solve inferred function application constraint", "[constraint]") {
     tm.CreateBindToConstraint(T.at(3), tm.getRegisteredType("double"));
 
     // T0 = (T1, T2) -> T3
-    REQUIRE(tm.solve());
-    CHECK(tm.getResolvedType(T.at(0)).has_func());
-    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(3)).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 
-    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
-    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "float");
-    CHECK(tm.getResolvedType(T.at(3)).raw().name() == "double");
+    REQUIRE(solution->getResolvedType(T.at(0)).has_func());
+    REQUIRE(solution->getResolvedType(T.at(1)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(2)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(3)).has_raw());
+
+    CHECK(solution->getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(solution->getResolvedType(T.at(2)).raw().name() == "float");
+    CHECK(solution->getResolvedType(T.at(3)).raw().name() == "double");
 }
 
 TEST_CASE("solve inferred function application constraint no args", "[constraint]") {
@@ -224,13 +238,15 @@ TEST_CASE("solve inferred function application constraint no args", "[constraint
     tm.CreateBindToConstraint(T.at(1), tm.getRegisteredType("double"));
 
     // T0 = (T1, T2) -> T3
-    REQUIRE(tm.solve());
-    CHECK(tm.getResolvedType(T.at(0)).has_func());
-    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 
-    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "double");
-    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
+    REQUIRE(solution->getResolvedType(T.at(0)).has_func());
+    REQUIRE(solution->getResolvedType(T.at(1)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(2)).has_raw());
+
+    CHECK(solution->getResolvedType(T.at(1)).raw().name() == "double");
+    CHECK(solution->getResolvedType(T.at(2)).raw().name() == "double");
 }
 
 TEST_CASE("solve function different num args application constraint", "[constraint]") {
@@ -249,21 +265,22 @@ TEST_CASE("solve function different num args application constraint", "[constrai
     tm.CreateBindFunctionConstraint(T1FuncHash, T.at(0), { T.at(1) }, T.at(2));
 
     // T0 = (T1, T2) -> T3
-    REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T.at(0)).has_func());
-    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
+    REQUIRE(solution->getResolvedType(T.at(0)).has_func());
+    REQUIRE(solution->getResolvedType(T.at(1)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(2)).has_raw());
 
     // Check it got bound to: func foo(a: Int) -> Double
-    CHECK(tm.getResolvedType(T.at(0)).func().args_size() == 1);
-    REQUIRE(tm.getResolvedType(T.at(0)).func().args(0).has_raw());
-    CHECK(tm.getResolvedType(T.at(0)).func().args(0).raw().name() == "int");
-    REQUIRE(tm.getResolvedType(T.at(0)).func().has_returntype());
-    REQUIRE(tm.getResolvedType(T.at(0)).func().returntype().has_raw());
-    CHECK(tm.getResolvedType(T.at(0)).func().returntype().raw().name() == "double");
+    CHECK(solution->getResolvedType(T.at(0)).func().args_size() == 1);
+    REQUIRE(solution->getResolvedType(T.at(0)).func().args(0).has_raw());
+    CHECK(solution->getResolvedType(T.at(0)).func().args(0).raw().name() == "int");
+    REQUIRE(solution->getResolvedType(T.at(0)).func().has_returntype());
+    REQUIRE(solution->getResolvedType(T.at(0)).func().returntype().has_raw());
+    CHECK(solution->getResolvedType(T.at(0)).func().returntype().raw().name() == "double");
 
-    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
-    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
+    CHECK(solution->getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(solution->getResolvedType(T.at(2)).raw().name() == "double");
 }
 
 TEST_CASE("solve function same num args different types application constraint", "[constraint]") {
@@ -283,21 +300,22 @@ TEST_CASE("solve function same num args different types application constraint",
     tm.CreateLiteralConformsToConstraint(T.at(1), typecheck::KnownProtocolKind::ExpressibleByInteger);
 
     // T0 = (T1, T2) -> T3
-    REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T.at(0)).has_func());
-    REQUIRE(tm.getResolvedType(T.at(1)).has_raw());
-    REQUIRE(tm.getResolvedType(T.at(2)).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
+    REQUIRE(solution->getResolvedType(T.at(0)).has_func());
+    REQUIRE(solution->getResolvedType(T.at(1)).has_raw());
+    REQUIRE(solution->getResolvedType(T.at(2)).has_raw());
 
     // Check it got bound to: func foo(a: Int) -> Double
-    CHECK(tm.getResolvedType(T.at(0)).func().args_size() == 1);
-    REQUIRE(tm.getResolvedType(T.at(0)).func().args(0).has_raw());
-    CHECK(tm.getResolvedType(T.at(0)).func().args(0).raw().name() == "int");
-    REQUIRE(tm.getResolvedType(T.at(0)).func().has_returntype());
-    REQUIRE(tm.getResolvedType(T.at(0)).func().returntype().has_raw());
-    CHECK(tm.getResolvedType(T.at(0)).func().returntype().raw().name() == "double");
+    CHECK(solution->getResolvedType(T.at(0)).func().args_size() == 1);
+    REQUIRE(solution->getResolvedType(T.at(0)).func().args(0).has_raw());
+    CHECK(solution->getResolvedType(T.at(0)).func().args(0).raw().name() == "int");
+    REQUIRE(solution->getResolvedType(T.at(0)).func().has_returntype());
+    REQUIRE(solution->getResolvedType(T.at(0)).func().returntype().has_raw());
+    CHECK(solution->getResolvedType(T.at(0)).func().returntype().raw().name() == "double");
 
-    CHECK(tm.getResolvedType(T.at(1)).raw().name() == "int");
-    CHECK(tm.getResolvedType(T.at(2)).raw().name() == "double");
+    CHECK(solution->getResolvedType(T.at(1)).raw().name() == "int");
+    CHECK(solution->getResolvedType(T.at(2)).raw().name() == "double");
 }
 
 TEST_CASE("solve function infer args later constraint", "[constraint]") {
@@ -325,14 +343,15 @@ TEST_CASE("solve function infer args later constraint", "[constraint]") {
         T6
      }
      */
-    REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T.at(8)).has_func());
-    REQUIRE(tm.getResolvedType(T.at(7)).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
+    REQUIRE(solution->getResolvedType(T.at(8)).has_func());
+    REQUIRE(solution->getResolvedType(T.at(7)).has_raw());
 
     // Check it got bound to: func foo() -> Int
-    REQUIRE(tm.getResolvedType(T.at(8)).func().has_returntype());
-    REQUIRE(tm.getResolvedType(T.at(8)).func().returntype().has_raw());
-    CHECK(tm.getResolvedType(T.at(8)).func().returntype().raw().name() == "int");
+    REQUIRE(solution->getResolvedType(T.at(8)).func().has_returntype());
+    REQUIRE(solution->getResolvedType(T.at(8)).func().returntype().has_raw());
+    CHECK(solution->getResolvedType(T.at(8)).func().returntype().raw().name() == "int");
 }
 
 TEST_CASE("solve for-loop constraints regression", "[constraint]") {
@@ -354,20 +373,21 @@ TEST_CASE("solve for-loop constraints regression", "[constraint]") {
     tm.CreateEqualsConstraint(T7, T0);
     tm.CreateEqualsConstraint(T9, T7);
 
-    REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T0).has_raw());
-    REQUIRE(tm.getResolvedType(T3).has_raw());
-    REQUIRE(tm.getResolvedType(T4).has_raw());
-    REQUIRE(tm.getResolvedType(T5).has_raw());
-    REQUIRE(tm.getResolvedType(T7).has_raw());
-    REQUIRE(tm.getResolvedType(T9).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
+    REQUIRE(solution->getResolvedType(T0).has_raw());
+    REQUIRE(solution->getResolvedType(T3).has_raw());
+    REQUIRE(solution->getResolvedType(T4).has_raw());
+    REQUIRE(solution->getResolvedType(T5).has_raw());
+    REQUIRE(solution->getResolvedType(T7).has_raw());
+    REQUIRE(solution->getResolvedType(T9).has_raw());
 
-    CHECK(tm.getResolvedType(T0).raw().name() == "int");
-    CHECK(tm.getResolvedType(T3).raw().name() == "int");
-    CHECK(tm.getResolvedType(T4).raw().name() == "int");
-    CHECK(tm.getResolvedType(T5).raw().name() == "int");
-    CHECK(tm.getResolvedType(T7).raw().name() == "int");
-    CHECK(tm.getResolvedType(T9).raw().name() == "int");
+    CHECK(solution->getResolvedType(T0).raw().name() == "int");
+    CHECK(solution->getResolvedType(T3).raw().name() == "int");
+    CHECK(solution->getResolvedType(T4).raw().name() == "int");
+    CHECK(solution->getResolvedType(T5).raw().name() == "int");
+    CHECK(solution->getResolvedType(T7).raw().name() == "int");
+    CHECK(solution->getResolvedType(T9).raw().name() == "int");
 }
 
 TEST_CASE("solve for-loop constraints", "[constraint]") {
@@ -403,34 +423,35 @@ TEST_CASE("solve for-loop constraints", "[constraint]") {
     tm.CreateLiteralConformsToConstraint(T11, typecheck::KnownProtocolKind::ExpressibleByInteger);
     tm.CreateBindToConstraint(T12, tm.getRegisteredType("void"));
 
-    REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T0).has_raw());
-    REQUIRE(tm.getResolvedType(T1).has_raw());
-    REQUIRE(tm.getResolvedType(T2).has_raw());
-    REQUIRE(tm.getResolvedType(T3).has_raw());
-    REQUIRE(tm.getResolvedType(T4).has_raw());
-    REQUIRE(tm.getResolvedType(T5).has_raw());
-    REQUIRE(tm.getResolvedType(T6).has_raw());
-    REQUIRE(tm.getResolvedType(T7).has_raw());
-    REQUIRE(tm.getResolvedType(T8).has_raw());
-    REQUIRE(tm.getResolvedType(T9).has_raw());
-    REQUIRE(tm.getResolvedType(T10).has_raw());
-    REQUIRE(tm.getResolvedType(T11).has_raw());
-    REQUIRE(tm.getResolvedType(T12).has_raw());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
+    REQUIRE(solution->getResolvedType(T0).has_raw());
+    REQUIRE(solution->getResolvedType(T1).has_raw());
+    REQUIRE(solution->getResolvedType(T2).has_raw());
+    REQUIRE(solution->getResolvedType(T3).has_raw());
+    REQUIRE(solution->getResolvedType(T4).has_raw());
+    REQUIRE(solution->getResolvedType(T5).has_raw());
+    REQUIRE(solution->getResolvedType(T6).has_raw());
+    REQUIRE(solution->getResolvedType(T7).has_raw());
+    REQUIRE(solution->getResolvedType(T8).has_raw());
+    REQUIRE(solution->getResolvedType(T9).has_raw());
+    REQUIRE(solution->getResolvedType(T10).has_raw());
+    REQUIRE(solution->getResolvedType(T11).has_raw());
+    REQUIRE(solution->getResolvedType(T12).has_raw());
 
-    CHECK(tm.getResolvedType(T0).raw().name() == "int");
-    CHECK(tm.getResolvedType(T1).raw().name() == "int");
-    CHECK(tm.getResolvedType(T2).raw().name() == "int");
-    CHECK(tm.getResolvedType(T3).raw().name() == "int");
-    CHECK(tm.getResolvedType(T4).raw().name() == "int");
-    CHECK(tm.getResolvedType(T5).raw().name() == "int");
-    CHECK(tm.getResolvedType(T6).raw().name() == "bool");
-    CHECK(tm.getResolvedType(T7).raw().name() == "int");
-    CHECK(tm.getResolvedType(T8).raw().name() == "int");
-    CHECK(tm.getResolvedType(T9).raw().name() == "int");
-    CHECK(tm.getResolvedType(T10).raw().name() == "int");
-    CHECK(tm.getResolvedType(T11).raw().name() == "int");
-    CHECK(tm.getResolvedType(T12).raw().name() == "void");
+    CHECK(solution->getResolvedType(T0).raw().name() == "int");
+    CHECK(solution->getResolvedType(T1).raw().name() == "int");
+    CHECK(solution->getResolvedType(T2).raw().name() == "int");
+    CHECK(solution->getResolvedType(T3).raw().name() == "int");
+    CHECK(solution->getResolvedType(T4).raw().name() == "int");
+    CHECK(solution->getResolvedType(T5).raw().name() == "int");
+    CHECK(solution->getResolvedType(T6).raw().name() == "bool");
+    CHECK(solution->getResolvedType(T7).raw().name() == "int");
+    CHECK(solution->getResolvedType(T8).raw().name() == "int");
+    CHECK(solution->getResolvedType(T9).raw().name() == "int");
+    CHECK(solution->getResolvedType(T10).raw().name() == "int");
+    CHECK(solution->getResolvedType(T11).raw().name() == "int");
+    CHECK(solution->getResolvedType(T12).raw().name() == "void");
 }
 
 TEST_CASE("multiple independent statements", "[constraint]") {
@@ -455,7 +476,8 @@ TEST_CASE("multiple independent statements", "[constraint]") {
 
     tm.CreateApplicableFunctionConstraint(funcHash, {}, T.at(0));
     tm.CreateBindFunctionConstraint(funcHash, T.at(11), {}, T.at(10));
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 TEST_CASE("mutually-recursive solve for-loop constraints", "[constraint]") {
@@ -492,26 +514,27 @@ TEST_CASE("mutually-recursive solve for-loop constraints", "[constraint]") {
     tm.CreateEqualsConstraint(T.at(1), T.at(11));
     tm.CreateEqualsConstraint(T.at(14), T.at(13));
 
-    REQUIRE(tm.solve());
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
     for (std::size_t i = 0; i < 16; ++i) {
-        REQUIRE(tm.getResolvedType(T.at(i)).has_raw());
+        REQUIRE(solution->getResolvedType(T.at(i)).has_raw());
     }
-    CHECK(tm.getResolvedType(T.at(0)).raw().name()  == "void");
-    CHECK(tm.getResolvedType(T.at(1)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(2)).raw().name()  == "void");
-    CHECK(tm.getResolvedType(T.at(3)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(4)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(5)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(6)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(7)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(8)).raw().name()  == "bool");
-    CHECK(tm.getResolvedType(T.at(9)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(10)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(11)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(12)).raw().name()  == "void");
-    CHECK(tm.getResolvedType(T.at(13)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(14)).raw().name()  == "int");
-    CHECK(tm.getResolvedType(T.at(15)).raw().name()  == "void");
+    CHECK(solution->getResolvedType(T.at(0)).raw().name()  == "void");
+    CHECK(solution->getResolvedType(T.at(1)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(2)).raw().name()  == "void");
+    CHECK(solution->getResolvedType(T.at(3)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(4)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(5)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(6)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(7)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(8)).raw().name()  == "bool");
+    CHECK(solution->getResolvedType(T.at(9)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(10)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(11)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(12)).raw().name()  == "void");
+    CHECK(solution->getResolvedType(T.at(13)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(14)).raw().name()  == "int");
+    CHECK(solution->getResolvedType(T.at(15)).raw().name()  == "void");
 }
 
 TEST_CASE("regression test 1 constraints", "[constraint]") {
@@ -540,9 +563,10 @@ TEST_CASE("regression test 1 constraints", "[constraint]") {
     tm.CreateEqualsConstraint(T.at(21), T.at(7));
     tm.CreateEqualsConstraint(T.at(21), T.at(22));
     tm.CreateLiteralConformsToConstraint(T.at(22), typecheck::KnownProtocolKind::ExpressibleByInteger);
-    REQUIRE(tm.solve());
-    REQUIRE(tm.getResolvedType(T.at(11)).has_raw());
-    CHECK(tm.getResolvedType(T.at(11)).raw().name()  == "int");
+    const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
+    REQUIRE(solution->getResolvedType(T.at(11)).has_raw());
+    CHECK(solution->getResolvedType(T.at(11)).raw().name()  == "int");
 }
 
 TEST_CASE("regression test 2 constraints (ackerman)", "[constraint]") {
@@ -661,7 +685,8 @@ TEST_CASE("regression test 2 constraints (ackerman)", "[constraint]") {
 	tm.CreateEqualsConstraint(T.at(79), T.at(91));
 	tm.CreateBindFunctionConstraint(-1993622415222145992, T.at(93), {}, T.at(92));
 
-	REQUIRE(tm.solve());
+	const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 void RunStressTest(const std::size_t numSymbols) {
@@ -683,7 +708,8 @@ void RunStressTest(const std::size_t numSymbols) {
 
 		tm.CreateEqualsConstraint(T.at(i), T.at((i + 1) % numSymbols));
 	}
-	REQUIRE(tm.solve());
+	const auto solution = tm.solve();
+    REQUIRE(solution.has_value());
 }
 
 #define CREATE_STRESS_TEST(numSymbols) TEST_CASE("stress test " + std::to_string(numSymbols) + " constraints", "[constraint]") { RunStressTest(numSymbols); }

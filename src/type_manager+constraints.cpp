@@ -30,40 +30,7 @@ namespace {
 #endif
 }
 
-auto TypeManager::getConstraintKindScore(const ConstraintKind& kind) -> int {
-    switch (kind) {
-        case BindParam:
-        case Bind:
-            return 0; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-        case ApplicableFunction:
-            return 1; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-        case Conversion:
-            return 2; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-        case ConformsTo:
-            return 3; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-        case Equal:
-            return 4; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-        case BindOverload:
-            return 5; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-    }
-
-    return 10; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-}
-
-void TypeManager::SortConstraints(std::vector<Constraint>* constraints) {
-    // Sort the constraints by the order in which they need to be resolved
-    std::sort(constraints->begin(), constraints->end(), [](const Constraint& c1, const Constraint& c2) {
-		// Temporarily Inverted Sort so it resolves all of them
-        return TypeManager::getConstraintKindScore(c1.kind()) < TypeManager::getConstraintKindScore(c2.kind());
-    });
-
-}
-
-void TypeManager::SortConstraints() {
-	this->SortConstraints(&this->constraints);
-}
-
-auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -> ConstraintPass::IDType {
+auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -> Constraint::IDType {
 	auto constraint = getNewBlankConstraint(ConstraintKind::Equal, this->constraint_generator.next_id());
 
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -84,7 +51,7 @@ auto TypeManager::CreateEqualsConstraint(const TypeVar& t0, const TypeVar& t1) -
 	return constraint.id();
 }
 
-auto TypeManager::CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind::LiteralProtocol& protocol) -> ConstraintPass::IDType {
+auto TypeManager::CreateLiteralConformsToConstraint(const TypeVar& t0, const KnownProtocolKind::LiteralProtocol& protocol) -> Constraint::IDType {
 	auto constraint = getNewBlankConstraint(ConstraintKind::ConformsTo, this->constraint_generator.next_id());
 
 	TYPECHECK_ASSERT(!t0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -102,7 +69,7 @@ auto TypeManager::CreateLiteralConformsToConstraint(const TypeVar& t0, const Kno
 	return constraint.id();
 }
 
-auto TypeManager::CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1) -> ConstraintPass::IDType {
+auto TypeManager::CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& T1) -> Constraint::IDType {
     auto constraint = getNewBlankConstraint(ConstraintKind::Conversion, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -122,7 +89,7 @@ auto TypeManager::CreateConvertibleConstraint(const TypeVar& T0, const TypeVar& 
     return constraint.id();
 }
 
-auto TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<Type>& args, const Type& return_type) -> ConstraintPass::IDType {
+auto TypeManager::CreateApplicableFunctionConstraint(const Constraint::IDType& functionid, const std::vector<Type>& args, const Type& return_type) -> Constraint::IDType {
     const auto returnVar = this->CreateTypeVar();
     std::vector<TypeVar> argVars;
     for (std::size_t i = 0; i < args.size(); ++i) {
@@ -139,7 +106,7 @@ auto TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDTyp
     return constraintID;
 }
 
-auto TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar) -> ConstraintPass::IDType {
+auto TypeManager::CreateApplicableFunctionConstraint(const Constraint::IDType& functionid, const std::vector<TypeVar>& argVars, const TypeVar& returnTypeVar) -> Constraint::IDType {
     FunctionVar funcVar;
     funcVar.set_id(functionid);
     for (auto& arg : argVars) {
@@ -150,14 +117,14 @@ auto TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDTyp
     return this->CreateApplicableFunctionConstraint(functionid, funcVar);
 }
 
-auto TypeManager::CreateApplicableFunctionConstraint(const ConstraintPass::IDType& functionid, const FunctionVar& type) -> ConstraintPass::IDType {
+auto TypeManager::CreateApplicableFunctionConstraint(const Constraint::IDType& functionid, const FunctionVar& type) -> Constraint::IDType {
     TYPECHECK_ASSERT(type.id() == functionid, "Function type ID should match function id and be set.");
 
     this->functions.push_back(type);
     return type.id();
 }
 
-auto TypeManager::CreateBindFunctionConstraint(const ConstraintPass::IDType& functionid, const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType) -> ConstraintPass::IDType {
+auto TypeManager::CreateBindFunctionConstraint(const Constraint::IDType& functionid, const TypeVar& T0, const std::vector<TypeVar>& args, const TypeVar& returnType) -> Constraint::IDType {
     auto constraint = getNewBlankConstraint(ConstraintKind::BindOverload, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");
@@ -183,7 +150,7 @@ auto TypeManager::CreateBindFunctionConstraint(const ConstraintPass::IDType& fun
     return constraint.id();
 }
 
-auto TypeManager::CreateBindToConstraint(const TypeVar& T0, const Type& type) -> ConstraintPass::IDType {
+auto TypeManager::CreateBindToConstraint(const TypeVar& T0, const Type& type) -> Constraint::IDType {
     auto constraint = getNewBlankConstraint(ConstraintKind::Bind, this->constraint_generator.next_id());
 
     TYPECHECK_ASSERT(!T0.symbol().empty(), "Cannot use empty type when creating constraint.");

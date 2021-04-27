@@ -1,17 +1,7 @@
 #include <typecheck/type_manager.hpp>
 #include <typecheck/constraint.hpp>           // for ConstraintKind
 #include <typecheck/generic_type_generator.hpp>       // for GenericTypeGene...
-
 #include <typecheck/debug.hpp>
-#include <typecheck/resolver.hpp>                     // for Resolver
-#include <typecheck/resolvers/ResolveConformsTo.hpp>  // for ResolveConformsTo
-#include <typecheck/resolvers/ResolveEquals.hpp>      // for ResolveEquals
-#include <typecheck/resolvers/ResolveConvertible.hpp> // for ResolveConvertible
-#include <typecheck/resolvers/ResolveApplicableFunction.hpp> // for ResolveApplicableFunction
-#include <typecheck/resolvers/ResolveBindOverload.hpp> // for ResolveBindOverload
-#include <typecheck/resolvers/ResolveBindTo.hpp>       // for ResolveBindTo
-
-#include <typecheck/type_solver.hpp>                  // for TypeSolver
 #include <typecheck/type.hpp>                 // for Type, TypeVar
 
 #include <typecheck/protocols/ExpressibleByFloatLiteral.hpp>
@@ -26,7 +16,6 @@
 #include <constraint/internal/utils.hpp>
 
 #include <cppnotstdlib/strings.hpp>
-
 
 #include <optional>
 #include <list>
@@ -76,7 +65,7 @@ auto TypeManager::getRegisteredType(const std::string& name) const noexcept -> T
 
 auto TypeManager::getRegisteredType(const Type& name) const noexcept -> Type {
 	for (auto& type : this->registeredTypes) {
-        if (proto_equal(type, name)) {
+        if (type == name) {
 			return type;
 		}
 	}
@@ -84,24 +73,7 @@ auto TypeManager::getRegisteredType(const Type& name) const noexcept -> Type {
 	return {};
 }
 
-auto TypeManager::canGetFunctionOverloads(const ConstraintPass::IDType& funcID, const ConstraintPass* pass) const -> bool {
-    for (auto& overload : this->functions) {
-        if (overload.id() == funcID) {
-            // Check if it's `ready`
-            for (auto& arg : overload.args()) {
-                if (!pass->hasResolvedType(arg)) {
-                    return false;
-                }
-            }
-            if (!pass->hasResolvedType(overload.returnvar())) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-auto TypeManager::getFunctionOverloads(const ConstraintPass::IDType& funcID) const -> std::vector<FunctionVar> {
+auto TypeManager::getFunctionOverloads(const Constraint::IDType& funcID) const -> std::vector<FunctionVar> {
     std::vector<FunctionVar> overloads;
     for (const auto& overload : this->functions) {
         // Lookup by 'var', to deal with anonymous functions.
@@ -125,24 +97,11 @@ auto TypeManager::setConvertible(const std::string& T0, const std::string& T1) -
     return this->setConvertible(t0, t1);
 }
 
-auto join(const std::string& separator, const std::vector<std::string>& input) -> std::string {
-    std::string out;
-    if (input.size() > 1) {
-        for (std::size_t i = 0; i < input.size() - 1; ++i) {
-            out += (input.at(i) + separator);
-        }
-    }
-    if (input.size() > 1) {
-        out += input.back();
-    }
-    return out;
+auto TypeManager::CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const -> Constraint::IDType {
+    return static_cast<Constraint::IDType>(std::hash<std::string>()(name + cppnotstdlib::join(argNames, ":")));
 }
 
-auto TypeManager::CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const -> ConstraintPass::IDType {
-    return static_cast<ConstraintPass::IDType>(std::hash<std::string>()(name + join(":", argNames)));
-}
-
-auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const -> ConstraintPass::IDType {
+auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const -> Constraint::IDType {
     // Lambda functions use the address of the arguments as part of the name
     const void* address = static_cast<const void*>(&argNames);
     std::stringstream ss;
@@ -153,7 +112,7 @@ auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNa
 }
 
 auto TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
-    if (proto_equal(T0, T1)) {
+    if (T0 == T1) {
 		return true;
 	}
 
@@ -170,10 +129,6 @@ auto TypeManager::setConvertible(const Type& T0, const Type& T1) -> bool {
 		return true;
 	}
 	return false;
-}
-
-auto TypeManager::getResolvedType(const TypeVar& type) const -> const Type {
-	return this->solver.getResolvedType(type);
 }
 
 auto TypeManager::isConvertible(const std::string& T0, const std::string& T1) const noexcept -> bool {
@@ -196,7 +151,7 @@ auto TypeManager::isConvertible(const Type& T0, const Type& T1) const noexcept -
         return false;
     }
 
-    if (proto_equal(T0, T1)) {
+    if (T0 == T1) {
 		return true;
 	}
 
@@ -233,16 +188,6 @@ auto TypeManager::getConvertible(const Type& T0) const -> std::vector<Type> {
     return out;
 }
 
-auto TypeManager::registerResolver(std::unique_ptr<Resolver>&& resolver) -> bool {
-	bool will_insert = this->registeredResolvers.find(resolver->kind) == this->registeredResolvers.end();
-	if (will_insert) {
-		// We don't have one yet, so add it
-		this->registeredResolvers.emplace(std::make_pair(resolver->kind, std::move(resolver)));
-	}
-
-	return will_insert;
-}
-
 auto TypeManager::CreateTypeVar() -> const TypeVar {
 	const auto var = this->type_generator.next();
 
@@ -253,7 +198,7 @@ auto TypeManager::CreateTypeVar() -> const TypeVar {
 	return type;
 }
 
-auto TypeManager::getConstraintInternal(const ConstraintPass::IDType id) -> Constraint* {
+auto TypeManager::getConstraintInternal(const Constraint::IDType id) -> Constraint* {
     for (auto& constraint : this->constraints) {
         if (constraint.id() == id) {
             return &constraint;
@@ -263,7 +208,7 @@ auto TypeManager::getConstraintInternal(const ConstraintPass::IDType id) -> Cons
     return nullptr;
 }
 
-auto TypeManager::getConstraint(const ConstraintPass::IDType id) const -> const Constraint* {
+auto TypeManager::getConstraint(const Constraint::IDType id) const -> const Constraint* {
 	for (auto& constraint : this->constraints) {
 		if (constraint.id() == id) {
 			return &constraint;
@@ -355,7 +300,7 @@ namespace {
     }
 }
 
-auto TypeManager::solve() -> bool {
+auto TypeManager::solve() -> std::optional<ConstraintPass> {
     constraint::Solver constraint_solver;
     std::set<std::string> all_variable_names;
 
@@ -410,7 +355,7 @@ auto TypeManager::solve() -> bool {
                     break;
                 default:
                     std::cout << "Unsupported Literal" << std::endl;
-                    return false;
+                    return std::nullopt;
                     break;
                 }
                 insert_if_not_exists(var, varDomain);
@@ -427,7 +372,7 @@ auto TypeManager::solve() -> bool {
                 });
             } else {
                 std::cout << "Malformed Conforms Constraint" << std::endl;
-                return false;
+                return std::nullopt;
             }
         } else if (constraint.has_types()) {
             const auto types = constraint.types();
@@ -592,11 +537,11 @@ auto TypeManager::solve() -> bool {
                 });
             } else {
                 std::cout << "Malformed Explicit Constraint" << std::endl;
-                return false;
+                return std::nullopt;
             }
         } else {
             std::cout << "Unknown Constraint Type" << std::endl;
-            return false;
+            return std::nullopt;
         }
     }
 
@@ -623,15 +568,13 @@ auto TypeManager::solve() -> bool {
     const auto solution = constraint_solver.getOptimizedSolution(std::move(heuristic), std::move(actualDistance));
     const auto hasSolution = solution.has_value();
     if (!hasSolution) {
-        return false;
+        return std::nullopt;
     }
 
     ConstraintPass pass;
     for (const auto& var : all_variable_names) {
         const auto val = solution->at(var);
-        pass.resolvedTypes[var] = TypeFromString(val.to_string(), *solution);
+        pass.setResolvedType(var, TypeFromString(val.to_string(), *solution));
     }
-    this->solver.last_pass = std::move(pass);
-
-    return hasSolution;
+    return pass;
 }

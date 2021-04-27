@@ -203,7 +203,6 @@ if (${TYPECHECK_BUILD_TESTS})
 	add_executable(test_typecheck test/test_typecheck.cpp ${TEST_INC_FILES})
     target_link_libraries(test_typecheck typecheck Catch2::Catch2)
     target_include_directories(test_typecheck SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
-	target_compile_definitions(test_typecheck PUBLIC "-DTEST_RESOLVERS")
 	target_compile_definitions(test_typecheck PUBLIC "-DTEST_TYPE_MANAGER")
 	target_compile_definitions(test_typecheck PUBLIC "-DTEST_TYPE_CONSTRAINTS")
 
@@ -216,20 +215,6 @@ if (${TYPECHECK_BUILD_TESTS})
 		DEPENDENCIES test_typecheck)
 	endif()
     add_test(typecheck test_typecheck)
-
-	# Test just resolvers
-	add_executable(test_resolvers test/test_resolvers.cpp ${TEST_INC_FILES})
-    target_link_libraries(test_resolvers typecheck Catch2::Catch2)
-    target_include_directories(test_resolvers SYSTEM PUBLIC $<TARGET_PROPERTY:Catch2::Catch2,INTERFACE_INCLUDE_DIRECTORIES>)
-	target_compile_definitions(test_resolvers PUBLIC "-DTEST_RESOLVERS")
-	if (TYPECHECK_ENABLE_COVERAGE)
-		setup_target_for_coverage_lcov(
-			NAME coverage_resolvers
-			EXECUTABLE $<TARGET_FILE:test_resolvers>
-			LCOV_ARGS ${TYPECHECK_LCOV_ARGS}
-			GENHTML_ARGS --legend --branch-coverage
-			DEPENDENCIES test_resolvers)
-	endif()
 
 	# Test just constraints
 	add_executable(test_constraints test/test_constraints.cpp ${TEST_INC_FILES})

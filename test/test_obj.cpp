@@ -1,6 +1,5 @@
 #include "test_include_catch.hpp"
 #include <typecheck/type.hpp>
-#include <typecheck/constraint_group.hpp>
 
 TEST_CASE("Check raw type copy constructor", "[raw_type]") {
 	typecheck::RawType t;
@@ -155,67 +154,4 @@ TEST_CASE("Copy Type Constructor", "[type]") {
 	CHECK(g.func().has_returntype());
 	CHECK(g.func().returntype().has_raw());
 	CHECK(g.func().returntype().raw().name() == "Hello world");
-}
-
-TEST_CASE("create empty", "[Constraint Group]") {
-	typecheck::ConstraintGroup cg;
-	CHECK(cg.size() == 0);
-}
-
-TEST_CASE("insert", "[ConstraintGroup]") {
-	typecheck::ConstraintGroup cg;
-	CHECK(cg.size() == 0);
-
-	cg.add(1234);
-	CHECK(cg.size() == 1);
-}
-
-TEST_CASE("remove", "[ConstraintGroup]") {
-	typecheck::ConstraintGroup cg;
-	CHECK(cg.size() == 0);
-
-	cg.add(1234);
-	CHECK(cg.size() == 1);
-
-	cg.remove(1234);
-	CHECK(cg.size() == 0);
-}
-
-TEST_CASE("contains", "[ConstraintGroup]") {
-	typecheck::ConstraintGroup cg;
-	CHECK(cg.size() == 0);
-
-	cg.add(1234);
-	CHECK(cg.size() == 1);
-	CHECK(cg.contains(1234));
-
-	cg.remove(1234);
-	CHECK(cg.size() == 0);
-	CHECK(!cg.contains(1234));
-}
-
-TEST_CASE("copy", "[ConstraintGroup]") {
-	typecheck::ConstraintGroup cg;
-	CHECK(cg.size() == 0);
-
-	cg.add(1);
-	cg.add(2);
-	cg.add(3);
-	CHECK(cg.size() == 3);
-
-	auto cg2 = cg;
-	CHECK(cg2.size() == 3);
-}
-
-TEST_CASE("toList", "[ConstraintGroup]") {
-	typecheck::ConstraintGroup cg;
-	CHECK(cg.size() == 0);
-
-	cg.add(1234);
-	CHECK(cg.size() == 1);
-	CHECK(cg.toList().size() == 1);
-
-	cg.remove(1234);
-	CHECK(cg.size() == 0);
-	CHECK(cg.toList().empty());
 }

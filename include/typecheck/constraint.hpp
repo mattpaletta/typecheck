@@ -43,6 +43,8 @@ namespace typecheck {
 
 	class Constraint {
 	public:
+        using IDType = long long;
+
 		class Types {
 		public:
 			Types();
@@ -166,8 +168,8 @@ namespace typecheck {
 		Constraint();
 		bool operator==(const Constraint& other) const;
 
-		long long id() const;
-		void set_id(const long long id);
+		IDType id() const;
+		void set_id(const IDType id);
 
 		const ConstraintKind& kind() const;
 		void set_kind(const ConstraintKind& kind);
