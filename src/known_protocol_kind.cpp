@@ -5,19 +5,21 @@ using namespace typecheck;
 
 auto literal_to_str(const KnownProtocolKind::LiteralProtocol& literal) -> std::string {
 	switch (literal) {
-		case typecheck::KnownProtocolKind::ExpressibleByArray:
+		case KnownProtocolKind::ExpressibleByDouble:
+			return "ExpressibleByDouble";
+		case KnownProtocolKind::ExpressibleByArray:
 			return "ExpressibleByArray";
-		case typecheck::KnownProtocolKind::ExpressibleByBoolean:
+		case KnownProtocolKind::ExpressibleByBoolean:
 			return "ExpressibleByBoolean";
-		case typecheck::KnownProtocolKind::ExpressibleByDictionary:
+		case KnownProtocolKind::ExpressibleByDictionary:
 			return "ExpressibleByDictionary";
-		case typecheck::KnownProtocolKind::ExpressibleByFloat:
+		case KnownProtocolKind::ExpressibleByFloat:
 			return "ExpressibleByFloat";
-		case typecheck::KnownProtocolKind::ExpressibleByInteger:
+		case KnownProtocolKind::ExpressibleByInteger:
 			return "ExpressibleByInteger";
-		case typecheck::KnownProtocolKind::ExpressibleByString:
+		case KnownProtocolKind::ExpressibleByString:
 			return "ExpressibleByString";
-		case typecheck::KnownProtocolKind::ExpressibleByNil:
+		case KnownProtocolKind::ExpressibleByNil:
 			return "ExpressibleByNil";
 	}
 }

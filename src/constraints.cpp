@@ -246,12 +246,12 @@ auto Constraint::Overload::add_argvars() -> TypeVar* {
 	return &this->_argVars.at(this->_argVars.size() - 1);
 }
 
-auto Constraint::Overload::argvars_size() const -> int {
-	return static_cast<int>(this->_argVars.size());
+auto Constraint::Overload::argvars_size() const -> std::size_t {
+	return this->_argVars.size();
 }
 
-auto Constraint::Overload::argvars(const int i) const -> const TypeVar& {
-	return this->_argVars.at(static_cast<std::size_t>(i));
+auto Constraint::Overload::argvars(std::size_t i) const -> const TypeVar& {
+	return this->_argVars.at(i);
 }
 
 auto Constraint::Overload::mutable_type() -> TypeVar* {

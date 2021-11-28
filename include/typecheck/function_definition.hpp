@@ -21,8 +21,8 @@ namespace typecheck {
 
 		void CopyFrom(const FunctionDefinition& other);
 
-		int args_size() const;
-		const Type& args(const int i) const;
+		std::size_t args_size() const;
+		const Type& args(std::size_t i) const;
 		Type* add_args();
 
 		const Type& returntype() const;
@@ -32,9 +32,9 @@ namespace typecheck {
 		std::string name() const;
         void set_name(const std::string& name);
 
-        int id() const;
-        void set_id(int id);
-        
+		long long id() const;
+        void set_id(long long id);
+
 		std::string ShortDebugString() const;
 
 	private:
@@ -44,6 +44,6 @@ namespace typecheck {
 		mutable std::unique_ptr<Type> _returnType;
 
 		std::string _name;
-		int _id{};
+		long long _id;
 	};
 }

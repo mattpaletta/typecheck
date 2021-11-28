@@ -66,7 +66,7 @@ namespace typecheck {
 			TypeVar* mutable_third();
 
 			std::string ShortDebugString() const;
-		
+
 		private:
 			mutable std::optional<TypeVar> _first;
 			mutable std::optional<TypeVar> _second;
@@ -121,8 +121,8 @@ namespace typecheck {
 			long long functionid() const;
 			void set_functionid(const long long functionid);
 
-			int argvars_size() const;
-			const TypeVar& argvars(const int i) const;
+			std::size_t argvars_size() const;
+			const TypeVar& argvars(std::size_t i) const;
 			TypeVar* add_argvars();
 
 			bool has_type() const;

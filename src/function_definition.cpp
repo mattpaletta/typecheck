@@ -72,12 +72,12 @@ auto FunctionDefinition::add_args() -> Type* {
 	return &this->_args.at(this->_args.size() - 1);
 }
 
-auto FunctionDefinition::args_size() const -> int {
-	return static_cast<int>(this->_args.size());
+auto FunctionDefinition::args_size() const -> std::size_t {
+	return this->_args.size();
 }
 
-auto FunctionDefinition::args(const int i) const -> const Type& {
-	return this->_args.at(static_cast<std::size_t>(i));
+auto FunctionDefinition::args(std::size_t i) const -> const Type& {
+	return this->_args.at(i);
 }
 
 auto FunctionDefinition::name() const -> std::string {
@@ -88,11 +88,11 @@ void FunctionDefinition::set_name(const std::string& name) {
     this->_name = name;
 }
 
-auto FunctionDefinition::id() const -> int {
+auto FunctionDefinition::id() const -> long long {
 	return this->_id;
 }
 
-void FunctionDefinition::set_id(int id) {
+void FunctionDefinition::set_id(long long id) {
     this->_id = id;
 }
 

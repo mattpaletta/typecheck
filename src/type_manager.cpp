@@ -313,7 +313,7 @@ auto TypeManager::solve() -> std::optional<ConstraintPass> {
         if (domain.size() == 0) {
             std::cout << "Warning: Domain Empty for variable: " << var << std::endl;
         }
-        
+
         if (all_variable_names.find(var) == all_variable_names.end()) {
             constraint_solver.addVariable(var, domain);
             all_variable_names.insert(var);
@@ -354,6 +354,11 @@ auto TypeManager::solve() -> std::optional<ConstraintPass> {
                     AddLiteralProtocolTypes<ExpressibleByIntegerLiteral>(domain);
                     AddHeuristicProtocolFuncs<ExpressibleByIntegerLiteral>(heuristcFuncs, distanceFuncs, var);
                     break;
+				case KnownProtocolKind::ExpressibleByArray:
+				case KnownProtocolKind::ExpressibleByBoolean:
+				case KnownProtocolKind::ExpressibleByDictionary:
+				case KnownProtocolKind::ExpressibleByNil:
+				case KnownProtocolKind::ExpressibleByString:
                 default:
                     std::cout << "Unsupported Literal" << std::endl;
                     return std::nullopt;
@@ -425,6 +430,11 @@ auto TypeManager::solve() -> std::optional<ConstraintPass> {
                         return true;
                     });
                     break;
+				case Bind:
+				case BindParam:
+				case BindOverload:
+				case ConformsTo:
+				case ApplicableFunction:
                 default:
                     std::cout << "Unimplemented Constraint Kind: " << constraint.kind() << std::endl;
                     assert(false);
@@ -437,7 +447,7 @@ auto TypeManager::solve() -> std::optional<ConstraintPass> {
             std::vector<std::string> overloadVariables;
             overloadVariables.emplace_back(overload.type().symbol());
             overloadVariables.emplace_back(overload.returnvar().symbol());
-            for (auto i = 0; i < overload.argvars_size(); ++i) {
+            for (std::size_t i = 0; i < overload.argvars_size(); ++i) {
                 overloadVariables.emplace_back(overload.argvars(i).symbol());
             }
 
@@ -467,7 +477,7 @@ auto TypeManager::solve() -> std::optional<ConstraintPass> {
             }
 
 
-            for (auto i = 0; i < funcFamily.size(); ++i) {
+            for (std::size_t i = 0; i < funcFamily.size(); ++i) {
                 const auto& vars = all_func_dependant_variables.at(i);
                 const auto& func = funcFamily.at(i);
 
@@ -512,7 +522,7 @@ auto TypeManager::solve() -> std::optional<ConstraintPass> {
                         return false;
                     }
 
-                    for (auto i = 0; i < funcDefinition.args().size(); ++i) {
+                    for (std::size_t i = 0; i < funcDefinition.args().size(); ++i) {
                         if (!compare_vars(overload.argvars(i), funcDefinition.args().at(i))) {
                             return false;
                         }
