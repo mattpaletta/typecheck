@@ -64,11 +64,12 @@ TEST_CASE("Check Copy From", "[function definition]") {
 
 TEST_CASE("Check Equals", "[function definition]") {
 	typecheck::FunctionDefinition f;
-
+	f.set_id(123);
 	f.add_args();
 	f.mutable_returntype()->mutable_raw()->set_name("Hello World");
 
 	typecheck::FunctionDefinition g;
+	g.set_id(123);
 	g.add_args();
 	g.mutable_returntype()->mutable_raw()->set_name("Hello World");
 	CHECK(f == g);

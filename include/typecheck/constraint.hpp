@@ -201,7 +201,7 @@ namespace typecheck {
 		bool isDisabled;
 		bool isFavoured;
 		*/
-		long long _id{};
+		long long _id;
 
 		// ID's of nested constraints
 		std::vector<std::int64_t> nested;
