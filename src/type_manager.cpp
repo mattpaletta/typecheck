@@ -99,7 +99,7 @@ auto TypeManager::setConvertible(const std::string& T0, const std::string& T1) -
 }
 
 auto TypeManager::CreateFunctionHash(const std::string& name, const std::vector<std::string>& argNames) const -> Constraint::IDType {
-    return static_cast<Constraint::IDType>(std::hash<std::string>()(name + cppnotstdlib::join(argNames, ":")));
+    return static_cast<Constraint::IDType>(std::hash<std::string>()(name + cppnotstdlib::string::join(argNames, ":")));
 }
 
 auto TypeManager::CreateLambdaFunctionHash(const std::vector<std::string>& argNames) const -> Constraint::IDType {
@@ -221,7 +221,7 @@ auto TypeManager::getConstraint(const Constraint::IDType id) const -> const Cons
 
 namespace {
     typecheck::Type TypeFromString(const std::string& val, const constraint::Solution& sol) {
-        if (cppnotstdlib::explode(val, '|').size() == 1) {
+        if (cppnotstdlib::string::explode(val, '|').size() == 1) {
             return Type(RawType(val));
         } else {
             auto fvar = typecheck::FunctionVar::unserialize(val);

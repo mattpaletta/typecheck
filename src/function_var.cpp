@@ -59,9 +59,9 @@ auto FunctionVar::serialize() const -> std::string {
 }
 
 auto FunctionVar::unserialize(const std::string& str) -> FunctionVar {
-    const auto parts = cppnotstdlib::explode(str, '|');
+    const auto parts = cppnotstdlib::string::explode(str, '|');
 
-    const auto args = parts.at(0) == "<empty>" ? std::vector<std::string>{} : cppnotstdlib::explode(parts.at(0), ',');
+    const auto args = parts.at(0) == "<empty>" ? std::vector<std::string>{} : cppnotstdlib::string::explode(parts.at(0), ',');
     const auto returnVar = parts.at(1);
     const auto name = parts.at(2);
     const auto id = std::stol(parts.at(3));
